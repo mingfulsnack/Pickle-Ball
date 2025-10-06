@@ -7,21 +7,21 @@ const bookingController = require('../controllers/bookingController');
 // Routes cho admin (cần đăng nhập)
 router.use(authenticateToken);
 
-// Lấy danh sách đặt bàn
+// Lấy danh sách đặt sân
 router.get('/', bookingController.getBookings);
 
-// Lấy chi tiết đặt bàn
+// Lấy chi tiết đặt sân
 router.get('/:id', bookingController.getBookingDetail);
 
-// Xác nhận đặt bàn
+// Xác nhận đặt sân
 router.put('/:id/confirm', 
-  checkRole(['Admin', 'Manager', 'Staff']), 
+  checkRole(['manager', 'staff']), 
   bookingController.confirmBooking
 );
 
-// Hủy đặt bàn (admin)
+// Hủy đặt sân (admin)
 router.put('/:id/cancel', 
-  checkRole(['Admin', 'Manager']), 
+  checkRole(['manager']), 
   bookingController.cancelBooking
 );
 

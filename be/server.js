@@ -27,6 +27,11 @@ const reportRoutes = require('./routes/reports');
 const orderRoutes = require('./routes/orderRoutes');
 const invoiceRoutes = require('./routes/invoices');
 
+// New routes for court booking system
+const courtRoutes = require('./routes/courts');
+const availabilityRoutes = require('./routes/availability');
+const serviceRoutes = require('./routes/services');
+
 // Security middleware
 app.use(helmet());
 
@@ -112,16 +117,24 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/invoices', invoiceRoutes);
 
+// New court booking system routes
+app.use('/api/courts', courtRoutes);
+app.use('/api/availability', availabilityRoutes);
+app.use('/api/services', serviceRoutes);
+
 // Welcome route
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'Welcome to Buffet Restaurant Management API',
+    message: 'Welcome to Pickleball Court Management API',
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
       public: '/api/public',
       bookings: '/api/bookings',
+      courts: '/api/courts',
+      availability: '/api/availability', 
+      services: '/api/services',
       tables: '/api/tables',
       menu: '/api/menu',
       customers: '/api/customers',

@@ -130,6 +130,47 @@ const schemas = {
     dieu_kien: Joi.object(),
     is_active: Joi.boolean(),
   }),
+
+  // Sân tennis/pickleball
+  court: Joi.object({
+    ma_san: Joi.string().min(1).max(50).required(),
+    ten_san: Joi.string().min(1).max(200).required(),
+    trang_thai: Joi.boolean(),
+    suc_chua: Joi.number().integer().min(1).max(10).default(4),
+    ghi_chu: Joi.string().allow(null, ''),
+  }),
+
+  // Dịch vụ
+  service: Joi.object({
+    ma_dv: Joi.string().min(1).max(50).required(),
+    ten_dv: Joi.string().min(1).max(200).required(),
+    loai: Joi.string().valid('rent', 'buy').required(),
+    don_gia: Joi.number().min(0).required(),
+    ghi_chu: Joi.string().allow(null, ''),
+  }),
+
+  // Tính giá trước khi booking
+  priceCalculation: Joi.object({
+    ngay_su_dung: Joi.date().iso().required(),
+    slots: Joi.array()
+      .items(
+        Joi.object({
+          san_id: Joi.number().integer().positive().required(),
+          start_time: Joi.string().pattern(/^([01]\d|2[0-3]):00$/).required(),
+          end_time: Joi.string().pattern(/^([01]\d|2[0-3]):00$/).required(),
+        })
+      )
+      .min(1)
+      .required(),
+    services: Joi.array()
+      .items(
+        Joi.object({
+          dich_vu_id: Joi.number().integer().positive().required(),
+          so_luong: Joi.number().integer().min(1).default(1),
+        })
+      )
+      .optional(),
+  }),
 };
 
 module.exports = {
