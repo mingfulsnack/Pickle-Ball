@@ -1,0 +1,332 @@
+{
+  "info": {
+    "name": "Pickleball Bồ Đề API",
+    "description": "API collection for Pickleball court booking system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "your_admin_jwt_token_here",
+      "type": "string"
+    },
+    {
+      "key": "booking_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🌍 Public API",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/../health",
+            "description": "Check server health status"
+          }
+        },
+        {
+          "name": "Get All Courts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/courts?activeOnly=true",
+              "query": [
+                {
+                  "key": "activeOnly",
+                  "value": "true",
+                  "description": "Only get active courts"
+                }
+              ]
+            },
+            "description": "Get list of all available courts"
+          }
+        },
+        {
+          "name": "Check Availability",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/availability?date=2025-10-08&start_time=09:00&end_time=11:00",
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2025-10-08",
+                  "description": "Date in YYYY-MM-DD format"
+                },
+                {
+                  "key": "start_time",
+                  "value": "09:00",
+                  "description": "Start time in HH:00 format"
+                },
+                {
+                  "key": "end_time",
+                  "value": "11:00",
+                  "description": "End time in HH:00 format"
+                }
+              ]
+            },
+            "description": "Check court availability for specific date and time"
+          }
+        },
+        {
+          "name": "Get Court Slots",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/availability/courts/1?date=2025-10-08",
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2025-10-08",
+                  "description": "Date in YYYY-MM-DD format"
+                }
+              ]
+            },
+            "description": "Get available time slots for specific court"
+          }
+        },
+        {
+          "name": "Get All Services",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/services?loai=rent",
+              "query": [
+                {
+                  "key": "loai",
+                  "value": "rent",
+                  "description": "Service type: rent or buy"
+                }
+              ]
+            },
+            "description": "Get list of all services"
+          }
+        },
+        {
+          "name": "Calculate Price",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/public/availability/calculate-price",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ngay_su_dung\": \"2025-10-08\",\n  \"slots\": [\n    {\n      \"san_id\": 1,\n      \"start_time\": \"09:00\",\n      \"end_time\": \"11:00\"\n    }\n  ],\n  \"services\": [\n    {\n      \"dich_vu_id\": 1,\n      \"so_luong\": 2\n    }\n  ]\n}"
+            },
+            "description": "Calculate total price for booking before creating"
+          }
+        },
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/public/bookings",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": null,\n  \"customer\": {\n    \"full_name\": \"Nguyễn Văn Test\",\n    \"phone\": \"0987654321\",\n    \"email\": \"test@email.com\"\n  },\n  \"ngay_su_dung\": \"2025-10-08\",\n  \"slots\": [\n    {\n      \"san_id\": 1,\n      \"start_time\": \"14:00\",\n      \"end_time\": \"16:00\",\n      \"ghi_chu\": \"Test booking from Postman\"\n    }\n  ],\n  \"services\": [\n    {\n      \"dich_vu_id\": 1,\n      \"so_luong\": 2\n    }\n  ],\n  \"payment_method\": \"cash\",\n  \"note\": \"Test booking note\"\n}"
+            },
+            "description": "Create a new court booking"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data.booking.ma_pd) {",
+                  "        pm.collectionVariables.set('booking_token', jsonData.data.booking.ma_pd);",
+                  "        console.log('Booking token saved: ' + jsonData.data.booking.ma_pd);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Booking by Token",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/public/bookings/{{booking_token}}",
+            "description": "Get booking details by booking token"
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/public/bookings/{{booking_token}}/cancel",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Test cancellation from Postman\"\n}"
+            },
+            "description": "Cancel a booking by token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Admin API",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "description": "Login as admin to get JWT token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data.token) {",
+                  "        pm.collectionVariables.set('admin_token', jsonData.data.token);",
+                  "        console.log('Admin token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Bookings (Admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings?page=1&limit=20",
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "description": "Get all bookings (admin only)"
+          }
+        },
+        {
+          "name": "Get Booking Detail (Admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/bookings/{{booking_token}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "description": "Get booking details by ID or token (admin only)"
+          }
+        },
+        {
+          "name": "Confirm Booking (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/bookings/{{booking_token}}/confirm",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "description": "Confirm a booking (admin only)"
+          }
+        },
+        {
+          "name": "Create Court (Admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/courts",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ma_san\": \"S999\",\n  \"ten_san\": \"Sân Test\",\n  \"suc_chua\": 4,\n  \"trang_thai\": true,\n  \"ghi_chu\": \"Sân test từ Postman\"\n}"
+            },
+            "description": "Create new court (manager only)"
+          }
+        },
+        {
+          "name": "Create Service (Admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/services",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ma_dv\": \"DV_TEST\",\n  \"ten_dv\": \"Dịch vụ test\",\n  \"loai\": \"rent\",\n  \"don_gia\": 25000,\n  \"ghi_chu\": \"Dịch vụ test từ Postman\"\n}"
+            },
+            "description": "Create new service (admin only)"
+          }
+        }
+      ]
+    }
+  ]
+}

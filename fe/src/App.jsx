@@ -8,10 +8,13 @@ import {
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './layouts/AppLayout';
-import Login from './pages/Login';
+import PublicLayout from './layouts/PublicLayout';
+//import Login from './pages/Login';
 
-// User pages
-
+// Customer/Public pages
+import Homepage from './pages/customer/Homepage';
+import BookingPage from './pages/customer/BookingPage';
+import Dashboard from './pages/customer/Dashboard';
 
 // Admin pages
 
@@ -48,24 +51,27 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   return children;
 };
 
-// Public Route component (redirects to dashboard if already logged in)
+// Public Route component (redirects to admin dashboard if already logged in as admin)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
   console.log(
     'PublicRoute - isLoading:',
     isLoading,
     'isAuthenticated:',
-    isAuthenticated()
+    isAuthenticated(),
+    'isAdmin:',
+    isAdmin()
   );
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (isAuthenticated()) {
-    console.log('User is authenticated, redirecting to dashboard');
-    return <Navigate to="/dashboard" replace />;
+  // Only redirect admins to admin dashboard, let regular users access public pages
+  if (isAuthenticated() && isAdmin()) {
+    console.log('Admin user accessing public route, redirecting to admin dashboard');
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return children;
@@ -76,75 +82,50 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public login route */}
-          <Route path="/login" element={<Login />} />
+          {/* Public routes with PublicLayout */}
+          <Route path="/" element={<PublicLayout />}>
+            <Route index element={<Homepage />} />
+            <Route path="booking" element={<BookingPage />} />
+            <Route path="booking-history" element={<div>Lịch sử đặt sân (Coming soon)</div>} />
+            <Route path="about" element={<div>Giới thiệu (Coming soon)</div>} />
+            <Route path="booking-confirmation" element={<div>Xác nhận đặt sân (Coming soon)</div>} />
+          </Route>
+          
+          {/* Login route (standalone) */}
+          {/* <Route 
+            path="/login" 
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } 
+          /> */}
 
-          {/* All routes wrapped in AppLayout */}
-          <Route path="/" element={<AppLayout />}>
-            {/* Public routes (user dashboard and menu) */}
+          {/* Admin routes with AppLayout */}
+          <Route path="/admin" element={<AppLayout />}>
+            <Route 
+              index 
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
+              path="dashboard"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            {/* Add more admin routes here as needed */}
             
-
-            {/* Admin-only routes */}
-
-            <Route
-              path=""
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path=""
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path=""
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <EmployeesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path=""
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <TablesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path=""
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <OrdersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path=""
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <InvoicesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path=""
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <ReportsPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Redirect admin root to dashboard */}
+            <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>
 
-          {/* Catch all route */}
+          {/* Catch all route - redirect to homepage */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 

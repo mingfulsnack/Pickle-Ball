@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Header.scss';
@@ -7,6 +7,7 @@ import './Header.scss';
 const Header = ({ isPublic = false }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = () => {
     navigate('/login');
@@ -17,11 +18,46 @@ const Header = ({ isPublic = false }) => {
     logout(); // AuthContext sẽ tự handle redirect
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   return (
     <header className={`header ${isPublic ? 'public' : ''}`}>
       <div className="header-content">
         <div className="header-left">
-          {/* Can add breadcrumbs or page title here */}
+          {/* Logo */}
+          <div className="logo" onClick={() => handleNavigation('/')}>
+            <div className="logo-icon">🍎</div>
+            <span className="logo-text">Pickleball Bồ Đề</span>
+          </div>
+          
+          {/* Navigation Menu (only for public layout) */}
+          {isPublic && (
+            <nav className="main-nav">
+              <ul className="nav-list">
+                <li className={`nav-item ${isActive('/') ? 'active' : ''}`}>
+                  <button onClick={() => handleNavigation('/')}>
+                    Trang chủ
+                  </button>
+                </li>
+                <li className={`nav-item ${isActive('/booking-history') ? 'active' : ''}`}>
+                  <button onClick={() => handleNavigation('/booking-history')}>
+                    Lịch sử đặt sân
+                  </button>
+                </li>
+                <li className={`nav-item ${isActive('/about') ? 'active' : ''}`}>
+                  <button onClick={() => handleNavigation('/about')}>
+                    Giới thiệu
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          )}
         </div>
 
         <div className="header-right">
@@ -29,7 +65,7 @@ const Header = ({ isPublic = false }) => {
             <div className="user-menu">
               <div className="user-info">
                 <FaUser className="user-icon" />
-                <span className="user-name">{user?.hoten || 'User'}</span>
+                <span className="user-name">{user?.full_name || user?.username || 'User'}</span>
               </div>
               <button
                 className="btn btn-secondary logout-btn"

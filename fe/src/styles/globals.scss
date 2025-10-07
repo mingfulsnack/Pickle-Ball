@@ -1,16 +1,6 @@
 @use './variables.scss' as *;
 @use 'sass:color';
 
-// Import component styles
-@import '../components/LoadingSpinner.scss';
-@import '../components/Modal.scss';
-@import '../components/Button.scss';
-@import '../components/menu/DishForm.scss';
-@import '../components/menu/CategoryForm.scss';
-@import '../components/menu/BuffetSetForm.scss';
-@import '../pages/BookingPage.scss';
-@import '../pages/AdminBookingsPage.scss';
-@import '../pages/EmployeesPage.scss';
 
 * {
   margin: 0;

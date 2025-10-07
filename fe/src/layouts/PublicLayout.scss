@@ -2,20 +2,21 @@
 
 .public-layout {
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #ffffff;
 
   .main-content {
-    padding-top: $header-height; // Account for fixed header height
-    min-height: calc(100vh - #{$header-height});
+    padding-top: 80px; // Account for fixed header height (80px for public header)
+    min-height: calc(100vh - 80px);
 
     .content-wrapper {
       width: 100%;
-      max-width: 1200px;
+      // Remove max-width and padding to let pages control their own layout
+      // max-width: 1200px;
       margin: 0 auto;
-      padding: 2rem;
+      // padding: 2rem;
 
       @media (max-width: 768px) {
-        padding: 1rem;
+        // padding: 1rem;
       }
     }
   }

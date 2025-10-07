@@ -14,6 +14,9 @@
   // Modifier cho public layout (không có sidebar)
   &.public {
     left: 0;
+    background-color: #ffffff;
+    height: 80px;
+    border-bottom: 1px solid #e0e0e0;
   }
 
   .header-content {
@@ -22,9 +25,84 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
 
     .header-left {
       flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        
+        &:hover {
+          transform: scale(1.05);
+        }
+        
+        .logo-icon {
+          font-size: 2rem;
+          color: #000000;
+        }
+        
+        .logo-text {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #000000;
+          text-decoration: none;
+        }
+      }
+      
+      .main-nav {
+        .nav-list {
+          display: flex;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          gap: 40px;
+          
+          .nav-item {
+            position: relative;
+            
+            button {
+              background: none;
+              border: none;
+              color: #212121;
+              font-size: 1rem;
+              font-weight: 500;
+              cursor: pointer;
+              padding: 8px 0;
+              transition: color 0.3s ease;
+              
+              &:hover {
+                color: #4CAF50;
+              }
+            }
+            
+            &.active {
+              button {
+                color: #212121;
+                font-weight: 600;
+              }
+              
+              &::after {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background-color: #000000;
+              }
+            }
+          }
+        }
+      }
     }
 
     .header-right {
@@ -32,11 +110,20 @@
       align-items: center;
 
       .login-btn {
-        background-color: #ffac1c;
-        border-color: #ffac1c;
+        background-color: #4CAF50;
+        border-color: #4CAF50;
+        color: white;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        
         &:hover {
-          background-color: darken(#ffac1c, 10%) !important;
+          background-color: #2E7D32 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
         }
+        
         display: flex;
         align-items: center;
         gap: $spacing-sm;

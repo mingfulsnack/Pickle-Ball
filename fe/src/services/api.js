@@ -94,6 +94,9 @@ export const authAPI = {
   getProfile: () => api.get('/auth/profile'),
 };
 
+// Public API exports
+export { publicApi };
+
 // API
 
 
