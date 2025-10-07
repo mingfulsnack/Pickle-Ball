@@ -157,19 +157,15 @@ const createBooking = async (req, res) => {
 const getBookingByToken = async (req, res) => {
   try {
     const { token } = req.params; // token maps to ma_pd
-    const booking = await PhieuDatSan.findBy({ column: 'ma_pd', value: token });
-    // PhieuDatSan.findBy helper expects (column,value) but model has findBy method
-    // Use query fallback
-    let result;
-    if (!booking) {
-      const q = await PhieuDatSan.query('SELECT * FROM phieu_dat_san WHERE ma_pd = $1', [token]);
-      result = q.rows[0];
-    } else {
-      result = booking;
-    }
+    
+    // Use query to find booking by ma_pd
+    const q = await PhieuDatSan.query('SELECT * FROM phieu_dat_san WHERE ma_pd = $1', [token]);
+    const result = q.rows[0];
+    
     if (!result) {
       return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt'));
     }
+    
     // fetch slots and services
     const slots = await ChiTietPhieuSan.query('SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1', [result.id]);
     const services = await ChiTietPhieuDichVu.query('SELECT * FROM chi_tiet_phieu_dich_vu WHERE phieu_dat_id = $1', [result.id]);

@@ -19,8 +19,6 @@ const { testConnection } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const publicRoutes = require('./routes/public');
 const bookingRoutes = require('./routes/bookings');
-const tableRoutes = require('./routes/tables');
-const menuRoutes = require('./routes/menu');
 const customerRoutes = require('./routes/customers');
 const employeeRoutes = require('./routes/employees');
 const reportRoutes = require('./routes/reports');
@@ -109,8 +107,6 @@ app.get('/health', async (req, res) => {
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/tables', tableRoutes);
-app.use('/api/menu', menuRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/reports', reportRoutes);
@@ -135,8 +131,6 @@ app.get('/', (req, res) => {
       courts: '/api/courts',
       availability: '/api/availability', 
       services: '/api/services',
-      tables: '/api/tables',
-      menu: '/api/menu',
       customers: '/api/customers',
       employees: '/api/employees',
       reports: '/api/reports',

@@ -1,10 +1,8 @@
 // Export tất cả models
 const BaseModel = require('./BaseModel');
-const Employee = require('./Employee');
+const User = require('./User');
 const Customer = require('./Customer');
-const Table = require('./Table');
 const Booking = require('./Booking');
-const Menu = require('./Menu');
 
 // New models for court booking system
 const San = require('./San');
@@ -20,11 +18,9 @@ const AvailabilityCache = require('./AvailabilityCache');
 
 module.exports = {
   BaseModel,
-  Employee,
+  User,
   Customer,
-  Table,
   Booking,
-  Menu,
   San,
   BangGiaSan,
   DichVu,
