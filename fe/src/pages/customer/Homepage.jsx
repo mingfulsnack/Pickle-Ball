@@ -296,7 +296,7 @@ const Homepage = () => {
             </div>
             <div className="footer-info">
               <p>Hệ thống sân pickleball hiện đại và chuyên nghiệp</p>
-              <p>📍 Địa chỉ: 123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
+              <p>📍 Địa chỉ: 237 đường Phú Viên, phố Bồ Đề, quận Long Biên, TP.Hà Nội</p>
               <p>📞 Hotline: 0900 123 456</p>
               <p>✉️ Email: contact@pickleballbode.com</p>
             </div>

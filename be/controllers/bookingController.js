@@ -11,6 +11,7 @@ const {
   formatResponse,
   formatErrorResponse,
   generateRandomString,
+  hashPassword,
 } = require('../utils/helpers');
 
 // Create booking (public)
@@ -107,6 +108,54 @@ const createBooking = async (req, res) => {
 
     // Create booking transactionally
     const booking = await PhieuDatSan.transaction(async (client) => {
+      let finalUserId = user_id;
+      
+      // If no user_id provided, create/find customer user
+      if (!finalUserId && customer) {
+        // Validate required customer info
+        if (!customer.full_name || !customer.phone) {
+          throw new Error('Vui lòng cung cấp đầy đủ tên và số điện thoại');
+        }
+        
+        const email = customer.email || `${customer.phone}@temp.local`;
+        const username = email;
+        const password = customer.phone; // Use phone as password
+        
+        // Check if user already exists by email or phone
+        const existingUserSql = `
+          SELECT id FROM users 
+          WHERE email = $1 OR phone = $2 
+          LIMIT 1
+        `;
+        const existingUserRes = await client.query(existingUserSql, [email, customer.phone]);
+        
+        if (existingUserRes.rows.length > 0) {
+          // User exists, use existing user
+          finalUserId = existingUserRes.rows[0].id;
+        } else {
+          // Create new customer user
+          const password_hash = await hashPassword(password);
+          
+          const createUserSql = `
+            INSERT INTO users (username, email, role, full_name, phone, password_hash)
+            VALUES ($1, $2, 'customer', $3, $4, $5)
+            RETURNING id
+          `;
+          const userRes = await client.query(createUserSql, [
+            username,
+            email,
+            customer.full_name,
+            customer.phone,
+            password_hash
+          ]);
+          finalUserId = userRes.rows[0].id;
+        }
+      }
+      
+      if (!finalUserId) {
+        throw new Error('Không thể tạo user cho booking');
+      }
+      
       // create phieu_dat_san
       const ma_pd = 'PD' + Date.now().toString().slice(-8) + generateRandomString(4);
       const insertBookingSql = `
@@ -116,7 +165,7 @@ const createBooking = async (req, res) => {
       `;
       const bookingRes = await client.query(insertBookingSql, [
         ma_pd,
-        user_id || null,
+        finalUserId,
         null,
         ngay_su_dung,
         'pending',
