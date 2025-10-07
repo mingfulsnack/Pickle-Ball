@@ -46,8 +46,11 @@
         }
         
         .logo-icon {
-          font-size: 2rem;
-          color: #000000;
+          /* image logo size: match the visual scale of the old emoji icon but smaller to avoid oversized logo */
+          width: 1.5rem;
+          height: 1.5rem;
+          display: block;
+          object-fit: contain;
         }
         
         .logo-text {
@@ -196,6 +199,15 @@
           .user-name,
           .user-role {
             display: none;
+          }
+        }
+      }
+      
+      .header-left {
+        .logo {
+          .logo-icon {
+            width: 1.25rem;
+            height: 1.25rem;
           }
         }
       }

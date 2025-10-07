@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Homepage.scss';
 import { publicApi } from '../../services/api';
+import appleImg from '../../assets/apple.png';
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -291,7 +292,7 @@ const Homepage = () => {
         <div className="footer-container">
           <div className="footer-content">
             <div className="footer-logo">
-              <div className="logo-icon">🍎</div>
+              <img src={appleImg} alt="Apple" className="logo-icon" />
               <span className="logo-text">Pickleball Bồ Đề</span>
             </div>
             <div className="footer-info">

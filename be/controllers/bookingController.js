@@ -156,11 +156,17 @@ const createBooking = async (req, res) => {
         throw new Error('Không thể tạo user cho booking');
       }
       
-      // create phieu_dat_san
+      // create phieu_dat_san (ensure columns for totals exist)
       const ma_pd = 'PD' + Date.now().toString().slice(-8) + generateRandomString(4);
+
+      // Ensure columns exist (safe: ADD COLUMN IF NOT EXISTS)
+      await client.query(`ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tien_san numeric DEFAULT 0`);
+      await client.query(`ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tien_dich_vu numeric DEFAULT 0`);
+      await client.query(`ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tong_tien numeric DEFAULT 0`);
+
       const insertBookingSql = `
-        INSERT INTO phieu_dat_san (ma_pd, user_id, created_by, ngay_su_dung, trang_thai, payment_method, is_paid, note)
-        VALUES ($1,$2,$3,$4,$5,$6,false,$7)
+        INSERT INTO phieu_dat_san (ma_pd, user_id, created_by, ngay_su_dung, trang_thai, payment_method, is_paid, note, tien_san, tien_dich_vu, tong_tien)
+        VALUES ($1,$2,$3,$4,$5,$6,false,$7,$8,$9,$10)
         RETURNING *
       `;
       const bookingRes = await client.query(insertBookingSql, [
@@ -171,6 +177,9 @@ const createBooking = async (req, res) => {
         'pending',
         payment_method || null,
         note || null,
+        slotsTotal,
+        servicesTotal,
+        grandTotal,
       ]);
       const created = bookingRes.rows[0];
 
@@ -215,11 +224,76 @@ const getBookingByToken = async (req, res) => {
       return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt'));
     }
     
-    // fetch slots and services
-    const slots = await ChiTietPhieuSan.query('SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1', [result.id]);
-    const services = await ChiTietPhieuDichVu.query('SELECT * FROM chi_tiet_phieu_dich_vu WHERE phieu_dat_id = $1', [result.id]);
+    // fetch slots
+    const slotsQ = await ChiTietPhieuSan.query('SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1', [result.id]);
+    const slots = slotsQ.rows || [];
 
-    res.json(formatResponse(true, { booking: result, slots: slots.rows, services: services.rows }, 'Lấy thông tin đặt sân thành công'));
+    // compute total hours from slots (expect time format HH:MM[:SS])
+    const parseToMinutes = (t) => {
+      if (!t) return 0;
+      const parts = t.split(':').map(Number);
+      return parts[0] * 60 + (parts[1] || 0);
+    };
+    const totalHours = slots.reduce((acc, s) => {
+      const start = parseToMinutes(s.start_time);
+      const end = parseToMinutes(s.end_time);
+      const dur = Math.max(0, (end - start) / 60);
+      return acc + dur;
+    }, 0);
+
+    // fetch services joined with dich_vu to get don_gia and loai
+    const servicesQ = await ChiTietPhieuDichVu.query(
+      `SELECT ctpd.*, dv.id as dv_id, dv.ma_dv, dv.ten_dv, dv.loai as dv_loai, dv.don_gia as dv_don_gia
+       FROM chi_tiet_phieu_dich_vu ctpd
+       LEFT JOIN dich_vu dv ON ctpd.dich_vu_id = dv.id
+       WHERE ctpd.phieu_dat_id = $1`,
+      [result.id]
+    );
+    const rawServices = servicesQ.rows || [];
+
+    // enrich services with dv info and compute lineTotal
+    const enrichedServices = rawServices.map((sv) => {
+      const so_luong = sv.so_luong || sv.qty || 1;
+      const don_gia = sv.don_gia !== null && sv.don_gia !== undefined ? parseFloat(sv.don_gia) : (sv.dv_don_gia !== null && sv.dv_don_gia !== undefined ? parseFloat(sv.dv_don_gia) : 0);
+      const loai = sv.dv_loai || null;
+      let lineTotal = 0;
+      if (loai === 'rent') {
+        lineTotal = don_gia * so_luong * totalHours;
+      } else {
+        lineTotal = don_gia * so_luong;
+      }
+      return {
+        ...sv,
+        so_luong,
+        don_gia,
+        lineTotal: Number(lineTotal.toFixed(2)),
+        dv: {
+          id: sv.dv_id || sv.dich_vu_id,
+          ma_dv: sv.ma_dv,
+          ten_dv: sv.ten_dv,
+          loai: loai,
+          don_gia: don_gia,
+        }
+      };
+    });
+
+    // Ensure totals are present in response (use stored values if available, else compute)
+    const bookingTotals = {
+      tien_san: result.tien_san !== undefined && result.tien_san !== null ? parseFloat(result.tien_san) : null,
+      tien_dich_vu: result.tien_dich_vu !== undefined && result.tien_dich_vu !== null ? parseFloat(result.tien_dich_vu) : null,
+      tong_tien: result.tong_tien !== undefined && result.tong_tien !== null ? parseFloat(result.tong_tien) : null,
+    };
+    if (bookingTotals.tong_tien === null) {
+      const slotsSum = slots.reduce((acc, s) => acc + parseFloat(s.don_gia || s.slotTotal || 0), 0);
+      const servicesSum = enrichedServices.reduce((acc, s) => acc + (s.lineTotal || 0), 0);
+      bookingTotals.tien_san = bookingTotals.tien_san === null ? Number(slotsSum.toFixed(2)) : bookingTotals.tien_san;
+      bookingTotals.tien_dich_vu = bookingTotals.tien_dich_vu === null ? Number(servicesSum.toFixed(2)) : bookingTotals.tien_dich_vu;
+      bookingTotals.tong_tien = Number((bookingTotals.tien_san + bookingTotals.tien_dich_vu).toFixed(2));
+    }
+
+    res.json(
+      formatResponse(true, { booking: result, slots, services: enrichedServices, totals: bookingTotals }, 'Lấy thông tin đặt sân thành công')
+    );
   } catch (error) {
     console.error('Get booking by token error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));

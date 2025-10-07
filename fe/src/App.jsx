@@ -14,6 +14,7 @@ import PublicLayout from './layouts/PublicLayout';
 // Customer/Public pages
 import Homepage from './pages/customer/Homepage';
 import BookingPage from './pages/customer/BookingPage';
+import BookingLookup from './pages/customer/BookingLookup';
 import Dashboard from './pages/customer/Dashboard';
 
 // Admin pages
@@ -86,7 +87,7 @@ function App() {
           <Route path="/" element={<PublicLayout />}>
             <Route index element={<Homepage />} />
             <Route path="booking" element={<BookingPage />} />
-            <Route path="booking-history" element={<div>Lịch sử đặt sân (Coming soon)</div>} />
+            <Route path="booking-history" element={<BookingLookup />} />
             <Route path="about" element={<div>Giới thiệu (Coming soon)</div>} />
             <Route path="booking-confirmation" element={<div>Xác nhận đặt sân (Coming soon)</div>} />
           </Route>

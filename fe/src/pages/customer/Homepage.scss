@@ -13,12 +13,21 @@
   --border-light: #E0E0E0;
   --white: #ffffff;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  /* ensure logo image on homepage matches the header icon scale */
+  .logo-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: block;
+    object-fit: contain;
+  }
 }
 
 /* Hero Section */
 .hero-section {
   background: var(--primary-green-light);
   padding: 80px 0;
+  
   
   .hero-content {
     max-width: 1200px;

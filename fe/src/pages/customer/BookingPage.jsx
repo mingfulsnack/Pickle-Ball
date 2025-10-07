@@ -51,6 +51,10 @@ const BookingPage = () => {
     if (!searchParams.date) return;
     
     setLoading(true);
+    // Clear previous selections/pricing when running a fresh availability check
+    setSelectedSlots([]);
+    setSelectedServices([]);
+    setPricing(null);
     try {
       const response = await publicApi.get('/public/availability', {
         params: searchParams
@@ -82,20 +86,37 @@ const BookingPage = () => {
   };
   
   const handleSlotToggle = (courtId, startTime, endTime) => {
-    const slotId = `${courtId}-${startTime}-${endTime}`;
-    const existingSlotIndex = selectedSlots.findIndex(
+    // Toggle exact match; otherwise add new slot but replace any overlapping slots for same court
+    const existingExactIndex = selectedSlots.findIndex(
       slot => slot.san_id === courtId && slot.start_time === startTime && slot.end_time === endTime
     );
-    
-    if (existingSlotIndex >= 0) {
-      setSelectedSlots(prev => prev.filter((_, index) => index !== existingSlotIndex));
-    } else {
-      setSelectedSlots(prev => [...prev, {
-        san_id: courtId,
-        start_time: startTime,
-        end_time: endTime
-      }]);
+
+    if (existingExactIndex >= 0) {
+      // exact match found -> toggle off
+      setSelectedSlots(prev => prev.filter((_, index) => index !== existingExactIndex));
+      return;
     }
+
+    // parse times to minutes for overlap checks
+    const parseToMinutes = (t) => {
+      const [hh, mm] = t.split(':').map(Number);
+      return hh * 60 + mm;
+    };
+    const newStart = parseToMinutes(startTime);
+    const newEnd = parseToMinutes(endTime);
+
+    // filter out overlapping slots for same court
+    const filtered = selectedSlots.filter(s => {
+      if (s.san_id !== courtId) return true; // keep slots for other courts
+      const sStart = parseToMinutes(s.start_time);
+      const sEnd = parseToMinutes(s.end_time);
+      // no overlap if newEnd <= sStart OR newStart >= sEnd
+      const noOverlap = newEnd <= sStart || newStart >= sEnd;
+      return noOverlap; // keep only non-overlapping
+    });
+
+    // Add the new slot (replace overlapping ones)
+    setSelectedSlots([...filtered, { san_id: courtId, start_time: startTime, end_time: endTime }]);
   };
   
   const handleServiceToggle = (serviceId, quantity = 1) => {

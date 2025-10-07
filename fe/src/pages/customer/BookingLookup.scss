@@ -1,0 +1,104 @@
+/* Booking Lookup Styles */
+.booking-lookup-page {
+  min-height: 60vh;
+  padding: 40px 20px;
+  background: #ffffff;
+
+  .lookup-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+  p {
+    color: #616161;
+    margin-bottom: 20px;
+  }
+
+  .lookup-form {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    input {
+      flex: 1;
+      padding: 12px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+
+  .lookup-error {
+    color: #F44336;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .lookup-result {
+    margin-top: 16px;
+
+    .booking-info {
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 8px 0;
+
+        .label {
+          width: 180px;
+          font-weight: 600;
+        }
+
+        .value {
+          color: #424242;
+        }
+      }
+
+      .slots {
+        display: grid;
+        gap: 12px;
+      }
+
+      .slot-item {
+        padding: 10px;
+        border-radius: 8px;
+        background: #f9f9f9;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .services-list {
+        margin-top: 12px;
+        display: grid;
+        gap: 8px;
+
+        .service-item {
+          padding: 10px;
+          background: #fafafa;
+          border-radius: 8px;
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+        }
+      }
+    }
+  }
+}

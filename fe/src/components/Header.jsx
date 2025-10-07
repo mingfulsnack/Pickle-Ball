@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import appleImg from '../assets/apple.png';
 import './Header.scss';
 
 const Header = ({ isPublic = false }) => {
@@ -32,7 +33,7 @@ const Header = ({ isPublic = false }) => {
         <div className="header-left">
           {/* Logo */}
           <div className="logo" onClick={() => handleNavigation('/')}>
-            <div className="logo-icon">🍎</div>
+            <img src={appleImg} alt="Apple" className="logo-icon" />
             <span className="logo-text">Pickleball Bồ Đề</span>
           </div>
           
