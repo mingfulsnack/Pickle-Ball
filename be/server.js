@@ -225,46 +225,8 @@ const startServer = async () => {
 // Start the server
 const server = startServer();
 
-// Scheduled jobs
-console.log('🕐 Setting up scheduled jobs...');
 
-// Chạy cleanup hàng ngày lúc 0:00
-cron.schedule(
-  '0 0 * * *',
-  async () => {
-    console.log('🧹 Running daily booking cleanup...');
-    await BookingCleanupService.runDailyCleanup();
-  },
-  {
-    timezone: 'Asia/Ho_Chi_Minh',
-  }
-);
 
-// Cập nhật booking quá hạn mỗi 30 phút
-cron.schedule(
-  '*/30 * * * *',
-  async () => {
-    console.log('⏰ Checking for expired bookings...');
-    await BookingCleanupService.updateExpiredBookings();
-  },
-  {
-    timezone: 'Asia/Ho_Chi_Minh',
-  }
-);
-
-// Cleanup booking đã hủy mỗi 10 phút
-cron.schedule(
-  '*/10 * * * *',
-  async () => {
-    console.log('🗑️ Cleaning up cancelled bookings...');
-    await BookingCleanupService.cleanupCancelledBookings();
-  },
-  {
-    timezone: 'Asia/Ho_Chi_Minh',
-  }
-);
-
-console.log('✅ Scheduled jobs configured');
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

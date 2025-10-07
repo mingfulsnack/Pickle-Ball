@@ -16,13 +16,11 @@ const authenticateToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Lấy thông tin nhân viên từ database
+    // Lấy thông tin user từ database
     const result = await pool.query(`
-      SELECT nv.*, vt.tenvaitro 
-      FROM nhanvien nv 
-      LEFT JOIN vai_tro vt ON nv.mavaitro = vt.mavaitro 
-      WHERE nv.manv = $1 AND nv.is_active = true
-    `, [decoded.manv]);
+      SELECT * FROM users 
+      WHERE id = $1 AND role IN ('staff', 'manager')
+    `, [decoded.id]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ 
@@ -52,7 +50,7 @@ const checkRole = (allowedRoles) => {
       });
     }
 
-    const userRole = req.user.tenvaitro;
+    const userRole = req.user.role;
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ 
         success: false, 

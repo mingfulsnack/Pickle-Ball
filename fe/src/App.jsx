@@ -11,19 +11,10 @@ import AppLayout from './layouts/AppLayout';
 import Login from './pages/Login';
 
 // User pages
-import UserDashboard from './pages/user/Dashboard';
-import UserMenuPage from './pages/user/MenuPage';
-import BookingPage from './pages/BookingPage';
+
 
 // Admin pages
-import AdminDashboard from './pages/Dashboard';
-import AdminMenuPage from './pages/admin/AdminMenuPage';
-import TablesPage from './pages/TablesPage';
-import AdminBookingsPage from './pages/AdminBookingsPage';
-import EmployeesPage from './pages/EmployeesPage';
-import OrdersPage from './pages/OrdersPage';
-import InvoicesPage from './pages/InvoicesPage';
-import ReportsPage from './pages/ReportsPage';
+
 import './styles/globals.scss';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -91,30 +82,28 @@ function App() {
           {/* All routes wrapped in AppLayout */}
           <Route path="/" element={<AppLayout />}>
             {/* Public routes (user dashboard and menu) */}
-            <Route index element={<UserDashboard />} />
-            <Route path="menu" element={<UserMenuPage />} />
-            <Route path="booking" element={<BookingPage />} />
+            
 
             {/* Admin-only routes */}
 
             <Route
-              path="admin/menu"
+              path=""
               element={
                 <ProtectedRoute adminOnly={true}>
-                  <AdminMenuPage />
+                  
                 </ProtectedRoute>
               }
             />
             <Route
-              path="admin/bookings"
+              path=""
               element={
                 <ProtectedRoute adminOnly={true}>
-                  <AdminBookingsPage />
+                  
                 </ProtectedRoute>
               }
             />
             <Route
-              path="admin/employees"
+              path=""
               element={
                 <ProtectedRoute adminOnly={true}>
                   <EmployeesPage />
@@ -122,7 +111,7 @@ function App() {
               }
             />
             <Route
-              path="admin/tables"
+              path=""
               element={
                 <ProtectedRoute adminOnly={true}>
                   <TablesPage />
@@ -130,7 +119,7 @@ function App() {
               }
             />
             <Route
-              path="admin/orders"
+              path=""
               element={
                 <ProtectedRoute adminOnly={true}>
                   <OrdersPage />
@@ -138,7 +127,7 @@ function App() {
               }
             />
             <Route
-              path="admin/invoices"
+              path=""
               element={
                 <ProtectedRoute adminOnly={true}>
                   <InvoicesPage />
@@ -146,7 +135,7 @@ function App() {
               }
             />
             <Route
-              path="admin/reports"
+              path=""
               element={
                 <ProtectedRoute adminOnly={true}>
                   <ReportsPage />

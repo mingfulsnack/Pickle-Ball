@@ -6,8 +6,17 @@ class User extends BaseModel {
     super('users'); // Using users table for employees with role filter
   }
 
-  // Find user by username
+  // Find user by username (any role)
   async findByUsername(username) {
+    const result = await this.query(
+      `SELECT * FROM users WHERE username = $1`,
+      [username]
+    );
+    return result.rows[0] || null;
+  }
+
+  // Find staff/manager by username (for authentication)
+  async findStaffByUsername(username) {
     const result = await this.query(
       `SELECT * FROM users WHERE username = $1 AND role IN ('staff', 'manager')`,
       [username]
@@ -57,26 +66,52 @@ class User extends BaseModel {
 
   // Get all users
   async findAllUsers(conditions = {}, page = 1, limit = 20) {
-    const baseConditions = [
-      { column: 'role', operator: 'IN', value: ['staff', 'manager'] }
-    ];
+    const baseConditions = [];
     
-    // Add additional conditions if provided
+    // Add role filter if provided
     if (conditions.role) {
-      baseConditions.push({ column: 'role', operator: '=', value: conditions.role });
+      if (Array.isArray(conditions.role)) {
+        baseConditions.push({ column: 'role', operator: 'IN', value: conditions.role });
+      } else {
+        baseConditions.push({ column: 'role', operator: '=', value: conditions.role });
+      }
     }
+    
+    // Add search filter if provided
     if (conditions.search) {
       baseConditions.push({ column: 'full_name', operator: 'ILIKE', value: `%${conditions.search}%` });
     }
 
     const offset = (page - 1) * limit;
     const users = await this.findAll(baseConditions, 'created_at DESC', limit, offset);
-
+    
     // Remove password hashes from response
     users.forEach(user => delete user.password_hash);
-
+    
     return users;
   }
+
+  // Get customer by phone
+  async findCustomerByPhone(phone) {
+    const result = await this.query(
+      `SELECT id, username, email, role, full_name, phone, created_at 
+       FROM users WHERE phone = $1 AND role = 'customer'`,
+      [phone]
+    );
+    return result.rows[0] || null;
+  }
+
+  // Check if phone exists
+  async isPhoneExists(phone, excludeId = null) {
+    let conditions = [{ column: 'phone', operator: '=', value: phone }];
+    if (excludeId) {
+      conditions.push({ column: 'id', operator: '!=', value: excludeId });
+    }
+    const users = await this.findAll(conditions);
+    return users.length > 0;
+  }
 }
+
+module.exports = new User();
 
 module.exports = new User();
