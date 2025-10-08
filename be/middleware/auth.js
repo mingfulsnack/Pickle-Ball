@@ -7,25 +7,28 @@ const authenticateToken = async (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Access token required' 
+    return res.status(401).json({
+      success: false,
+      message: 'Access token required',
     });
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Lấy thông tin user từ database
-    const result = await pool.query(`
+    const result = await pool.query(
+      `
       SELECT * FROM users 
-      WHERE id = $1 AND role IN ('staff', 'manager')
-    `, [decoded.id]);
+      WHERE id = $1
+    `,
+      [decoded.id]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid token or user not found' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token or user not found',
       });
     }
 
@@ -33,9 +36,9 @@ const authenticateToken = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Auth error:', error);
-    return res.status(403).json({ 
-      success: false, 
-      message: 'Invalid or expired token' 
+    return res.status(403).json({
+      success: false,
+      message: 'Invalid or expired token',
     });
   }
 };
@@ -44,17 +47,17 @@ const authenticateToken = async (req, res, next) => {
 const checkRole = (allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Authentication required' 
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
       });
     }
 
     const userRole = req.user.role;
     if (!allowedRoles.includes(userRole)) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Insufficient permissions' 
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions',
       });
     }
 
@@ -66,33 +69,36 @@ const checkRole = (allowedRoles) => {
 const checkPermission = (requiredPermission) => {
   return async (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Authentication required' 
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
       });
     }
 
     try {
-      const result = await pool.query(`
+      const result = await pool.query(
+        `
         SELECT q.tenquyen 
         FROM vaitro_quyen vq
         JOIN quyen q ON vq.maquyen = q.maquyen
         WHERE vq.mavaitro = $1 AND q.tenquyen = $2
-      `, [req.user.mavaitro, requiredPermission]);
+      `,
+        [req.user.mavaitro, requiredPermission]
+      );
 
       if (result.rows.length === 0) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Permission denied' 
+        return res.status(403).json({
+          success: false,
+          message: 'Permission denied',
         });
       }
 
       next();
     } catch (error) {
       console.error('Permission check error:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Permission check failed' 
+      return res.status(500).json({
+        success: false,
+        message: 'Permission check failed',
       });
     }
   };
@@ -101,5 +107,5 @@ const checkPermission = (requiredPermission) => {
 module.exports = {
   authenticateToken,
   checkRole,
-  checkPermission
+  checkPermission,
 };

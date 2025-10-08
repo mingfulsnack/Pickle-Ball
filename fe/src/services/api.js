@@ -89,7 +89,8 @@ publicApi.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
+  // register should use publicApi (no auth token)
+  register: (userData) => publicApi.post('/auth/register', userData),
   logout: () => api.post('/auth/logout'),
   getProfile: () => api.get('/auth/profile'),
 };
@@ -98,6 +99,5 @@ export const authAPI = {
 export { publicApi };
 
 // API
-
 
 export default api;

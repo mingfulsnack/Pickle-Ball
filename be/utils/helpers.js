@@ -10,13 +10,23 @@ const hashPassword = async (password) => {
 
 // Verify password
 const verifyPassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
+  // If stored password is a bcrypt hash (starts with $2), use bcrypt.compare
+  try {
+    if (typeof hashedPassword === 'string' && hashedPassword.startsWith('$2')) {
+      return await bcrypt.compare(password, hashedPassword);
+    }
+    // legacy: stored as plain text (seed data). Fall back to direct compare
+    return password === hashedPassword;
+  } catch (err) {
+    console.error('verifyPassword error:', err);
+    return false;
+  }
 };
 
 // Generate JWT token
 const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 };
 
@@ -30,7 +40,7 @@ const isTimeInRange = (time, startTime, endTime) => {
   const current = moment(time, 'HH:mm');
   const start = moment(startTime, 'HH:mm');
   const end = moment(endTime, 'HH:mm');
-  
+
   return current.isBetween(start, end, null, '[]');
 };
 
@@ -42,10 +52,13 @@ const generateBookingToken = () => {
 // Calculate discount amount
 const calculateDiscount = (total, promotion) => {
   if (!promotion || !promotion.is_active) return 0;
-  
+
   switch (promotion.loai_km) {
     case 'percentage':
-      return Math.min(total * (promotion.giatri / 100), promotion.max_discount || total);
+      return Math.min(
+        total * (promotion.giatri / 100),
+        promotion.max_discount || total
+      );
     case 'fixed':
       return Math.min(promotion.giatri, total);
     default:
@@ -67,7 +80,8 @@ const isValidEmail = (email) => {
 
 // Generate random string
 const generateRandomString = (length = 8) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const chars =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -80,33 +94,33 @@ const getPaginationOffset = (page, limit) => {
   const currentPage = Math.max(1, parseInt(page) || 1);
   const currentLimit = Math.max(1, Math.min(100, parseInt(limit) || 10));
   const offset = (currentPage - 1) * currentLimit;
-  
+
   return { offset, limit: currentLimit, page: currentPage };
 };
 
 // Response formatter
 const formatResponse = (success, data = null, message = '', meta = null) => {
   const response = { success, message };
-  
+
   if (data !== null) {
     response.data = data;
   }
-  
+
   if (meta) {
     response.meta = meta;
   }
-  
+
   return response;
 };
 
 // Error response formatter
 const formatErrorResponse = (message, details = null) => {
   const response = { success: false, message };
-  
+
   if (details) {
     response.details = details;
   }
-  
+
   return response;
 };
 
@@ -123,5 +137,5 @@ module.exports = {
   generateRandomString,
   getPaginationOffset,
   formatResponse,
-  formatErrorResponse
+  formatErrorResponse,
 };

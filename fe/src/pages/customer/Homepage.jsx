@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import './Homepage.scss';
 import { publicApi } from '../../services/api';
 import appleImg from '../../assets/apple.png';
+import pickleballImg from '../../assets/pickleball.png';
 
 const Homepage = () => {
   const navigate = useNavigate();
   const [bookingForm, setBookingForm] = useState({
     date: '',
     startTime: '',
-    endTime: ''
+    endTime: '',
   });
   const [courts, setCourts] = useState([]);
   const [services, setServices] = useState([]);
@@ -40,9 +41,9 @@ const Homepage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setBookingForm(prev => ({
+    setBookingForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -58,16 +59,16 @@ const Homepage = () => {
         params: {
           date: bookingForm.date,
           start_time: bookingForm.startTime,
-          end_time: bookingForm.endTime
-        }
+          end_time: bookingForm.endTime,
+        },
       });
-      
+
       // Navigate to booking page with search results
-      navigate('/booking', { 
-        state: { 
+      navigate('/booking', {
+        state: {
           availability: response.data.data,
-          searchParams: bookingForm
-        }
+          searchParams: bookingForm,
+        },
       });
     } catch (error) {
       console.error('Error checking availability:', error);
@@ -95,14 +96,14 @@ const Homepage = () => {
         <div className="hero-content">
           <div className="hero-left">
             <div className="feature-badge">
-              <span className="leaf-icon">🌿</span>
+              <img src={appleImg} alt="Apple" className="logo-icon" />
               <span>Easy court rentals</span>
             </div>
             <h1 className="hero-title">
               Thuê sân pickleball ngay chỉ trong vài giây
             </h1>
             <p className="hero-description">
-              Real-time availability, flexible time slots, and hassle-free 
+              Real-time availability, flexible time slots, and hassle-free
               management. Book your racquet and play today!
             </p>
             <button className="cta-button" onClick={handleBookNow}>
@@ -111,17 +112,21 @@ const Homepage = () => {
           </div>
           <div className="hero-right">
             <div className="hero-image">
-              <img 
-                src="/src/assets/pickleball-court.jpg" 
+              <img
+                src="/src/assets/pickleball-court.jpg"
                 alt="Sân pickleball"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
-              <div className="image-placeholder" style={{display: 'none'}}>
-                <span>🏓</span>
-                <p>Sân Pickleball</p>
+              <div className="image-placeholder" style={{ display: 'none' }}>
+                <img
+                  src={pickleballImg}
+                  alt="Sân Pickleball"
+                  className="placeholder-court-image"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               </div>
             </div>
           </div>
@@ -134,17 +139,17 @@ const Homepage = () => {
           <div className="feature-card">
             <div className="feature-icon">📍</div>
             <h3>Sân có sẵn</h3>
-            <p>Luôn có sân trống để bạn lựa chọn trong ngày</p>
+            <p>Có thể xem các sân có sẵn và thực hiện đặt sân ngay</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">⏰</div>
             <h3>Giờ chơi linh hoạt</h3>
-            <p>Đặt sân theo thời gian phù hợp với lịch trình của bạn</p>
+            <p>Khách hàng có thể chọn giờ chơi theo ý muốn</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">🎯</div>
             <h3>Ưu đãi đặc biệt</h3>
-            <p>Nhận giảm giá và khuyến mãi hấp dẫn mỗi tháng</p>
+            <p>Ưu đãi giá sân vào các ngày thường</p>
           </div>
         </div>
       </section>
@@ -171,8 +176,10 @@ const Homepage = () => {
                 onChange={handleInputChange}
               >
                 <option value="">Chọn giờ</option>
-                {timeOptions.map(time => (
-                  <option key={time} value={time}>{time}</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
                 ))}
               </select>
             </div>
@@ -184,13 +191,15 @@ const Homepage = () => {
                 onChange={handleInputChange}
               >
                 <option value="">Chọn giờ</option>
-                {timeOptions.map(time => (
-                  <option key={time} value={time}>{time}</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
                 ))}
               </select>
             </div>
-            <button 
-              className="search-button" 
+            <button
+              className="search-button"
               onClick={handleSearch}
               disabled={loading}
             >
@@ -213,14 +222,13 @@ const Homepage = () => {
               </div>
               <h3>Đáp ứng mọi khung giờ</h3>
               <p>
-                Pickleball Bồ Đề cung cấp dịch vụ cho thuê sân từ 6h sáng đến 10h tối, 
-                phù hợp với mọi lịch trình của bạn. Hệ thống đặt sân trực tuyến 
-                giúp bạn dễ dàng chọn thời gian phù hợp.
+                Pickleball Bồ Đề cung cấp tới khách hàng các khung giờ đẹp và hợp lý. Tổng đài của chúng tôi luôn sẵn sàng hỗ trợ khách hàng, mang lại sự tiện lợi và thoải mái cho khách hàng trong quá trình sử dụng dịch vụ.
+
               </p>
               <ul className="service-features">
-                <li>✅ Mở cửa từ 6h sáng đến 10h tối</li>
-                <li>✅ Đặt sân trực tuyến 24/7</li>
-                <li>✅ Xác nhận đặt sân tức thì</li>
+                <li>Mở cửa từ 6h sáng đến 10h tối</li>
+                <li>Đặt sân trực tuyến 24/7</li>
+                <li>Xác nhận đặt sân tức thì</li>
               </ul>
             </div>
 
@@ -232,14 +240,14 @@ const Homepage = () => {
               </div>
               <h3>Tiện ích cao cấp</h3>
               <p>
-                Hệ thống sân được trang bị đầy đủ tiện nghi hiện đại, 
-                từ thiết bị cho thuê đến dịch vụ hỗ trợ chuyên nghiệp. 
-                Mang đến trải nghiệm chơi tốt nhất cho khách hàng.
+                Hệ thống sân được trang bị đầy đủ tiện nghi hiện đại, từ thiết
+                bị cho thuê đến dịch vụ hỗ trợ chuyên nghiệp. Mang đến trải
+                nghiệm chơi tốt nhất cho khách hàng.
               </p>
               <ul className="service-features">
-                <li>✅ Thiết bị cho thuê chất lượng cao</li>
-                <li>✅ Sân tiêu chuẩn quốc tế</li>
-                <li>✅ Hệ thống chiếu sáng LED</li>
+                <li>Thiết bị cho thuê chất lượng cao</li>
+                <li>Sân tiêu chuẩn quốc tế</li>
+                <li>Hệ thống chiếu sáng LED</li>
               </ul>
             </div>
 
@@ -251,14 +259,12 @@ const Homepage = () => {
               </div>
               <h3>Đẳng cấp dịch vụ</h3>
               <p>
-                Đội ngũ nhân viên chuyên nghiệp, tận tâm phục vụ khách hàng 
-                với thái độ nhiệt tình. Cam kết mang đến trải nghiệm 
-                đặt sân và chơi thể thao tuyệt vời nhất.
+                Đội ngũ nhân viên  phục vụ chuyên nghiệp. Pickleball Bồ Đề luôn đặt chất lượng dịch vụ lên hàng đầu với khẩu hiệu “Chất lượng là danh dự”. 
               </p>
               <ul className="service-features">
-                <li>✅ Nhân viên hỗ trợ 24/7</li>
-                <li>✅ Chính sách hoàn tiền linh hoạt</li>
-                <li>✅ Chương trình khách hàng thân thiết</li>
+                <li>Nhân viên hỗ trợ 24/7</li>
+                <li>Chính sách hoàn tiền linh hoạt</li>
+                <li>Chương trình khách hàng thân thiết</li>
               </ul>
             </div>
           </div>
@@ -297,7 +303,10 @@ const Homepage = () => {
             </div>
             <div className="footer-info">
               <p>Hệ thống sân pickleball hiện đại và chuyên nghiệp</p>
-              <p>📍 Địa chỉ: 237 đường Phú Viên, phố Bồ Đề, quận Long Biên, TP.Hà Nội</p>
+              <p>
+                📍 Địa chỉ: 237 đường Phú Viên, phố Bồ Đề, quận Long Biên, TP.Hà
+                Nội
+              </p>
               <p>📞 Hotline: 0900 123 456</p>
               <p>✉️ Email: contact@pickleballbode.com</p>
             </div>

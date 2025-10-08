@@ -12,9 +12,9 @@ const getAvailability = async (req, res) => {
 
     // Lấy tất cả sân
     const courts = await San.findAll({ activeOnly: true });
-    
+
     const availability = [];
-    
+
     for (const court of courts) {
       let isAvailable = true;
       let conflictDetails = null;
@@ -26,6 +26,9 @@ const getAvailability = async (req, res) => {
           [court.id, date, start_time, end_time]
         );
         isAvailable = checkResult.rows[0].available;
+        console.debug(
+          `Checked availability court=${court.id} date=${date} start=${start_time} end=${end_time} => available=${isAvailable}`
+        );
 
         if (!isAvailable) {
           // Lấy thông tin booking xung đột
@@ -51,7 +54,7 @@ const getAvailability = async (req, res) => {
            ORDER BY ctps.start_time`,
           [court.id, date]
         );
-        
+
         conflictDetails = dayBookings.rows;
         isAvailable = dayBookings.rows.length === 0;
       }
@@ -62,11 +65,13 @@ const getAvailability = async (req, res) => {
         ten_san: court.ten_san,
         suc_chua: court.suc_chua,
         is_available: isAvailable,
-        bookings: conflictDetails || []
+        bookings: conflictDetails || [],
       });
     }
 
-    res.json(formatResponse(true, availability, 'Kiểm tra tình trạng sân thành công'));
+    res.json(
+      formatResponse(true, availability, 'Kiểm tra tình trạng sân thành công')
+    );
   } catch (error) {
     console.error('Get availability error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -105,9 +110,9 @@ const getCourtAvailableSlots = async (req, res) => {
     for (let hour = 6; hour < 23; hour++) {
       const start = `${hour.toString().padStart(2, '0')}:00`;
       const end = `${(hour + 1).toString().padStart(2, '0')}:00`;
-      
+
       // Kiểm tra xem khung giờ này có bị trùng không
-      const isBooked = bookedSlots.rows.some(booking => {
+      const isBooked = bookedSlots.rows.some((booking) => {
         const bookingStart = booking.start_time;
         const bookingEnd = booking.end_time;
         return !(end <= bookingStart || start >= bookingEnd);
@@ -116,18 +121,24 @@ const getCourtAvailableSlots = async (req, res) => {
       allSlots.push({
         start_time: start,
         end_time: end,
-        is_available: !isBooked
+        is_available: !isBooked,
       });
     }
 
-    res.json(formatResponse(true, {
-      san_id: parseInt(san_id),
-      ma_san: court.ma_san,
-      ten_san: court.ten_san,
-      date,
-      slots: allSlots,
-      booked_slots: bookedSlots.rows
-    }, 'Lấy khung giờ trống thành công'));
+    res.json(
+      formatResponse(
+        true,
+        {
+          san_id: parseInt(san_id),
+          ma_san: court.ma_san,
+          ten_san: court.ten_san,
+          date,
+          slots: allSlots,
+          booked_slots: bookedSlots.rows,
+        },
+        'Lấy khung giờ trống thành công'
+      )
+    );
   } catch (error) {
     console.error('Get court available slots error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -140,7 +151,9 @@ const calculatePrice = async (req, res) => {
     const { ngay_su_dung, slots, services = [] } = req.body;
 
     if (!ngay_su_dung || !Array.isArray(slots) || slots.length === 0) {
-      return res.status(400).json(formatErrorResponse('Thiếu thông tin ngày và khung giờ'));
+      return res
+        .status(400)
+        .json(formatErrorResponse('Thiếu thông tin ngày và khung giờ'));
     }
 
     const calculations = [];
@@ -149,7 +162,7 @@ const calculatePrice = async (req, res) => {
     // Tính giá từng slot
     for (const slot of slots) {
       const { san_id, start_time, end_time } = slot;
-      
+
       // Kiểm tra availability
       const availResult = await San.query(
         `SELECT is_court_available($1, $2::date, $3::time, $4::time) as available`,
@@ -157,11 +170,22 @@ const calculatePrice = async (req, res) => {
       );
 
       if (!availResult.rows[0].available) {
-        return res.status(409).json(formatErrorResponse(`Sân ${san_id} không trống trong khung ${start_time}-${end_time}`));
+        return res
+          .status(409)
+          .json(
+            formatErrorResponse(
+              `Sân ${san_id} không trống trong khung ${start_time}-${end_time}`
+            )
+          );
       }
 
       // Tính giá
-      const priceResult = await BangGiaSan.calcTotalPriceForSlot(san_id, ngay_su_dung, start_time, end_time);
+      const priceResult = await BangGiaSan.calcTotalPriceForSlot(
+        san_id,
+        ngay_su_dung,
+        start_time,
+        end_time
+      );
       const slotPrice = parseFloat(priceResult || 0);
       totalSlotsPrice += slotPrice;
 
@@ -169,7 +193,7 @@ const calculatePrice = async (req, res) => {
         san_id,
         start_time,
         end_time,
-        price: slotPrice
+        price: slotPrice,
       });
     }
 
@@ -186,12 +210,17 @@ const calculatePrice = async (req, res) => {
 
     for (const service of services) {
       const { dich_vu_id, so_luong = 1 } = service;
-      
-      const serviceQuery = await San.query('SELECT * FROM dich_vu WHERE id = $1', [dich_vu_id]);
+
+      const serviceQuery = await San.query(
+        'SELECT * FROM dich_vu WHERE id = $1',
+        [dich_vu_id]
+      );
       const serviceInfo = serviceQuery.rows[0];
-      
+
       if (!serviceInfo) {
-        return res.status(404).json(formatErrorResponse(`Không tìm thấy dịch vụ ${dich_vu_id}`));
+        return res
+          .status(404)
+          .json(formatErrorResponse(`Không tìm thấy dịch vụ ${dich_vu_id}`));
       }
 
       let servicePrice = 0;
@@ -209,23 +238,29 @@ const calculatePrice = async (req, res) => {
         don_gia: parseFloat(serviceInfo.don_gia),
         so_luong,
         total_hours: serviceInfo.loai === 'rent' ? totalHours : 1,
-        price: servicePrice
+        price: servicePrice,
       });
     }
 
     const grandTotal = totalSlotsPrice + totalServicesPrice;
 
-    res.json(formatResponse(true, {
-      ngay_su_dung,
-      total_hours: totalHours,
-      slots: calculations,
-      services: serviceCalculations,
-      summary: {
-        slots_total: totalSlotsPrice,
-        services_total: totalServicesPrice,
-        grand_total: grandTotal
-      }
-    }, 'Tính giá thành công'));
+    res.json(
+      formatResponse(
+        true,
+        {
+          ngay_su_dung,
+          total_hours: totalHours,
+          slots: calculations,
+          services: serviceCalculations,
+          summary: {
+            slots_total: totalSlotsPrice,
+            services_total: totalServicesPrice,
+            grand_total: grandTotal,
+          },
+        },
+        'Tính giá thành công'
+      )
+    );
   } catch (error) {
     console.error('Calculate price error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -235,5 +270,5 @@ const calculatePrice = async (req, res) => {
 module.exports = {
   getAvailability,
   getCourtAvailableSlots,
-  calculatePrice
+  calculatePrice,
 };

@@ -15,7 +15,10 @@ import PublicLayout from './layouts/PublicLayout';
 import Homepage from './pages/customer/Homepage';
 import BookingPage from './pages/customer/BookingPage';
 import BookingLookup from './pages/customer/BookingLookup';
+import BookingConfirmation from './pages/customer/BookingConfirmation';
 import Dashboard from './pages/customer/Dashboard';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 
 // Admin pages
 
@@ -69,9 +72,17 @@ const PublicRoute = ({ children }) => {
     return <div>Loading...</div>;
   }
 
-  // Only redirect admins to admin dashboard, let regular users access public pages
-  if (isAuthenticated() && isAdmin()) {
-    console.log('Admin user accessing public route, redirecting to admin dashboard');
+  // Require authentication for public routes
+  if (!isAuthenticated()) {
+    console.log('PublicRoute - user not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+
+  // If an admin user is accessing public route, redirect to admin dashboard
+  if (isAdmin()) {
+    console.log(
+      'Admin user accessing public route, redirecting to admin dashboard'
+    );
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -84,14 +95,28 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes with PublicLayout */}
-          <Route path="/" element={<PublicLayout />}>
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <PublicLayout />
+              </PublicRoute>
+            }
+          >
             <Route index element={<Homepage />} />
             <Route path="booking" element={<BookingPage />} />
             <Route path="booking-history" element={<BookingLookup />} />
             <Route path="about" element={<div>Giới thiệu (Coming soon)</div>} />
-            <Route path="booking-confirmation" element={<div>Xác nhận đặt sân (Coming soon)</div>} />
+            <Route
+              path="booking-confirmation"
+              element={<BookingConfirmation />}
+            />
           </Route>
-          
+
+          {/* Auth routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
           {/* Login route (standalone) */}
           {/* <Route 
             path="/login" 
@@ -104,13 +129,13 @@ function App() {
 
           {/* Admin routes with AppLayout */}
           <Route path="/admin" element={<AppLayout />}>
-            <Route 
-              index 
+            <Route
+              index
               element={
                 <ProtectedRoute adminOnly={true}>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route
               path="dashboard"
@@ -121,9 +146,12 @@ function App() {
               }
             />
             {/* Add more admin routes here as needed */}
-            
+
             {/* Redirect admin root to dashboard */}
-            <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route
+              path=""
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
           </Route>
 
           {/* Catch all route - redirect to homepage */}

@@ -9,7 +9,7 @@
     margin: 0 auto;
     padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
   }
 
   h1 {
@@ -35,7 +35,7 @@
     }
 
     button {
-      background: #4CAF50;
+      background: #4caf50;
       color: white;
       border: none;
       padding: 12px 18px;
@@ -46,58 +46,95 @@
   }
 
   .lookup-error {
-    color: #F44336;
+    color: #f44336;
     margin-bottom: 16px;
     font-weight: 600;
   }
 
   .lookup-result {
     margin-top: 16px;
+    .booking-card {
+      display: grid;
+      gap: 12px;
 
-    .booking-info {
-      .row {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        padding: 8px 0;
-
-        .label {
-          width: 180px;
-          font-weight: 600;
-        }
-
-        .value {
-          color: #424242;
-        }
+      article.booking-card {
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+        background: #fff;
+        margin-bottom: 14px;
+        border: 1px solid rgba(0, 0, 0, 0.03);
       }
 
-      .slots {
-        display: grid;
-        gap: 12px;
-      }
-
-      .slot-item {
-        padding: 10px;
-        border-radius: 8px;
-        background: #f9f9f9;
+      .card-head {
         display: flex;
         justify-content: space-between;
-        gap: 12px;
+        align-items: center;
+        margin-bottom: 8px;
       }
 
-      .services-list {
-        margin-top: 12px;
-        display: grid;
-        gap: 8px;
+      .code {
+        font-weight: 700;
+        color: #1e88e5;
+      }
 
-        .service-item {
-          padding: 10px;
-          background: #fafafa;
-          border-radius: 8px;
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-        }
+      .status {
+        padding: 6px 10px;
+        border-radius: 20px;
+        text-transform: capitalize;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .badge-pending {
+        background: #fff7e6;
+        color: #ff9800;
+      }
+      .badge-confirmed {
+        background: #e8f5e9;
+        color: #43a047;
+      }
+      .badge-cancelled {
+        background: #ffebee;
+        color: #e53935;
+      }
+
+      .card-body {
+        display: flex;
+        gap: 16px;
+        flex-direction: column;
+      }
+      .body-row {
+        display: flex;
+        justify-content: space-between;
+      }
+      .label {
+        color: #757575;
+        font-weight: 600;
+      }
+      .value {
+        color: #212121;
+      }
+      .total {
+        font-weight: 700;
+        color: #1e88e5;
+      }
+
+      .card-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: none;
+      }
+      .btn-outline {
+        background: transparent;
+        border: 1px solid #e0e0e0;
       }
     }
   }

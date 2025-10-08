@@ -1,43 +1,56 @@
 const { User } = require('../models');
-const { verifyPassword, generateToken, formatResponse, formatErrorResponse } = require('../utils/helpers');
+const {
+  verifyPassword,
+  generateToken,
+  formatResponse,
+  formatErrorResponse,
+} = require('../utils/helpers');
 
 // Đăng nhập
 const login = async (req, res) => {
   try {
-    const { tendangnhap, matkhau } = req.body;
+    console.debug('Login payload:', req.body);
+    // accept both 'username'/'password' and legacy 'tendangnhap'/'matkhau'
+    const username = req.body.username || req.body.tendangnhap;
+    const password = req.body.password || req.body.matkhau;
 
-    if (!tendangnhap || !matkhau) {
-      return res.status(400).json(formatErrorResponse('Tên đăng nhập và mật khẩu là bắt buộc'));
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Tên đăng nhập và mật khẩu là bắt buộc'));
     }
 
-    // Tìm nhân viên
-    const employee = await User.findStaffByUsername(tendangnhap);
+    // Find any user by username (allow customers as well)
+    const user = await User.findByUsername(username);
 
-    if (!employee) {
-      return res.status(401).json(formatErrorResponse('Tên đăng nhập hoặc mật khẩu không đúng'));
+    if (!user) {
+      return res
+        .status(401)
+        .json(formatErrorResponse('Tên đăng nhập hoặc mật khẩu không đúng'));
     }
 
-    // Kiểm tra mật khẩu
-    const isValidPassword = await verifyPassword(matkhau, employee.password_hash);
+    // Verify password
+    const isValidPassword = await verifyPassword(password, user.password_hash);
     if (!isValidPassword) {
-      return res.status(401).json(formatErrorResponse('Tên đăng nhập hoặc mật khẩu không đúng'));
+      return res
+        .status(401)
+        .json(formatErrorResponse('Tên đăng nhập hoặc mật khẩu không đúng'));
     }
 
-    // Tạo token
+    // Create token
     const token = generateToken({
-      id: employee.id,
-      username: employee.username,
-      role: employee.role
+      id: user.id,
+      username: user.username,
+      role: user.role,
     });
 
-    // Loại bỏ mật khẩu khỏi response
-    delete employee.password_hash;
+    // Remove password before returning
+    const safeUser = { ...user };
+    delete safeUser.password_hash;
 
-    res.json(formatResponse(true, {
-      token,
-      employee
-    }, 'Đăng nhập thành công'));
-
+    res.json(
+      formatResponse(true, { token, user: safeUser }, 'Đăng nhập thành công')
+    );
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -51,30 +64,40 @@ const changePassword = async (req, res) => {
     const userId = req.user.id;
 
     if (!matkhau_cu || !matkhau_moi) {
-      return res.status(400).json(formatErrorResponse('Mật khẩu cũ và mật khẩu mới là bắt buộc'));
+      return res
+        .status(400)
+        .json(formatErrorResponse('Mật khẩu cũ và mật khẩu mới là bắt buộc'));
     }
 
     if (matkhau_moi.length < 6) {
-      return res.status(400).json(formatErrorResponse('Mật khẩu mới phải có ít nhất 6 ký tự'));
+      return res
+        .status(400)
+        .json(formatErrorResponse('Mật khẩu mới phải có ít nhất 6 ký tự'));
     }
 
     // Lấy thông tin nhân viên hiện tại
     const employee = await User.findById(userId);
     if (!employee) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy nhân viên'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy nhân viên'));
     }
 
     // Kiểm tra mật khẩu cũ
-    const isValidOldPassword = await verifyPassword(matkhau_cu, employee.password_hash);
+    const isValidOldPassword = await verifyPassword(
+      matkhau_cu,
+      employee.password_hash
+    );
     if (!isValidOldPassword) {
-      return res.status(400).json(formatErrorResponse('Mật khẩu cũ không đúng'));
+      return res
+        .status(400)
+        .json(formatErrorResponse('Mật khẩu cũ không đúng'));
     }
 
     // Cập nhật mật khẩu
     await User.updatePassword(userId, matkhau_moi);
 
     res.json(formatResponse(true, null, 'Đổi mật khẩu thành công'));
-
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -89,11 +112,14 @@ const getProfile = async (req, res) => {
     const employee = await User.findByIdWithPermissions(userId);
 
     if (!employee) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy thông tin nhân viên'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy thông tin nhân viên'));
     }
 
-    res.json(formatResponse(true, employee, 'Lấy thông tin profile thành công'));
-
+    res.json(
+      formatResponse(true, employee, 'Lấy thông tin profile thành công')
+    );
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -103,5 +129,48 @@ const getProfile = async (req, res) => {
 module.exports = {
   login,
   changePassword,
-  getProfile
+  getProfile,
 };
+
+// Public registration for customers
+const register = async (req, res) => {
+  try {
+    const { username, email, password, full_name, phone } = req.body;
+
+    if (!username || !password || !full_name) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Thiếu thông tin đăng ký'));
+    }
+
+    // check existing
+    const existing = await User.findByUsername(username);
+    if (existing) {
+      return res
+        .status(409)
+        .json(formatErrorResponse('Tên tài khoản đã tồn tại'));
+    }
+
+    const password_hash = await require('../utils/helpers').hashPassword(
+      password
+    );
+    const created = await User.create({
+      username,
+      email,
+      password_hash,
+      role: 'customer',
+      full_name,
+      phone,
+    });
+
+    res
+      .status(201)
+      .json(formatResponse(true, { user: created }, 'Đăng ký thành công'));
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
+// export register as well
+module.exports.register = register;

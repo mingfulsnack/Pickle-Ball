@@ -18,9 +18,19 @@ const validate = (schema) => {
 const schemas = {
   // Đăng nhập
   login: Joi.object({
-    tendangnhap: Joi.string().required(),
-    matkhau: Joi.string().required(),
-  }),
+    tendangnhap: Joi.string().optional(),
+    matkhau: Joi.string().optional(),
+    username: Joi.string().optional(),
+    password: Joi.string().optional(),
+  }).custom((value, helpers) => {
+    // Require either (tendangnhap + matkhau) OR (username + password)
+    const hasUser = !!(value.tendangnhap || value.username);
+    const hasPass = !!(value.matkhau || value.password);
+    if (!hasUser || !hasPass) {
+      return helpers.error('any.invalid');
+    }
+    return value;
+  }, 'login field check'),
 
   // Nhân viên
   employee: Joi.object({
@@ -67,8 +77,12 @@ const schemas = {
       .items(
         Joi.object({
           san_id: Joi.number().integer().positive().required(),
-          start_time: Joi.string().pattern(/^([01]\d|2[0-3]):00$/).required(),
-          end_time: Joi.string().pattern(/^([01]\d|2[0-3]):00$/).required(),
+          start_time: Joi.string()
+            .pattern(/^([01]\d|2[0-3]):00$/)
+            .required(),
+          end_time: Joi.string()
+            .pattern(/^([01]\d|2[0-3]):00$/)
+            .required(),
           ghi_chu: Joi.string().allow(null, ''),
         })
       )
@@ -84,6 +98,17 @@ const schemas = {
       .optional(),
     payment_method: Joi.string().valid('cash', 'bank_transfer').optional(),
     note: Joi.string().allow(null, ''),
+  }),
+
+  // Auth register/login
+  register: Joi.object({
+    username: Joi.string().min(3).max(50).required(),
+    password: Joi.string().min(6).required(),
+    full_name: Joi.string().min(2).max(200).required(),
+    email: Joi.string().email().optional(),
+    phone: Joi.string()
+      .pattern(/^[0-9]{10,11}$/)
+      .optional(),
   }),
 
   // Bàn
@@ -156,8 +181,12 @@ const schemas = {
       .items(
         Joi.object({
           san_id: Joi.number().integer().positive().required(),
-          start_time: Joi.string().pattern(/^([01]\d|2[0-3]):00$/).required(),
-          end_time: Joi.string().pattern(/^([01]\d|2[0-3]):00$/).required(),
+          start_time: Joi.string()
+            .pattern(/^([01]\d|2[0-3]):00$/)
+            .required(),
+          end_time: Joi.string()
+            .pattern(/^([01]\d|2[0-3]):00$/)
+            .required(),
         })
       )
       .min(1)

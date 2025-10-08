@@ -58,7 +58,9 @@ const createBooking = async (req, res) => {
       // check court exists
       const court = await San.findById(s.san_id);
       if (!court) {
-        return res.status(404).json(formatErrorResponse(`Không tìm thấy sân id=${s.san_id}`));
+        return res
+          .status(404)
+          .json(formatErrorResponse(`Không tìm thấy sân id=${s.san_id}`));
       }
 
       // Call DB function is_court_available
@@ -70,7 +72,11 @@ const createBooking = async (req, res) => {
       if (!available) {
         return res
           .status(409)
-          .json(formatErrorResponse(`Sân ${s.san_id} không trống trong khung ${s.start_time}-${s.end_time}`));
+          .json(
+            formatErrorResponse(
+              `Sân ${s.san_id} không trống trong khung ${s.start_time}-${s.end_time}`
+            )
+          );
       }
 
       // Calculate price using DB function
@@ -89,7 +95,13 @@ const createBooking = async (req, res) => {
     for (const svc of services) {
       const dv = await DichVu.findById(svc.dich_vu_id || svc.id);
       if (!dv) {
-        return res.status(404).json(formatErrorResponse(`Không tìm thấy dịch vụ id=${svc.dich_vu_id || svc.id}`));
+        return res
+          .status(404)
+          .json(
+            formatErrorResponse(
+              `Không tìm thấy dịch vụ id=${svc.dich_vu_id || svc.id}`
+            )
+          );
       }
       const qty = svc.so_luong || 1;
       let lineTotal = 0;
@@ -108,61 +120,26 @@ const createBooking = async (req, res) => {
 
     // Create booking transactionally
     const booking = await PhieuDatSan.transaction(async (client) => {
-      let finalUserId = user_id;
-      
-      // If no user_id provided, create/find customer user
-      if (!finalUserId && customer) {
-        // Validate required customer info
-        if (!customer.full_name || !customer.phone) {
-          throw new Error('Vui lòng cung cấp đầy đủ tên và số điện thoại');
-        }
-        
-        const email = customer.email || `${customer.phone}@temp.local`;
-        const username = email;
-        const password = customer.phone; // Use phone as password
-        
-        // Check if user already exists by email or phone
-        const existingUserSql = `
-          SELECT id FROM users 
-          WHERE email = $1 OR phone = $2 
-          LIMIT 1
-        `;
-        const existingUserRes = await client.query(existingUserSql, [email, customer.phone]);
-        
-        if (existingUserRes.rows.length > 0) {
-          // User exists, use existing user
-          finalUserId = existingUserRes.rows[0].id;
-        } else {
-          // Create new customer user
-          const password_hash = await hashPassword(password);
-          
-          const createUserSql = `
-            INSERT INTO users (username, email, role, full_name, phone, password_hash)
-            VALUES ($1, $2, 'customer', $3, $4, $5)
-            RETURNING id
-          `;
-          const userRes = await client.query(createUserSql, [
-            username,
-            email,
-            customer.full_name,
-            customer.phone,
-            password_hash
-          ]);
-          finalUserId = userRes.rows[0].id;
-        }
-      }
-      
+      // Require authenticated user for booking: do not auto-create customers here
+      const finalUserId = user_id;
       if (!finalUserId) {
-        throw new Error('Không thể tạo user cho booking');
+        throw new Error('Vui lòng đăng nhập trước khi đặt sân');
       }
-      
+
       // create phieu_dat_san (ensure columns for totals exist)
-      const ma_pd = 'PD' + Date.now().toString().slice(-8) + generateRandomString(4);
+      const ma_pd =
+        'PD' + Date.now().toString().slice(-8) + generateRandomString(4);
 
       // Ensure columns exist (safe: ADD COLUMN IF NOT EXISTS)
-      await client.query(`ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tien_san numeric DEFAULT 0`);
-      await client.query(`ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tien_dich_vu numeric DEFAULT 0`);
-      await client.query(`ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tong_tien numeric DEFAULT 0`);
+      await client.query(
+        `ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tien_san numeric DEFAULT 0`
+      );
+      await client.query(
+        `ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tien_dich_vu numeric DEFAULT 0`
+      );
+      await client.query(
+        `ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tong_tien numeric DEFAULT 0`
+      );
 
       const insertBookingSql = `
         INSERT INTO phieu_dat_san (ma_pd, user_id, created_by, ngay_su_dung, trang_thai, payment_method, is_paid, note, tien_san, tien_dich_vu, tong_tien)
@@ -188,7 +165,14 @@ const createBooking = async (req, res) => {
         await client.query(
           `INSERT INTO chi_tiet_phieu_san (phieu_dat_id, san_id, start_time, end_time, don_gia, ghi_chu)
            VALUES ($1,$2,$3,$4,$5,$6)`,
-          [created.id, s.san_id, s.start_time, s.end_time, s.slotTotal, s.ghi_chu || null]
+          [
+            created.id,
+            s.san_id,
+            s.start_time,
+            s.end_time,
+            s.slotTotal,
+            s.ghi_chu || null,
+          ]
         );
       }
 
@@ -201,7 +185,12 @@ const createBooking = async (req, res) => {
         );
       }
 
-      return { booking: created, slots: slotResults, services: serviceDetails, total: grandTotal };
+      return {
+        booking: created,
+        slots: slotResults,
+        services: serviceDetails,
+        total: grandTotal,
+      };
     });
 
     res.status(201).json(formatResponse(true, booking, 'Đặt sân thành công'));
@@ -215,17 +204,25 @@ const createBooking = async (req, res) => {
 const getBookingByToken = async (req, res) => {
   try {
     const { token } = req.params; // token maps to ma_pd
-    
+
     // Use query to find booking by ma_pd
-    const q = await PhieuDatSan.query('SELECT * FROM phieu_dat_san WHERE ma_pd = $1', [token]);
+    const q = await PhieuDatSan.query(
+      'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
+      [token]
+    );
     const result = q.rows[0];
-    
+
     if (!result) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt'));
     }
-    
+
     // fetch slots
-    const slotsQ = await ChiTietPhieuSan.query('SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1', [result.id]);
+    const slotsQ = await ChiTietPhieuSan.query(
+      'SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1',
+      [result.id]
+    );
     const slots = slotsQ.rows || [];
 
     // compute total hours from slots (expect time format HH:MM[:SS])
@@ -254,7 +251,12 @@ const getBookingByToken = async (req, res) => {
     // enrich services with dv info and compute lineTotal
     const enrichedServices = rawServices.map((sv) => {
       const so_luong = sv.so_luong || sv.qty || 1;
-      const don_gia = sv.don_gia !== null && sv.don_gia !== undefined ? parseFloat(sv.don_gia) : (sv.dv_don_gia !== null && sv.dv_don_gia !== undefined ? parseFloat(sv.dv_don_gia) : 0);
+      const don_gia =
+        sv.don_gia !== null && sv.don_gia !== undefined
+          ? parseFloat(sv.don_gia)
+          : sv.dv_don_gia !== null && sv.dv_don_gia !== undefined
+          ? parseFloat(sv.dv_don_gia)
+          : 0;
       const loai = sv.dv_loai || null;
       let lineTotal = 0;
       if (loai === 'rent') {
@@ -273,26 +275,58 @@ const getBookingByToken = async (req, res) => {
           ten_dv: sv.ten_dv,
           loai: loai,
           don_gia: don_gia,
-        }
+        },
       };
     });
 
     // Ensure totals are present in response (use stored values if available, else compute)
     const bookingTotals = {
-      tien_san: result.tien_san !== undefined && result.tien_san !== null ? parseFloat(result.tien_san) : null,
-      tien_dich_vu: result.tien_dich_vu !== undefined && result.tien_dich_vu !== null ? parseFloat(result.tien_dich_vu) : null,
-      tong_tien: result.tong_tien !== undefined && result.tong_tien !== null ? parseFloat(result.tong_tien) : null,
+      tien_san:
+        result.tien_san !== undefined && result.tien_san !== null
+          ? parseFloat(result.tien_san)
+          : null,
+      tien_dich_vu:
+        result.tien_dich_vu !== undefined && result.tien_dich_vu !== null
+          ? parseFloat(result.tien_dich_vu)
+          : null,
+      tong_tien:
+        result.tong_tien !== undefined && result.tong_tien !== null
+          ? parseFloat(result.tong_tien)
+          : null,
     };
     if (bookingTotals.tong_tien === null) {
-      const slotsSum = slots.reduce((acc, s) => acc + parseFloat(s.don_gia || s.slotTotal || 0), 0);
-      const servicesSum = enrichedServices.reduce((acc, s) => acc + (s.lineTotal || 0), 0);
-      bookingTotals.tien_san = bookingTotals.tien_san === null ? Number(slotsSum.toFixed(2)) : bookingTotals.tien_san;
-      bookingTotals.tien_dich_vu = bookingTotals.tien_dich_vu === null ? Number(servicesSum.toFixed(2)) : bookingTotals.tien_dich_vu;
-      bookingTotals.tong_tien = Number((bookingTotals.tien_san + bookingTotals.tien_dich_vu).toFixed(2));
+      const slotsSum = slots.reduce(
+        (acc, s) => acc + parseFloat(s.don_gia || s.slotTotal || 0),
+        0
+      );
+      const servicesSum = enrichedServices.reduce(
+        (acc, s) => acc + (s.lineTotal || 0),
+        0
+      );
+      bookingTotals.tien_san =
+        bookingTotals.tien_san === null
+          ? Number(slotsSum.toFixed(2))
+          : bookingTotals.tien_san;
+      bookingTotals.tien_dich_vu =
+        bookingTotals.tien_dich_vu === null
+          ? Number(servicesSum.toFixed(2))
+          : bookingTotals.tien_dich_vu;
+      bookingTotals.tong_tien = Number(
+        (bookingTotals.tien_san + bookingTotals.tien_dich_vu).toFixed(2)
+      );
     }
 
     res.json(
-      formatResponse(true, { booking: result, slots, services: enrichedServices, totals: bookingTotals }, 'Lấy thông tin đặt sân thành công')
+      formatResponse(
+        true,
+        {
+          booking: result,
+          slots,
+          services: enrichedServices,
+          totals: bookingTotals,
+        },
+        'Lấy thông tin đặt sân thành công'
+      )
     );
   } catch (error) {
     console.error('Get booking by token error:', error);
@@ -307,10 +341,15 @@ const cancelBooking = async (req, res) => {
     const { reason } = req.body;
 
     // find booking
-    const q = await PhieuDatSan.query('SELECT * FROM phieu_dat_san WHERE ma_pd = $1', [token]);
+    const q = await PhieuDatSan.query(
+      'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
+      [token]
+    );
     const booking = q.rows[0];
     if (!booking) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt'));
     }
 
     if (booking.trang_thai === 'cancelled') {
@@ -318,8 +357,14 @@ const cancelBooking = async (req, res) => {
     }
 
     await PhieuDatSan.transaction(async (client) => {
-      await client.query('UPDATE phieu_dat_san SET trang_thai = $1 WHERE id = $2', ['cancelled', booking.id]);
-      await client.query('INSERT INTO phieu_huy_dat_san (phieu_dat_id, ly_do, nguoi_thuc_hien, tien_hoan) VALUES ($1,$2,$3,$4)', [booking.id, reason || null, null, 0]);
+      await client.query(
+        'UPDATE phieu_dat_san SET trang_thai = $1 WHERE id = $2',
+        ['cancelled', booking.id]
+      );
+      await client.query(
+        'INSERT INTO phieu_huy_dat_san (phieu_dat_id, ly_do, nguoi_thuc_hien, tien_hoan) VALUES ($1,$2,$3,$4)',
+        [booking.id, reason || null, null, 0]
+      );
     });
 
     res.json(formatResponse(true, null, 'Hủy đặt sân thành công'));
@@ -334,10 +379,44 @@ const getBookings = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
-    const q = await PhieuDatSan.query(`SELECT * FROM phieu_dat_san ORDER BY ngay_tao DESC LIMIT $1 OFFSET $2`, [limit, offset]);
+    const q = await PhieuDatSan.query(
+      `SELECT * FROM phieu_dat_san ORDER BY ngay_tao DESC LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
     res.json(formatResponse(true, q.rows, 'Lấy danh sách đặt sân thành công'));
   } catch (error) {
     console.error('Get bookings error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
+// Customer: list own bookings
+const getMyBookings = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const q = await PhieuDatSan.query(
+      `SELECT * FROM phieu_dat_san WHERE user_id = $1 ORDER BY ngay_tao DESC`,
+      [userId]
+    );
+    const bookings = q.rows;
+    // attach slots for each booking
+    for (const b of bookings) {
+      const slotsQ = await ChiTietPhieuSan.query(
+        'SELECT san_id, start_time, end_time, don_gia FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1 ORDER BY start_time',
+        [b.id]
+      );
+      b.slots = slotsQ.rows || [];
+    }
+
+    res.json(
+      formatResponse(
+        true,
+        bookings,
+        'Lấy lịch sử đặt sân của khách hàng thành công'
+      )
+    );
+  } catch (error) {
+    console.error('Get my bookings error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
   }
 };
@@ -348,15 +427,35 @@ const getBookingDetail = async (req, res) => {
     const { id } = req.params;
     let q;
     if (/^\d+$/.test(id)) {
-      q = await PhieuDatSan.query('SELECT * FROM phieu_dat_san WHERE id = $1', [id]);
+      q = await PhieuDatSan.query('SELECT * FROM phieu_dat_san WHERE id = $1', [
+        id,
+      ]);
     } else {
-      q = await PhieuDatSan.query('SELECT * FROM phieu_dat_san WHERE ma_pd = $1', [id]);
+      q = await PhieuDatSan.query(
+        'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
+        [id]
+      );
     }
     const booking = q.rows[0];
-    if (!booking) return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt'));
-    const slots = await ChiTietPhieuSan.query('SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1', [booking.id]);
-    const services = await ChiTietPhieuDichVu.query('SELECT * FROM chi_tiet_phieu_dich_vu WHERE phieu_dat_id = $1', [booking.id]);
-    res.json(formatResponse(true, { booking, slots: slots.rows, services: services.rows }, 'Lấy chi tiết đặt sân thành công'));
+    if (!booking)
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt'));
+    const slots = await ChiTietPhieuSan.query(
+      'SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1',
+      [booking.id]
+    );
+    const services = await ChiTietPhieuDichVu.query(
+      'SELECT * FROM chi_tiet_phieu_dich_vu WHERE phieu_dat_id = $1',
+      [booking.id]
+    );
+    res.json(
+      formatResponse(
+        true,
+        { booking, slots: slots.rows, services: services.rows },
+        'Lấy chi tiết đặt sân thành công'
+      )
+    );
   } catch (error) {
     console.error('Get booking detail error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -368,11 +467,29 @@ const confirmBooking = async (req, res) => {
   try {
     const { id } = req.params; // id or ma_pd
     // find booking
-    const q = await PhieuDatSan.query(/^\d+$/.test(id) ? 'SELECT * FROM phieu_dat_san WHERE id = $1' : 'SELECT * FROM phieu_dat_san WHERE ma_pd = $1', [id]);
+    const q = await PhieuDatSan.query(
+      /^\d+$/.test(id)
+        ? 'SELECT * FROM phieu_dat_san WHERE id = $1'
+        : 'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
+      [id]
+    );
     const booking = q.rows[0];
-    if (!booking) return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt'));
-    if (booking.trang_thai !== 'pending') return res.status(400).json(formatErrorResponse('Chỉ có thể xác nhận phiếu đang ở trạng thái pending'));
-    await PhieuDatSan.query('UPDATE phieu_dat_san SET trang_thai = $1 WHERE id = $2', ['confirmed', booking.id]);
+    if (!booking)
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt'));
+    if (booking.trang_thai !== 'pending')
+      return res
+        .status(400)
+        .json(
+          formatErrorResponse(
+            'Chỉ có thể xác nhận phiếu đang ở trạng thái pending'
+          )
+        );
+    await PhieuDatSan.query(
+      'UPDATE phieu_dat_san SET trang_thai = $1 WHERE id = $2',
+      ['confirmed', booking.id]
+    );
     res.json(formatResponse(true, null, 'Xác nhận đặt sân thành công'));
   } catch (error) {
     console.error('Confirm booking error:', error);
@@ -383,6 +500,7 @@ const confirmBooking = async (req, res) => {
 module.exports = {
   createBooking,
   getBookings,
+  getMyBookings,
   getBookingDetail,
   confirmBooking,
   cancelBooking,
