@@ -1,0 +1,63 @@
+.contacts-page.container {
+  padding: 1.25rem;
+}
+
+.contacts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.contacts-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.contact-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.contact-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-name {
+  font-weight: 600;
+}
+
+.contact-actions button {
+  margin-left: 0.5rem;
+}
+
+.contact-editor {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.form-row label {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}

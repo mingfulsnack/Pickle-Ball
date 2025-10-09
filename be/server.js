@@ -14,12 +14,12 @@ const PORT = process.env.PORT || 3000;
 const pool = require('./config/database');
 const { testConnection } = require('./config/database');
 
-
 // Import routes
 const authRoutes = require('./routes/auth');
 const publicRoutes = require('./routes/public');
 const bookingRoutes = require('./routes/bookings');
 const customerRoutes = require('./routes/customers');
+const contactsRoutes = require('./routes/contacts');
 const employeeRoutes = require('./routes/employees');
 const reportRoutes = require('./routes/reports');
 const orderRoutes = require('./routes/orderRoutes');
@@ -108,6 +108,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/contacts', contactsRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/orders', orderRoutes);
@@ -129,7 +130,7 @@ app.get('/', (req, res) => {
       public: '/api/public',
       bookings: '/api/bookings',
       courts: '/api/courts',
-      availability: '/api/availability', 
+      availability: '/api/availability',
       services: '/api/services',
       customers: '/api/customers',
       employees: '/api/employees',
@@ -224,9 +225,6 @@ const startServer = async () => {
 
 // Start the server
 const server = startServer();
-
-
-
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

@@ -141,14 +141,52 @@ const createBooking = async (req, res) => {
         `ALTER TABLE phieu_dat_san ADD COLUMN IF NOT EXISTS tong_tien numeric DEFAULT 0`
       );
 
+      // Determine contact snapshot: prefer explicit contact_id -> contact_snapshot payload -> fallback to user profile
+      let contactSnapshot = { name: null, phone: null, email: null };
+      if (req.body.contact_id) {
+        const contactQ = await client.query(
+          'SELECT * FROM customer_contacts WHERE id = $1',
+          [req.body.contact_id]
+        );
+        const contact = contactQ.rows[0];
+        if (!contact || contact.user_id !== finalUserId) {
+          throw new Error('Liên hệ không tồn tại hoặc không thuộc người dùng');
+        }
+        contactSnapshot.name = contact.full_name;
+        contactSnapshot.phone = contact.phone;
+        contactSnapshot.email = contact.email;
+      } else if (req.body.contact_snapshot) {
+        // client may send a lightweight snapshot when user chooses their own profile
+        const cs = req.body.contact_snapshot;
+        contactSnapshot.name = cs.contact_name || null;
+        contactSnapshot.phone = cs.contact_phone || null;
+        contactSnapshot.email = cs.contact_email || null;
+      } else {
+        // fallback: try to fetch basic user info from users table
+        const userQ = await client.query(
+          'SELECT full_name, phone, email FROM users WHERE id = $1',
+          [finalUserId]
+        );
+        const u = userQ.rows[0];
+        if (u) {
+          contactSnapshot.name = u.full_name || null;
+          contactSnapshot.phone = u.phone || null;
+          contactSnapshot.email = u.email || null;
+        }
+      }
+
       const insertBookingSql = `
-        INSERT INTO phieu_dat_san (ma_pd, user_id, created_by, ngay_su_dung, trang_thai, payment_method, is_paid, note, tien_san, tien_dich_vu, tong_tien)
-        VALUES ($1,$2,$3,$4,$5,$6,false,$7,$8,$9,$10)
+        INSERT INTO phieu_dat_san (ma_pd, user_id, contact_id, contact_name, contact_phone, contact_email, created_by, ngay_su_dung, trang_thai, payment_method, is_paid, note, tien_san, tien_dich_vu, tong_tien)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,false,$11,$12,$13,$14)
         RETURNING *
       `;
       const bookingRes = await client.query(insertBookingSql, [
         ma_pd,
         finalUserId,
+        req.body.contact_id || null,
+        contactSnapshot.name,
+        contactSnapshot.phone,
+        contactSnapshot.email,
         null,
         ngay_su_dung,
         'pending',

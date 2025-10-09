@@ -19,6 +19,7 @@ import BookingConfirmation from './pages/customer/BookingConfirmation';
 import Dashboard from './pages/customer/Dashboard';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import Contacts from './pages/customer/Contacts';
 
 // Admin pages
 
@@ -105,6 +106,7 @@ function App() {
           >
             <Route index element={<Homepage />} />
             <Route path="booking" element={<BookingPage />} />
+            <Route path="contacts" element={<Contacts />} />
             <Route path="booking-history" element={<BookingLookup />} />
             <Route path="about" element={<div>Giới thiệu (Coming soon)</div>} />
             <Route

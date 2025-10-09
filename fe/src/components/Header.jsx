@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -36,7 +36,7 @@ const Header = ({ isPublic = false }) => {
             <img src={appleImg} alt="Apple" className="logo-icon" />
             <span className="logo-text">Pickleball Bồ Đề</span>
           </div>
-          
+
           {/* Navigation Menu (only for public layout) */}
           {isPublic && (
             <nav className="main-nav">
@@ -46,12 +46,18 @@ const Header = ({ isPublic = false }) => {
                     Trang chủ
                   </button>
                 </li>
-                <li className={`nav-item ${isActive('/booking-history') ? 'active' : ''}`}>
+                <li
+                  className={`nav-item ${
+                    isActive('/booking-history') ? 'active' : ''
+                  }`}
+                >
                   <button onClick={() => handleNavigation('/booking-history')}>
                     Lịch sử đặt sân
                   </button>
                 </li>
-                <li className={`nav-item ${isActive('/about') ? 'active' : ''}`}>
+                <li
+                  className={`nav-item ${isActive('/about') ? 'active' : ''}`}
+                >
                   <button onClick={() => handleNavigation('/about')}>
                     Giới thiệu
                   </button>
@@ -64,9 +70,15 @@ const Header = ({ isPublic = false }) => {
         <div className="header-right">
           {isAuthenticated() ? (
             <div className="user-menu">
-              <div className="user-info">
+              <div
+                className="user-info"
+                onClick={() => handleNavigation('/contacts')}
+                style={{ cursor: 'pointer' }}
+              >
                 <FaUser className="user-icon" />
-                <span className="user-name">{user?.full_name || user?.username || 'User'}</span>
+                <span className="user-name">
+                  {user?.full_name || user?.username || 'User'}
+                </span>
               </div>
               <button
                 className="btn btn-secondary logout-btn"

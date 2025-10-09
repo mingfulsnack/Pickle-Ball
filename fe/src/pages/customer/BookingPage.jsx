@@ -23,6 +23,33 @@ const BookingPage = () => {
   const { user, isAuthenticated } = useAuth();
   const [pricing, setPricing] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(
+    location.state?.selectedContact ||
+      (function () {
+        try {
+          const raw = localStorage.getItem('selectedContact');
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })()
+  );
+
+  useEffect(() => {
+    // if navigated back from Contacts with selectedContact in state, use it
+    if (location.state?.selectedContact) {
+      setSelectedContact(location.state.selectedContact);
+    }
+    // if not present in nav state, try localStorage
+    if (!location.state?.selectedContact) {
+      try {
+        const raw = localStorage.getItem('selectedContact');
+        if (raw) setSelectedContact(JSON.parse(raw));
+      } catch {
+        // ignore
+      }
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchServices();
@@ -191,6 +218,16 @@ const BookingPage = () => {
         services: selectedServices,
         payment_method: 'cash',
         note: 'Đặt sân từ website',
+        contact_id: selectedContact?.id || null,
+        // if contact_id not set but selectedContact is present (user info), send snapshot fields
+        contact_snapshot:
+          selectedContact && !selectedContact.id
+            ? {
+                contact_name: selectedContact.full_name,
+                contact_phone: selectedContact.phone,
+                contact_email: selectedContact.email || null,
+              }
+            : null,
       };
 
       const response = await publicApi.post('/public/bookings', bookingData);
@@ -375,22 +412,59 @@ const BookingPage = () => {
         <div className="customer-section">
           <h2>Thông tin khách hàng</h2>
           <div className="customer-form">
-            <div className="form-group">
-              <label>Họ tên</label>
-              <input
-                type="text"
-                value={user?.full_name || user?.username || ''}
-                readOnly
-              />
-            </div>
-            <div className="form-group">
-              <label>Số điện thoại</label>
-              <input type="tel" value={user?.phone || ''} readOnly />
-            </div>
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={user?.email || ''} readOnly />
-            </div>
+            {selectedContact ? (
+              <div className="selected-contact">
+                <div className="form-group">
+                  <label>Họ tên</label>
+                  <input
+                    type="text"
+                    value={selectedContact.full_name}
+                    readOnly
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Số điện thoại</label>
+                  <input type="tel" value={selectedContact.phone} readOnly />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={selectedContact.email || ''}
+                    readOnly
+                  />
+                </div>
+                <div className="form-group">
+                  <button className="btn" onClick={() => navigate('/contacts')}>
+                    Chọn liên hệ khác
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label>Họ tên</label>
+                  <input
+                    type="text"
+                    value={user?.full_name || user?.username || ''}
+                    readOnly
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Số điện thoại</label>
+                  <input type="tel" value={user?.phone || ''} readOnly />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" value={user?.email || ''} readOnly />
+                </div>
+                <div className="form-group">
+                  <button className="btn" onClick={() => navigate('/contacts')}>
+                    Chọn liên hệ
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

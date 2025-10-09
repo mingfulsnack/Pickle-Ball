@@ -95,6 +95,14 @@ export const authAPI = {
   getProfile: () => api.get('/auth/profile'),
 };
 
+// Contacts API (authenticated)
+export const contactsAPI = {
+  list: () => api.get('/contacts'),
+  create: (data) => api.post('/contacts', data),
+  update: (id, data) => api.put(`/contacts/${id}`, data),
+  remove: (id) => api.delete(`/contacts/${id}`),
+};
+
 // Public API exports
 export { publicApi };
 
