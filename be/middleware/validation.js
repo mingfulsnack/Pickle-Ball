@@ -70,6 +70,16 @@ const schemas = {
 
   // Public booking (courts) - support multiple slots and services
   publicBooking: Joi.object({
+    contact_id: Joi.number().integer().positive().optional(),
+    contact_snapshot: Joi.object({
+      contact_name: Joi.string().max(255).optional(),
+      contact_phone: Joi.string()
+        .pattern(/^[0-9]{10,11}$/)
+        .optional(),
+      contact_email: Joi.string().email().optional(),
+    })
+      .allow(null)
+      .optional(),
     user_id: Joi.number().integer().positive().allow(null),
     customer: Joi.object().optional(),
     ngay_su_dung: Joi.date().iso().required(),

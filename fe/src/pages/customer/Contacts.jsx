@@ -9,8 +9,6 @@ const emptyContact = {
   full_name: '',
   phone: '',
   email: '',
-  cccd: '',
-  dob: '',
   is_default: false,
 };
 
@@ -245,21 +243,7 @@ export default function Contacts() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
-          <div className="form-row">
-            <label>CCCD</label>
-            <input
-              value={form.cccd}
-              onChange={(e) => setForm({ ...form, cccd: e.target.value })}
-            />
-          </div>
-          <div className="form-row">
-            <label>Ngày sinh</label>
-            <input
-              type="date"
-              value={form.dob}
-              onChange={(e) => setForm({ ...form, dob: e.target.value })}
-            />
-          </div>
+          {/* CCCD and DOB removed per UX request */}
           <div className="form-actions">
             <button className="btn btn-primary" onClick={handleSave}>
               Lưu
