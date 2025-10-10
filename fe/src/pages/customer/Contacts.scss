@@ -1,63 +1,176 @@
+// Contacts Page Styles
+@use '../../styles/variables.scss' as *;
+
 .contacts-page.container {
-  padding: 1.25rem;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: $bg-primary;
+  border-radius: $border-radius-lg;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .contacts-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $border-color;
+
+  h2 {
+    font-size: 1.8rem;
+    color: $text-primary;
+  }
 }
 
 .contacts-list {
-  display: grid;
-  gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .contact-card {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem;
   align-items: center;
-  padding: 0.75rem;
-  border: 1px solid #e6e6e6;
-  border-radius: 6px;
+  padding: 1.25rem;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-md;
   background: #fff;
+  transition: all 0.2s ease-in-out;
+
+  &.user-card {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  &.selected {
+    border-color: var(--primary-green, #4caf50);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+    background-color: var(--primary-green-light, #e8f5e8);
+  }
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+  }
+
+  .contact-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .contact-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: $text-primary;
+  }
+
+  .contact-phone,
+  .contact-email {
+    color: $text-secondary;
+    font-size: 0.9rem;
+  }
+
+  .contact-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+
+    .select-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+  }
 }
 
-.contact-main {
-  display: flex;
-  flex-direction: column;
-}
-
-.contact-name {
-  font-weight: 600;
-}
-
-.contact-actions button {
-  margin-left: 0.5rem;
-}
-
+// === PHẦN ĐÃ CẬP NHẬT ===
 .contact-editor {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px dashed #ccc;
-  border-radius: 6px;
-  background: #fafafa;
+  margin-top: 2.5rem;
+  padding: 2rem;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  background: #f9fafb;
+  animation: fadeIn 0.3s ease-in-out;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: $text-primary;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: $text-secondary;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid $border-color;
+      border-radius: $border-radius-md;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-green, #4caf50);
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    border-top: 1px solid $border-color;
+    padding-top: 1.5rem;
+    justify-content: flex-end;
+  }
+}
+// === KẾT THÚC PHẦN CẬP NHẬT ===
+
+// Button styles (override default button if needed)
+.btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: $border-radius-sm;
+
+  &.btn-primary {
+    background-color: var(--primary-green, #4caf50);
+  }
+
+  &.btn-danger {
+    background-color: #ef4444;
+  }
 }
 
-.form-row {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 0.5rem;
-}
-
-.form-row label {
-  font-size: 0.85rem;
-  margin-bottom: 0.25rem;
-}
-
-.form-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+@media (max-width: 768px) {
+  .contact-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    .contact-actions {
+      flex-wrap: wrap;
+    }
+  }
 }
