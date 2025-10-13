@@ -23,11 +23,7 @@ router.put(
   bookingController.confirmBooking
 );
 
-// Hủy đặt sân (admin)
-router.put(
-  '/:id/cancel',
-  checkRole(['manager']),
-  bookingController.cancelBooking
-);
+// Hủy đặt sân (khách hàng hoặc admin/staff)
+router.put('/:id/cancel', bookingController.cancelBooking);
 
 module.exports = router;

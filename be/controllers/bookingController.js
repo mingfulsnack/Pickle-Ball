@@ -375,23 +375,46 @@ const getBookingByToken = async (req, res) => {
 // Cancel booking (public or admin)
 const cancelBooking = async (req, res) => {
   try {
-    const { token } = req.params; // assume token is ma_pd
+    const { id } = req.params; // Can be numeric ID or ma_pd
     const { reason } = req.body;
+    const user = req.user; // from authenticateToken middleware
 
-    // find booking
+    // Find booking by id or ma_pd
     const q = await PhieuDatSan.query(
-      'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
-      [token]
+      /^\d+$/.test(id)
+        ? 'SELECT * FROM phieu_dat_san WHERE id = $1'
+        : 'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
+      [id]
     );
     const booking = q.rows[0];
+
     if (!booking) {
       return res
         .status(404)
         .json(formatErrorResponse('Không tìm thấy phiếu đặt'));
     }
 
+    // Authorization check
+    const isOwner = booking.user_id === user.id;
+    const isAdminOrStaff = ['manager', 'staff'].includes(user.role);
+
+    if (!isAdminOrStaff && !isOwner) {
+      return res
+        .status(403)
+        .json(formatErrorResponse('Không có quyền hủy đặt sân này'));
+    }
+
     if (booking.trang_thai === 'cancelled') {
       return res.status(400).json(formatErrorResponse('Đã hủy trước đó'));
+    }
+
+    // Customers can only cancel pending bookings
+    if (!isAdminOrStaff && isOwner && booking.trang_thai !== 'pending') {
+      return res
+        .status(403)
+        .json(
+          formatErrorResponse('Chỉ có thể hủy các đặt sân đang chờ xác nhận')
+        );
     }
 
     await PhieuDatSan.transaction(async (client) => {
@@ -401,7 +424,7 @@ const cancelBooking = async (req, res) => {
       );
       await client.query(
         'INSERT INTO phieu_huy_dat_san (phieu_dat_id, ly_do, nguoi_thuc_hien, tien_hoan) VALUES ($1,$2,$3,$4)',
-        [booking.id, reason || null, null, 0]
+        [booking.id, reason || null, user.id, 0] // record who cancelled
       );
     });
 
