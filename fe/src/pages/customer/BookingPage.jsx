@@ -208,6 +208,19 @@ const BookingPage = () => {
 
     setLoading(true);
     try {
+      // prepare contact_id as numeric if present
+      const preparedContactId =
+        selectedContact && selectedContact.id
+          ? Number(selectedContact.id)
+          : null;
+      if (
+        selectedContact &&
+        selectedContact.id &&
+        !Number.isInteger(preparedContactId)
+      ) {
+        throw new Error('contact_id must be a number');
+      }
+
       const bookingData = {
         user_id: user?.id,
         ngay_su_dung: searchParams.date,
@@ -218,21 +231,23 @@ const BookingPage = () => {
         services: selectedServices,
         payment_method: 'cash',
         note: 'Đặt sân từ website',
-        contact_id: selectedContact?.id || null,
-        // if contact_id not set but selectedContact is present (user info), send snapshot fields
-        contact_snapshot:
-          selectedContact && !selectedContact.id
-            ? {
-                contact_name: selectedContact.full_name,
-                contact_phone: selectedContact.phone,
-                contact_email: selectedContact.email || null,
-              }
-            : null,
       };
 
+      // attach contact info only when available and valid
+      if (preparedContactId !== null) {
+        bookingData.contact_id = preparedContactId;
+      } else if (selectedContact) {
+        bookingData.contact_snapshot = {
+          contact_name: selectedContact.full_name,
+          contact_phone: selectedContact.phone,
+          contact_email: selectedContact.email || null,
+        };
+      }
+
+      console.debug('Booking payload:', bookingData);
       const response = await publicApi.post('/public/bookings', bookingData);
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         const bookingToken = response.data.data.booking.ma_pd;
         navigate('/booking-confirmation', {
           state: {
@@ -240,10 +255,24 @@ const BookingPage = () => {
             token: bookingToken,
           },
         });
+        return;
+      }
+      // If response indicates failure, show message
+      if (response.data && !response.data.success) {
+        alert(response.data.message || 'Không thể đặt sân');
       }
     } catch (error) {
-      console.error('Error creating booking:', error);
-      alert('Có lỗi xảy ra khi đặt sân. Vui lòng thử lại.');
+      console.error('Error creating booking:', error, error?.response?.data);
+      const serverMsg = error?.response?.data?.message;
+      const serverDetails = error?.response?.data?.details;
+      if (serverMsg || serverDetails) {
+        const detailText = serverDetails ? '\n' + serverDetails.join('\n') : '';
+        alert(
+          `Lỗi khi đặt sân: ${serverMsg || 'Validation error'}${detailText}`
+        );
+      } else {
+        alert('Có lỗi xảy ra khi đặt sân. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }

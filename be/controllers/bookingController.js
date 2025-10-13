@@ -241,7 +241,8 @@ const createBooking = async (req, res) => {
 // Get booking by code/token (public)
 const getBookingByToken = async (req, res) => {
   try {
-    const { token } = req.params; // token maps to ma_pd
+    // Accept either :token (public route) or :id (admin route) and normalize
+    const token = req.params.token || req.params.id;
 
     // Use query to find booking by ma_pd
     const q = await PhieuDatSan.query(
@@ -375,9 +376,16 @@ const getBookingByToken = async (req, res) => {
 // Cancel booking (public or admin)
 const cancelBooking = async (req, res) => {
   try {
-    const { id } = req.params; // Can be numeric ID or ma_pd
+    // Accept route param as either :id (admin) or :token (public) and normalize
+    const id = req.params.id || req.params.token;
     const { reason } = req.body;
-    const user = req.user; // from authenticateToken middleware
+
+    if (!id) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Thiếu mã hoặc id đặt sân để hủy'));
+    }
+    const user = req.user; // may be undefined for public routes
 
     // Find booking by id or ma_pd
     const q = await PhieuDatSan.query(
@@ -395,13 +403,26 @@ const cancelBooking = async (req, res) => {
     }
 
     // Authorization check
-    const isOwner = booking.user_id === user.id;
-    const isAdminOrStaff = ['manager', 'staff'].includes(user.role);
+    const isOwner = user ? booking.user_id === user.id : false;
+    const isAdminOrStaff = user
+      ? ['manager', 'staff'].includes(user.role)
+      : false;
 
-    if (!isAdminOrStaff && !isOwner) {
-      return res
-        .status(403)
-        .json(formatErrorResponse('Không có quyền hủy đặt sân này'));
+    // If request is unauthenticated (public) then require the token match and allow cancel
+    if (!user) {
+      // For public cancel, `id` should be a token (ma_pd) and must match booking.ma_pd
+      if (/^\d+$/.test(id) || String(booking.ma_pd) !== String(id)) {
+        return res
+          .status(403)
+          .json(formatErrorResponse('Không có quyền hủy đặt sân này'));
+      }
+    } else {
+      // Authenticated users require either ownership or admin/staff role
+      if (!isAdminOrStaff && !isOwner) {
+        return res
+          .status(403)
+          .json(formatErrorResponse('Không có quyền hủy đặt sân này'));
+      }
     }
 
     if (booking.trang_thai === 'cancelled') {
@@ -424,7 +445,7 @@ const cancelBooking = async (req, res) => {
       );
       await client.query(
         'INSERT INTO phieu_huy_dat_san (phieu_dat_id, ly_do, nguoi_thuc_hien, tien_hoan) VALUES ($1,$2,$3,$4)',
-        [booking.id, reason || null, user.id, 0] // record who cancelled
+        [booking.id, reason || null, user ? user.id : null, 0] // record who cancelled (null for public)
       );
     });
 
