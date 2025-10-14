@@ -28,6 +28,8 @@ const invoiceRoutes = require('./routes/invoices');
 // New routes for court booking system
 const courtRoutes = require('./routes/courts');
 const availabilityRoutes = require('./routes/availability');
+const timeFrameRoutes = require('./routes/timeFrames');
+const shiftRoutes = require('./routes/shifts');
 const serviceRoutes = require('./routes/services');
 
 // Security middleware
@@ -118,6 +120,8 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/courts', courtRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/timeframes', timeFrameRoutes);
+app.use('/api/shifts', shiftRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {

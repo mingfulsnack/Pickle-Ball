@@ -33,12 +33,20 @@ class BaseModel {
         paramCount++;
         const op = cond.operator ? cond.operator.toUpperCase() : '=';
         if (op === 'IN' && Array.isArray(cond.value)) {
-          const placeholders = cond.value.map((_, i) => `$${paramCount + i}`).join(', ');
+          const placeholders = cond.value
+            .map((_, i) => `$${paramCount + i}`)
+            .join(', ');
           whereParts.push(`${cond.column} IN (${placeholders})`);
           params.push(...cond.value);
           paramCount += cond.value.length - 1;
-        } else if (op === 'BETWEEN' && Array.isArray(cond.value) && cond.value.length === 2) {
-          whereParts.push(`${cond.column} BETWEEN $${paramCount} AND $${paramCount + 1}`);
+        } else if (
+          op === 'BETWEEN' &&
+          Array.isArray(cond.value) &&
+          cond.value.length === 2
+        ) {
+          whereParts.push(
+            `${cond.column} BETWEEN $${paramCount} AND $${paramCount + 1}`
+          );
           params.push(cond.value[0], cond.value[1]);
           paramCount++;
         } else {
@@ -48,11 +56,13 @@ class BaseModel {
       }
       sql += ` WHERE ${whereParts.join(' AND ')}`;
     } else if (conditions && Object.keys(conditions).length > 0) {
-      const whereClause = Object.keys(conditions).map(key => {
-        paramCount++;
-        params.push(conditions[key]);
-        return `${key} = $${paramCount}`;
-      }).join(' AND ');
+      const whereClause = Object.keys(conditions)
+        .map((key) => {
+          paramCount++;
+          params.push(conditions[key]);
+          return `${key} = $${paramCount}`;
+        })
+        .join(' AND ');
       sql += ` WHERE ${whereClause}`;
     }
 
@@ -73,6 +83,16 @@ class BaseModel {
       paramCount++;
       sql += ` OFFSET $${paramCount}`;
       params.push(offset);
+    }
+    // Debug: show generated SQL and params when debugging
+    try {
+      console.debug(
+        `BaseModel.findAll - SQL for ${this.tableName}:`,
+        sql,
+        params
+      );
+    } catch (e) {
+      // ignore logging errors
     }
 
     const result = await this.query(sql, params);
@@ -131,9 +151,11 @@ class BaseModel {
     const column = idColumn || this.getDefaultIdColumn();
     const columns = Object.keys(data);
     const values = Object.values(data);
-    
-    const setClause = columns.map((col, index) => `${col} = $${index + 1}`).join(', ');
-    
+
+    const setClause = columns
+      .map((col, index) => `${col} = $${index + 1}`)
+      .join(', ');
+
     const sql = `
       UPDATE ${this.tableName} 
       SET ${setClause}
@@ -158,10 +180,14 @@ class BaseModel {
   // Soft delete
   async softDelete(id, idColumn = null) {
     const column = idColumn || this.getDefaultIdColumn();
-    return await this.update(id, { 
-      is_deleted: true, 
-      updated_at: new Date() 
-    }, column);
+    return await this.update(
+      id,
+      {
+        is_deleted: true,
+        updated_at: new Date(),
+      },
+      column
+    );
   }
 
   // Đếm records
@@ -171,11 +197,13 @@ class BaseModel {
     let paramCount = 0;
 
     if (Object.keys(conditions).length > 0) {
-      const whereClause = Object.keys(conditions).map(key => {
-        paramCount++;
-        params.push(conditions[key]);
-        return `${key} = $${paramCount}`;
-      }).join(' AND ');
+      const whereClause = Object.keys(conditions)
+        .map((key) => {
+          paramCount++;
+          params.push(conditions[key]);
+          return `${key} = $${paramCount}`;
+        })
+        .join(' AND ');
       sql += ` WHERE ${whereClause}`;
     }
 
@@ -188,7 +216,7 @@ class BaseModel {
     const offset = (page - 1) * limit;
     const total = await this.count(conditions);
     const records = await this.findAll(conditions, orderBy, limit, offset);
-    
+
     return {
       data: records,
       pagination: {
@@ -197,8 +225,8 @@ class BaseModel {
         total,
         totalPages: Math.ceil(total / limit),
         hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     };
   }
 
@@ -206,21 +234,21 @@ class BaseModel {
   getDefaultIdColumn() {
     // Quy ước: ma + tên bảng (ví dụ: nhanvien -> manv)
     const tableMap = {
-      'nhanvien': 'manv',
-      'khachhang': 'makh',
-      'ban': 'maban',
-      'vung': 'mavung',
-      'phieudatban': 'maphieu',
-      'monan': 'mamon',
-      'danhmucmonan': 'madanhmuc',
-      'setbuffet': 'maset',
-      'khuyenmai': 'makm',
-      'hangthanhvien': 'mahang',
-      'vai_tro': 'mavaitro',
-      'quyen': 'maquyen',
-      'hoadon': 'mahd'
+      nhanvien: 'manv',
+      khachhang: 'makh',
+      ban: 'maban',
+      vung: 'mavung',
+      phieudatban: 'maphieu',
+      monan: 'mamon',
+      danhmucmonan: 'madanhmuc',
+      setbuffet: 'maset',
+      khuyenmai: 'makm',
+      hangthanhvien: 'mahang',
+      vai_tro: 'mavaitro',
+      quyen: 'maquyen',
+      hoadon: 'mahd',
     };
-    
+
     return tableMap[this.tableName] || 'id';
   }
 

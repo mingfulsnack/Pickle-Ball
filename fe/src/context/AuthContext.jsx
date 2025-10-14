@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+
 import React, {
   createContext,
   useContext,
@@ -8,7 +10,6 @@ import React, {
 } from 'react';
 
 const AuthContext = createContext();
-
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -99,18 +100,27 @@ export const AuthProvider = ({ children }) => {
 
   const isAdmin = useCallback(() => {
     // Only log if result changes to reduce spam
+    const role = user?.tenvaitro || user?.role || null;
+    const code = user?.mavaitro || user?.role_id || null;
+    const result =
+      role === 'admin' ||
+      role === 'manager' ||
+      role === 'staff' ||
+      code === 1 ||
+      code === 2 ||
+      code === 3;
+
     if (window.authDebug) {
       console.log('isAdmin check:', {
         user: user,
-        tenvaitro: user?.tenvaitro,
-        mavaitro: user?.mavaitro,
-        result: user?.tenvaitro === 'admin' || user?.mavaitro === 1,
+        role,
+        code,
+        result,
       });
     }
 
-    if (!user) return null;
-    // Check both tenvaitro and mavaitro for admin
-    return user.tenvaitro === 'admin' || user.mavaitro === 1;
+    if (!user) return false;
+    return result;
   }, [user]);
 
   const getToken = useCallback(() => {

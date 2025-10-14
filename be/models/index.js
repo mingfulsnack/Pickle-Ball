@@ -14,6 +14,8 @@ const HoaDon = require('./HoaDon');
 const ChiTietHoaDon = require('./ChiTietHoaDon');
 const PhieuHuyDatSan = require('./PhieuHuyDatSan');
 const AvailabilityCache = require('./AvailabilityCache');
+const KhungGio = require('./KhungGio');
+const Ca = require('./Ca');
 
 module.exports = {
   BaseModel,
@@ -29,4 +31,6 @@ module.exports = {
   ChiTietHoaDon,
   PhieuHuyDatSan,
   AvailabilityCache,
+  KhungGio,
+  Ca,
 };

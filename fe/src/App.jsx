@@ -22,6 +22,9 @@ import Register from './pages/Auth/Register';
 import Contacts from './pages/customer/Contacts';
 
 // Admin pages
+import Bookings from './pages/admin/Bookings';
+import Courts from './pages/admin/Courts';
+import TimeFrames from './pages/admin/TimeFrames';
 
 import './styles/globals.scss';
 import 'react-toastify/dist/ReactToastify.css';
@@ -148,6 +151,30 @@ function App() {
               }
             />
             {/* Add more admin routes here as needed */}
+            <Route
+              path="bookings"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <Bookings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="courts"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <Courts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="timeframes"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <TimeFrames />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Redirect admin root to dashboard */}
             <Route

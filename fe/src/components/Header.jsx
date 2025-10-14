@@ -65,6 +65,56 @@ const Header = ({ isPublic = false }) => {
               </ul>
             </nav>
           )}
+
+          {/* Admin quick links for admin users */}
+          {!isPublic &&
+            isAuthenticated() &&
+            (user?.role === 'manager' || user?.role === 'staff') && (
+              <nav className="admin-nav">
+                <ul className="nav-list">
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/dashboard') ? 'active' : ''
+                    }`}
+                  >
+                    <button
+                      onClick={() => handleNavigation('/admin/dashboard')}
+                    >
+                      Admin
+                    </button>
+                  </li>
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/bookings') ? 'active' : ''
+                    }`}
+                  >
+                    <button onClick={() => handleNavigation('/admin/bookings')}>
+                      Đơn đặt
+                    </button>
+                  </li>
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/courts') ? 'active' : ''
+                    }`}
+                  >
+                    <button onClick={() => handleNavigation('/admin/courts')}>
+                      Sân
+                    </button>
+                  </li>
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/timeframes') ? 'active' : ''
+                    }`}
+                  >
+                    <button
+                      onClick={() => handleNavigation('/admin/timeframes')}
+                    >
+                      Khung giờ
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            )}
         </div>
 
         <div className="header-right">

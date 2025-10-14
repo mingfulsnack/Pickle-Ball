@@ -5,9 +5,9 @@ const { formatResponse, formatErrorResponse } = require('../utils/helpers');
 const getCourts = async (req, res) => {
   try {
     const { activeOnly = true } = req.query;
-    
-    const courts = await San.findAll({ 
-      activeOnly: activeOnly === 'true' 
+
+    const courts = await San.findAll({
+      activeOnly: activeOnly === 'true',
     });
 
     res.json(formatResponse(true, courts, 'Lấy danh sách sân thành công'));
@@ -21,7 +21,7 @@ const getCourts = async (req, res) => {
 const getCourtDetail = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const court = await San.findById(id);
     if (!court) {
       return res.status(404).json(formatErrorResponse('Không tìm thấy sân'));
@@ -37,11 +37,35 @@ const getCourtDetail = async (req, res) => {
 // Tạo sân mới (Admin)
 const createCourt = async (req, res) => {
   try {
-    const { ma_san, ten_san, suc_chua = 4, ghi_chu } = req.body;
+    let { ma_san, ten_san, suc_chua = 4, ghi_chu } = req.body;
+
+    // Normalize code
+    ma_san = String(ma_san || '').trim();
+    if (!ma_san) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Mã sân không được để trống'));
+    }
 
     // Kiểm tra mã sân đã tồn tại
-    const existing = await San.findByCode(ma_san);
-    if (existing) {
+    console.debug('CreateCourt - received ma_san:', ma_san);
+    // Prefer raw query for duplicate check (workaround for unexpected findByCode behavior)
+    let raw = null;
+    try {
+      raw = await San.queryOne('SELECT * FROM san WHERE ma_san = $1', [ma_san]);
+      console.debug('CreateCourt - raw query result for ma_san:', raw);
+    } catch (qerr) {
+      console.error('CreateCourt - raw query error:', qerr);
+    }
+    // Log findByCode too for debugging
+    try {
+      const existing = await San.findByCode(ma_san);
+      console.debug('CreateCourt - findByCode result:', existing);
+    } catch (ferr) {
+      console.error('CreateCourt - findByCode error:', ferr);
+    }
+
+    if (raw) {
       return res.status(400).json(formatErrorResponse('Mã sân đã tồn tại'));
     }
 
@@ -50,7 +74,7 @@ const createCourt = async (req, res) => {
       ten_san,
       trang_thai: true,
       suc_chua,
-      ghi_chu
+      ghi_chu,
     };
 
     const court = await San.create(courtData);
@@ -111,7 +135,9 @@ const deleteCourt = async (req, res) => {
     );
 
     if (parseInt(activeBookings.rows[0].count) > 0) {
-      return res.status(400).json(formatErrorResponse('Không thể xóa sân đang có đặt chỗ'));
+      return res
+        .status(400)
+        .json(formatErrorResponse('Không thể xóa sân đang có đặt chỗ'));
     }
 
     const deleted = await San.delete(id);
@@ -131,5 +157,5 @@ module.exports = {
   getCourtDetail,
   createCourt,
   updateCourt,
-  deleteCourt
+  deleteCourt,
 };

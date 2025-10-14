@@ -68,6 +68,31 @@ const schemas = {
     ghichu: Joi.string(),
   }).or('makh', 'guest_hoten'), // Phải có ít nhất một trong hai
 
+  // Time frame validation
+  timeFrame: Joi.object({
+    ten_khung_gio: Joi.string().min(2).max(255).required(),
+    start_at: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
+    end_at: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
+    ngay_ap_dung: Joi.number().integer().min(0).max(6).required(), // 0=Sunday, 6=Saturday
+  }),
+
+  // Shift validation
+  shift: Joi.object({
+    khung_gio_id: Joi.number().integer().positive().required(),
+    ten_ca: Joi.string().min(2).max(255).required(),
+    start_at: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
+    end_at: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
+    gia_theo_gio: Joi.number().positive().required(),
+  }),
+
   // Public booking (courts) - support multiple slots and services
   publicBooking: Joi.object({
     contact_id: Joi.number().integer().positive().optional(),
@@ -212,7 +237,13 @@ const schemas = {
   }),
 };
 
+// Export validation middleware functions
+const validateTimeFrame = validate(schemas.timeFrame);
+const validateShift = validate(schemas.shift);
+
 module.exports = {
   validate,
   schemas,
+  validateTimeFrame,
+  validateShift,
 };

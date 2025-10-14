@@ -23,7 +23,22 @@ const Login = () => {
       });
       const { token, user } = res.data.data;
       login(user, token);
-      navigate('/');
+      // Immediately route admin/manager/staff users to admin dashboard to avoid race with AuthContext state
+      const role = user?.tenvaitro || user?.role;
+      const code = user?.mavaitro || user?.role_id;
+      const isAdminUser =
+        role === 'admin' ||
+        role === 'manager' ||
+        role === 'staff' ||
+        code === 1 ||
+        code === 2 ||
+        code === 3;
+
+      if (isAdminUser) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
     } finally {

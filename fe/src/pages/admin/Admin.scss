@@ -1,0 +1,17 @@
+.admin-page {
+  padding: 1rem;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.admin-table th,
+.admin-table td {
+  border: 1px solid #eee;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.dashboard-header h1 {
+  margin-bottom: 0.25rem;
+}
