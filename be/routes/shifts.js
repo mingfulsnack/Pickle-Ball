@@ -20,8 +20,10 @@ router.get('/:id', shiftController.getShiftDetail);
 // Create new shift
 router.post('/', validateShift, shiftController.createShift);
 
-// Update shift
-router.put('/:id', validateShift, shiftController.updateShift);
+// Update shift (allow partial updates)
+const { schemas } = require('../middleware/validation');
+const { validate } = require('../middleware/validation');
+router.put('/:id', validate(schemas.shiftUpdate), shiftController.updateShift);
 
 // Delete shift
 router.delete('/:id', shiftController.deleteShift);

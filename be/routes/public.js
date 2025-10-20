@@ -24,16 +24,33 @@ router.get('/courts', courtController.getCourts);
 router.get('/availability', availabilityController.getAvailability);
 
 // Lấy khung giờ trống của sân cụ thể
-router.get('/availability/courts/:san_id', availabilityController.getCourtAvailableSlots);
+router.get(
+  '/availability/courts/:san_id',
+  availabilityController.getCourtAvailableSlots
+);
 
 // Tính giá trước khi đặt
-router.post('/availability/calculate-price', validate(schemas.priceCalculation), availabilityController.calculatePrice);
+router.post(
+  '/availability/calculate-price',
+  validate(schemas.priceCalculation),
+  availabilityController.calculatePrice
+);
+
+// Lấy shifts có sẵn cho ngày cụ thể (cho frontend booking)
+router.get(
+  '/shifts/available',
+  require('../controllers/shiftController').getAvailableShifts
+);
 
 // Lấy danh sách dịch vụ
 router.get('/services', serviceController.getServices);
 
 // Tạo đặt sân mới (khách hàng public)
-router.post('/bookings', validate(schemas.publicBooking), bookingController.createBooking);
+router.post(
+  '/bookings',
+  validate(schemas.publicBooking),
+  bookingController.createBooking
+);
 
 // Lấy thông tin đặt sân bằng token (khách hàng)
 router.get('/bookings/:token', bookingController.getBookingByToken);

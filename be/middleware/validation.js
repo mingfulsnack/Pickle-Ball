@@ -90,8 +90,17 @@ const schemas = {
     end_at: Joi.string()
       .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
       .required(),
-    gia_theo_gio: Joi.number().positive().required(),
+    gia_tien: Joi.number().min(0).required(),
   }),
+
+  // Shift update: allow partial updates (at least one field required)
+  shiftUpdate: Joi.object({
+    khung_gio_id: Joi.number().integer().positive(),
+    ten_ca: Joi.string().min(2).max(255),
+    start_at: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/),
+    end_at: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/),
+    gia_tien: Joi.number().min(0),
+  }).min(1),
 
   // Public booking (courts) - support multiple slots and services
   publicBooking: Joi.object({

@@ -48,7 +48,7 @@ const getShiftDetail = async (req, res) => {
 // Create new shift
 const createShift = async (req, res) => {
   try {
-    const { khung_gio_id, ten_ca, start_at, end_at, gia_theo_gio } = req.body;
+    const { khung_gio_id, ten_ca, start_at, end_at, gia_tien } = req.body;
 
     // Check if time frame exists
     const timeFrame = await KhungGio.findById(khung_gio_id);
@@ -90,10 +90,13 @@ const createShift = async (req, res) => {
       start_at,
       end_at
     );
-    if (overlapping) {
+    if (overlapping && overlapping.length > 0) {
+      const details = overlapping.map(
+        (s) => `${s.ten_ca}: ${s.start_at} - ${s.end_at}`
+      );
       return res
         .status(400)
-        .json(formatErrorResponse('Ca làm việc bị trùng với ca khác'));
+        .json(formatErrorResponse('Ca làm việc bị trùng với ca khác', details));
     }
 
     const shiftData = {
@@ -101,7 +104,7 @@ const createShift = async (req, res) => {
       ten_ca,
       start_at,
       end_at,
-      gia_theo_gio,
+      gia_tien,
       is_active: true,
     };
 
@@ -117,7 +120,9 @@ const createShift = async (req, res) => {
 const updateShift = async (req, res) => {
   try {
     const { id } = req.params;
-    const { khung_gio_id, ten_ca, start_at, end_at, gia_theo_gio } = req.body;
+    // allow partial updates
+    const payload = req.body || {};
+    const { khung_gio_id, ten_ca, start_at, end_at, gia_tien } = payload;
 
     const existing = await Ca.findById(id);
     if (!existing) {
@@ -126,18 +131,24 @@ const updateShift = async (req, res) => {
         .json(formatErrorResponse('Không tìm thấy ca làm việc'));
     }
 
+    // Determine final values (use existing where payload doesn't include)
+    const finalKhungGioId =
+      khung_gio_id !== undefined ? khung_gio_id : existing.khung_gio_id;
+    const finalStart = start_at !== undefined ? start_at : existing.start_at;
+    const finalEnd = end_at !== undefined ? end_at : existing.end_at;
+    const finalTenCa = ten_ca !== undefined ? ten_ca : existing.ten_ca;
+    const finalGia = gia_tien !== undefined ? gia_tien : existing.gia_tien;
+
     // If changing time frame, check new time frame exists
-    if (khung_gio_id !== existing.khung_gio_id) {
-      const timeFrame = await KhungGio.findById(khung_gio_id);
-      if (!timeFrame) {
-        return res
-          .status(400)
-          .json(formatErrorResponse('Khung giờ không tồn tại'));
-      }
+    const timeFrame = await KhungGio.findById(finalKhungGioId);
+    if (!timeFrame) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Khung giờ không tồn tại'));
     }
 
     // Validate time range
-    if (start_at >= end_at) {
+    if (finalStart >= finalEnd) {
       return res
         .status(400)
         .json(
@@ -147,13 +158,11 @@ const updateShift = async (req, res) => {
         );
     }
 
-    // Get time frame for bounds checking
-    const timeFrame = await KhungGio.findById(khung_gio_id);
-    const startMinutes = Ca.timeToMinutes(start_at);
-    const endMinutes = Ca.timeToMinutes(end_at);
+    // Bounds checking
+    const startMinutes = Ca.timeToMinutes(finalStart);
+    const endMinutes = Ca.timeToMinutes(finalEnd);
     const frameStart = Ca.timeToMinutes(timeFrame.start_at);
     const frameEnd = Ca.timeToMinutes(timeFrame.end_at);
-
     if (startMinutes < frameStart || endMinutes > frameEnd) {
       return res
         .status(400)
@@ -162,20 +171,29 @@ const updateShift = async (req, res) => {
         );
     }
 
-    // Check for overlapping shifts (exclude current shift)
+    // Overlap check excluding current shift
     const overlapping = await Ca.checkOverlapInTimeFrame(
-      khung_gio_id,
-      start_at,
-      end_at,
+      finalKhungGioId,
+      finalStart,
+      finalEnd,
       id
     );
-    if (overlapping) {
+    if (overlapping && overlapping.length > 0) {
+      const details = overlapping.map(
+        (s) => `${s.ten_ca}: ${s.start_at} - ${s.end_at}`
+      );
       return res
         .status(400)
-        .json(formatErrorResponse('Ca làm việc bị trùng với ca khác'));
+        .json(formatErrorResponse('Ca làm việc bị trùng với ca khác', details));
     }
 
-    const updateData = { khung_gio_id, ten_ca, start_at, end_at, gia_theo_gio };
+    const updateData = {
+      khung_gio_id: finalKhungGioId,
+      ten_ca: finalTenCa,
+      start_at: finalStart,
+      end_at: finalEnd,
+      gia_tien: finalGia,
+    };
     const updated = await Ca.update(id, updateData);
 
     res.json(formatResponse(true, updated, 'Cập nhật ca thành công'));
@@ -208,25 +226,34 @@ const deleteShift = async (req, res) => {
   }
 };
 
-// Get available shifts for a specific date and time
+// Get available shifts for a specific date (public endpoint)
 const getAvailableShifts = async (req, res) => {
   try {
-    const { date, time } = req.query;
+    const { date } = req.query;
 
-    if (!date || !time) {
-      return res
-        .status(400)
-        .json(formatErrorResponse('Thiếu thông tin ngày và giờ'));
+    if (!date) {
+      return res.status(400).json(formatErrorResponse('Thiếu thông tin ngày'));
     }
 
     // Get day of week (0 = Sunday, 1 = Monday, etc.)
     const dayOfWeek = new Date(date).getDay();
 
-    // Find shifts for the requested time
-    const shifts = await Ca.findShiftsForDateTime(dayOfWeek, time);
+    // Get all active shifts for this day of week
+    const shifts = await Ca.query(
+      `
+      SELECT c.*, kg.ten_khung_gio, kg.start_at as khung_gio_start, kg.end_at as khung_gio_end
+      FROM ca c
+      JOIN khung_gio kg ON c.khung_gio_id = kg.id
+      WHERE kg.ngay_ap_dung = $1 
+      AND kg.is_active = true
+      AND c.is_active = true
+      ORDER BY c.start_at ASC
+    `,
+      [dayOfWeek]
+    );
 
     res.json(
-      formatResponse(true, shifts, 'Lấy danh sách ca khả dụng thành công')
+      formatResponse(true, shifts.rows, 'Lấy danh sách ca khả dụng thành công')
     );
   } catch (error) {
     console.error('Get available shifts error:', error);

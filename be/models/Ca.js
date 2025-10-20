@@ -105,7 +105,10 @@ class Ca extends BaseModel {
 
       if (overlapStart < overlapEnd) {
         const overlapHours = (overlapEnd - overlapStart) / 60;
-        const shiftPrice = parseFloat(shift.gia_tien) || 0;
+        // support both column names if older rows exist: gia_tien or gia_theo_gio
+        const shiftPriceRaw =
+          shift.gia_tien !== undefined ? shift.gia_tien : shift.gia_theo_gio;
+        const shiftPrice = parseFloat(shiftPriceRaw) || 0;
         totalPrice += overlapHours * shiftPrice;
       }
     }
@@ -157,21 +160,19 @@ class Ca extends BaseModel {
     endTime,
     excludeShiftId = null
   ) {
-    const startMinutes = this.timeToMinutes(startTime);
-    const endMinutes = this.timeToMinutes(endTime);
-
+    // Use time columns (start_at, end_at) for overlap checks. startTime/endTime are strings 'HH:MM'
     let query = `
       SELECT * FROM ca 
       WHERE khung_gio_id = $1 
       AND is_active = true
       AND (
-        ($2 >= start_minutes AND $2 < end_minutes)
-        OR ($3 > start_minutes AND $3 <= end_minutes)
-        OR ($2 <= start_minutes AND $3 >= end_minutes)
+        ($2 >= start_at AND $2 < end_at)
+        OR ($3 > start_at AND $3 <= end_at)
+        OR ($2 <= start_at AND $3 >= end_at)
       )
     `;
 
-    const params = [khungGioId, startMinutes, endMinutes];
+    const params = [khungGioId, startTime, endTime];
 
     if (excludeShiftId) {
       query += ' AND id != $4';
@@ -179,13 +180,13 @@ class Ca extends BaseModel {
     }
 
     const result = await this.query(query, params);
-    return result.rows.length > 0;
+    // return array of overlapping rows so callers can provide details
+    return result.rows || [];
   }
 
   // Find shifts for a specific date and time
   async findShiftsForDateTime(dayOfWeek, time) {
-    const timeMinutes = this.timeToMinutes(time);
-
+    // time is expected as 'HH:MM' string; compare directly against start_at/end_at
     const query = `
       SELECT c.*, kg.ten_khung_gio, kg.ngay_ap_dung
       FROM ca c
@@ -193,12 +194,12 @@ class Ca extends BaseModel {
       WHERE kg.ngay_ap_dung = $1
       AND kg.is_active = true
       AND c.is_active = true
-      AND $2 >= c.start_minutes 
-      AND $2 < c.end_minutes
+      AND $2 >= c.start_at
+      AND $2 < c.end_at
       ORDER BY c.start_at
     `;
 
-    const result = await this.query(query, [dayOfWeek, timeMinutes]);
+    const result = await this.query(query, [dayOfWeek, time]);
     return result.rows;
   }
 }
