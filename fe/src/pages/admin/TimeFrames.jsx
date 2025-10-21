@@ -63,9 +63,24 @@ const TimeFrames = () => {
     }
 
     try {
+      // Normalize time format for timeframe (HH:MM:SS -> HH:MM)
+      const normalizeTime = (timeStr) => {
+        if (!timeStr) return timeStr;
+        return timeStr.length >= 5 ? timeStr.slice(0, 5) : timeStr;
+      };
+
+      const normalizedTimeFrameData = {
+        ...timeFrameFormData,
+        start_at: normalizeTime(timeFrameFormData.start_at),
+        end_at: normalizeTime(timeFrameFormData.end_at),
+      };
+
       if (selectedTimeFrame) {
         // Update existing time frame
-        await api.put(`/timeframes/${selectedTimeFrame.id}`, timeFrameFormData);
+        await api.put(
+          `/timeframes/${selectedTimeFrame.id}`,
+          normalizedTimeFrameData
+        );
 
         // Delete existing shifts
         const existingShifts = selectedTimeFrame.shifts || [];
@@ -73,10 +88,17 @@ const TimeFrames = () => {
           await api.delete(`/shifts/${shift.id}`);
         }
 
-        // Add new shifts
+        // Add new shifts (normalize times to avoid server validation errors)
         for (const shift of pendingShifts) {
+          const normalizeTime = (timeStr) => {
+            if (!timeStr) return timeStr;
+            return timeStr.length >= 5 ? timeStr.slice(0, 5) : timeStr;
+          };
+
           await api.post('/shifts', {
             ...shift,
+            start_at: normalizeTime(shift.start_at),
+            end_at: normalizeTime(shift.end_at),
             khung_gio_id: selectedTimeFrame.id,
           });
         }
@@ -86,14 +108,21 @@ const TimeFrames = () => {
         // Create new time frame
         const timeFrameResponse = await api.post(
           '/timeframes',
-          timeFrameFormData
+          normalizedTimeFrameData
         );
         const newTimeFrameId = timeFrameResponse.data.data.id;
 
-        // Add shifts to new time frame
+        // Add shifts to new time frame (normalize times to avoid server validation errors)
         for (const shift of pendingShifts) {
+          const normalizeTime = (timeStr) => {
+            if (!timeStr) return timeStr;
+            return timeStr.length >= 5 ? timeStr.slice(0, 5) : timeStr;
+          };
+
           await api.post('/shifts', {
             ...shift,
+            start_at: normalizeTime(shift.start_at),
+            end_at: normalizeTime(shift.end_at),
             khung_gio_id: newTimeFrameId,
           });
         }
@@ -106,7 +135,26 @@ const TimeFrames = () => {
       fetchTimeFrames();
     } catch (error) {
       console.error('Error saving time frame:', error);
-      showToast.error(error.response?.data?.message || 'Lỗi khi lưu khung giờ');
+      console.error('Request payload (timeframe):', timeFrameFormData);
+      console.error('Request payload (pending shifts):', pendingShifts);
+      console.error('Server response:', error.response?.data);
+      console.error('Validation details:', error.response?.data?.details);
+      console.error('Server status:', error.response?.status);
+
+      const serverData = error.response?.data;
+      let errorMessage = 'Lỗi khi lưu khung giờ';
+
+      if (serverData?.message) {
+        errorMessage = serverData.message;
+      } else if (serverData?.details && Array.isArray(serverData.details)) {
+        errorMessage = serverData.details.join(', ');
+      } else if (serverData?.error) {
+        errorMessage = serverData.error;
+      }
+
+      showToast.error(
+        `${errorMessage} (Status: ${error.response?.status || 'Unknown'})`
+      );
     }
   };
 
@@ -136,15 +184,8 @@ const TimeFrames = () => {
       end_at: timeFrame.end_at,
       ngay_ap_dung: timeFrame.ngay_ap_dung,
     });
-    setPendingShifts(
-      timeFrame.shifts?.map((shift) => ({
-        ten_ca: shift.ten_ca,
-        start_at: shift.start_at,
-        end_at: shift.end_at,
-        gia_tien:
-          shift.gia_tien !== undefined ? shift.gia_tien : shift.gia_theo_gio,
-      })) || []
-    );
+    // Don't pre-populate existing shifts - user must add new shifts
+    setPendingShifts([]);
     setShiftFormData({
       ten_ca: '',
       start_at: timeFrame.start_at,
@@ -316,9 +357,18 @@ const TimeFrames = () => {
       return;
     }
 
+    // Normalize time strings to HH:MM and parse price as integer to avoid precision issues
+    const normalizeTime = (timeStr) => {
+      if (!timeStr) return timeStr;
+      // Strip seconds if present (HH:MM:SS -> HH:MM)
+      return timeStr.length >= 5 ? timeStr.slice(0, 5) : timeStr;
+    };
+
     const normalized = {
       ...shiftFormData,
-      gia_tien: Number(shiftFormData.gia_tien),
+      start_at: normalizeTime(shiftFormData.start_at),
+      end_at: normalizeTime(shiftFormData.end_at),
+      gia_tien: parseInt(shiftFormData.gia_tien, 10) || 0, // Use parseInt to avoid floating point issues
     };
     setPendingShifts([...pendingShifts, normalized]);
     setShiftFormData({
@@ -376,11 +426,17 @@ const TimeFrames = () => {
   }
 
   return (
-    <div className="time-frames">
-      <div className="time-frames__header">
+    <div className="admin-page">
+      <div className="page-header">
         <h1>Quản lý khung giờ</h1>
+        <p className="page-subtitle">
+          Thiết lập khung giờ và ca làm việc cho các sân
+        </p>
+      </div>
+
+      <div className="page-actions">
         <button className="btn btn-primary" onClick={handleCreateTimeFrame}>
-          Thêm khung giờ
+          ➕ Thêm khung giờ
         </button>
       </div>
 

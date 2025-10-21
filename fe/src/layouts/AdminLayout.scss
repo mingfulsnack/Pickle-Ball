@@ -1,0 +1,246 @@
+@import '../styles/variables.scss';
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.admin-sidebar {
+  width: 280px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 1000;
+
+  .sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: white;
+
+      .logo-icon {
+        font-size: 2rem;
+      }
+
+      .logo-text {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+      }
+    }
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+
+    .nav-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .nav-item {
+      margin: 0.25rem 0.75rem;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: translateX(4px);
+      }
+
+      &.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav-icon {
+        font-size: 1.25rem;
+        width: 24px;
+        text-align: center;
+      }
+
+      .nav-text {
+        font-size: 0.95rem;
+      }
+    }
+  }
+
+  .sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: white;
+      flex: 1;
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .user-details {
+        .user-name {
+          font-size: 0.9rem;
+          font-weight: 600;
+          margin-bottom: 0.125rem;
+        }
+
+        .user-role {
+          font-size: 0.75rem;
+          opacity: 0.8;
+          text-transform: capitalize;
+        }
+      }
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+.admin-main {
+  flex: 1;
+  margin-left: 280px;
+  min-height: 100vh;
+
+  .mobile-header {
+    display: none;
+    background: white;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+    gap: 1rem;
+
+    .menu-toggle {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+
+      &:hover {
+        background: #f8fafc;
+      }
+    }
+
+    .mobile-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #1e293b;
+
+      .logo-icon {
+        font-size: 1.25rem;
+      }
+    }
+  }
+
+  .admin-content {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+// Responsive design
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 260px;
+  }
+
+  .admin-main {
+    margin-left: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 100%;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  .admin-main {
+    margin-left: 0;
+
+    .mobile-header {
+      display: flex;
+    }
+
+    .admin-content {
+      padding: 1rem;
+    }
+  }
+
+  .mobile-overlay {
+    display: block;
+  }
+}

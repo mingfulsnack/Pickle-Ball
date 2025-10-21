@@ -8,6 +8,7 @@ import {
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './layouts/AppLayout';
+import AdminLayout from './layouts/AdminLayout';
 import PublicLayout from './layouts/PublicLayout';
 //import Login from './pages/Login';
 
@@ -25,6 +26,7 @@ import Contacts from './pages/customer/Contacts';
 import Bookings from './pages/admin/Bookings';
 import Courts from './pages/admin/Courts';
 import TimeFrames from './pages/admin/TimeFrames';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 import './styles/globals.scss';
 import 'react-toastify/dist/ReactToastify.css';
@@ -132,13 +134,13 @@ function App() {
             } 
           /> */}
 
-          {/* Admin routes with AppLayout */}
-          <Route path="/admin" element={<AppLayout />}>
+          {/* Admin routes with AdminLayout */}
+          <Route path="/admin" element={<AdminLayout />}>
             <Route
               index
               element={
                 <ProtectedRoute adminOnly={true}>
-                  <Dashboard />
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />
@@ -146,7 +148,7 @@ function App() {
               path="dashboard"
               element={
                 <ProtectedRoute adminOnly={true}>
-                  <Dashboard />
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />

@@ -8,10 +8,9 @@ class User extends BaseModel {
 
   // Find user by username (any role)
   async findByUsername(username) {
-    const result = await this.query(
-      `SELECT * FROM users WHERE username = $1`,
-      [username]
-    );
+    const result = await this.query(`SELECT * FROM users WHERE username = $1`, [
+      username,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -47,7 +46,7 @@ class User extends BaseModel {
   // Create new user
   async createUser(data) {
     const { username, email, password, role, full_name, phone, note } = data;
-    
+
     // Hash password
     const password_hash = await hashPassword(password);
 
@@ -58,7 +57,7 @@ class User extends BaseModel {
       role,
       full_name,
       phone,
-      note
+      note,
     };
 
     return await this.create(userData);
@@ -67,27 +66,44 @@ class User extends BaseModel {
   // Get all users
   async findAllUsers(conditions = {}, page = 1, limit = 20) {
     const baseConditions = [];
-    
+
     // Add role filter if provided
     if (conditions.role) {
       if (Array.isArray(conditions.role)) {
-        baseConditions.push({ column: 'role', operator: 'IN', value: conditions.role });
+        baseConditions.push({
+          column: 'role',
+          operator: 'IN',
+          value: conditions.role,
+        });
       } else {
-        baseConditions.push({ column: 'role', operator: '=', value: conditions.role });
+        baseConditions.push({
+          column: 'role',
+          operator: '=',
+          value: conditions.role,
+        });
       }
     }
-    
+
     // Add search filter if provided
     if (conditions.search) {
-      baseConditions.push({ column: 'full_name', operator: 'ILIKE', value: `%${conditions.search}%` });
+      baseConditions.push({
+        column: 'full_name',
+        operator: 'ILIKE',
+        value: `%${conditions.search}%`,
+      });
     }
 
     const offset = (page - 1) * limit;
-    const users = await this.findAll(baseConditions, 'created_at DESC', limit, offset);
-    
+    const users = await this.findAll(
+      baseConditions,
+      'created_at DESC',
+      limit,
+      offset
+    );
+
     // Remove password hashes from response
-    users.forEach(user => delete user.password_hash);
-    
+    users.forEach((user) => delete user.password_hash);
+
     return users;
   }
 
@@ -111,7 +127,5 @@ class User extends BaseModel {
     return users.length > 0;
   }
 }
-
-module.exports = new User();
 
 module.exports = new User();

@@ -1,11 +1,29 @@
 @use './variables.scss' as *;
 @use 'sass:color';
 
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+// Expose key Sass variables as CSS custom properties so legacy styles using
+// var(--...) remain consistent across the app (admin and customer).
+:root {
+  --primary-color: #{$primary-color};
+  --secondary-color: #{$secondary-color};
+  --accent-color: #{$accent-color};
+  --danger-color: #{$danger-color};
+  --success-color: #{$success-color};
+  --text-color: #{$text-color};
+  --text-primary: #{$text-primary};
+  --text-muted: #{$text-muted};
+  --bg-primary: #{$bg-primary};
+  --bg-secondary: #{$bg-secondary};
+  --bg-light: #{$background-light};
+  --border-color: #{$border-color};
+  --primary-rgb: #{red($primary-color)}, #{green($primary-color)},
+    #{blue($primary-color)};
 }
 
 body {

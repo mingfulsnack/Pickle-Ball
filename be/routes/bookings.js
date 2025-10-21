@@ -13,6 +13,14 @@ router.get('/mine', bookingController.getMyBookings);
 // Lấy danh sách đặt sân
 router.get('/', bookingController.getBookings);
 
+// Tạo đặt sân mới (admin/staff)
+router.post(
+  '/',
+  checkRole(['manager', 'staff']),
+  validate(schemas.publicBooking),
+  bookingController.createBooking
+);
+
 // Lấy chi tiết đặt sân
 router.get('/:id', bookingController.getBookingDetail);
 

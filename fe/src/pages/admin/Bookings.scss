@@ -1,0 +1,311 @@
+/* Bookings admin styles - cohesive with Admin.scss and TimeFrames.scss */
+
+.admin-page h2 {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.admin-table tbody tr:hover {
+  background: #fbfdff;
+}
+
+.admin-table td {
+  vertical-align: middle;
+}
+
+.booking-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.booking-status.pending {
+  background: #fef3c7;
+  color: #7c5a00;
+}
+.booking-status.confirmed {
+  background: #bbf7d0;
+  color: #064e3b;
+}
+.booking-status.cancelled {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+/* Modal and Form Styles */
+.booking-form,
+.customer-form {
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+      }
+
+      &::placeholder {
+        color: var(--text-muted);
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      min-width: 120px;
+    }
+  }
+}
+
+.customer-selection {
+  .customer-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-top: 0.5rem;
+  }
+
+  .customer-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--bg-light);
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    span {
+      display: block;
+
+      &.muted {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+    }
+  }
+}
+
+.selected-customer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-light);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+
+  span {
+    font-weight: 500;
+  }
+}
+
+.services-list {
+  .service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--bg-light);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+
+    .service-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      button {
+        width: 30px;
+        height: 30px;
+        border: 1px solid var(--border-color);
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+
+        &:hover {
+          background: var(--bg-light);
+        }
+      }
+
+      span {
+        min-width: 30px;
+        text-align: center;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+/* New Booking Flow Styles */
+.booking-search {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+
+  h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: end;
+
+    .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+  }
+}
+
+.available-courts {
+  margin-bottom: 2rem;
+
+  h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+  }
+
+  .courts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .court-card {
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &.selected {
+      border-color: var(--primary-color);
+      background: var(--primary-color-light);
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    }
+
+    .court-name {
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .court-time {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .court-price {
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.services-section {
+  margin-bottom: 2rem;
+
+  h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+  }
+}
+
+.pricing-summary {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+
+  h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+  }
+
+  .pricing-details {
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0;
+
+      &.total {
+        border-top: 1px solid var(--border-color);
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--primary-color);
+      }
+    }
+  }
+}

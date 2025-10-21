@@ -46,14 +46,11 @@ const schemas = {
 
   // Khách hàng
   customer: Joi.object({
-    hoten: Joi.string().min(2).max(100).required(),
-    gioitinh: Joi.string().valid('Nam', 'Nữ', 'Khác'),
-    sodienthoai: Joi.string()
+    ho_ten: Joi.string().min(2).max(100).required(),
+    sdt: Joi.string()
       .pattern(/^[0-9]{10,11}$/)
       .required(),
-    email: Joi.string().email(),
-    diachi: Joi.string(),
-    mahang: Joi.number().integer().positive(),
+    email: Joi.string().email().allow('', null).optional(),
   }),
 
   // Đặt bàn
@@ -249,10 +246,12 @@ const schemas = {
 // Export validation middleware functions
 const validateTimeFrame = validate(schemas.timeFrame);
 const validateShift = validate(schemas.shift);
+const validateCustomer = validate(schemas.customer);
 
 module.exports = {
   validate,
   schemas,
   validateTimeFrame,
   validateShift,
+  validateCustomer,
 };

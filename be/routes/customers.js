@@ -1,17 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const customerController = require('../controllers/customerController');
+const { authenticateToken, checkRole } = require('../middleware/auth');
+const validation = require('../middleware/validation');
 
-// Placeholder routes for missing endpoints
-const endpoints = ['customers', 'employees', 'reports', 'orderRoutes', 'invoices'];
+// Apply auth middleware for all customer routes
+router.use(authenticateToken);
 
-endpoints.forEach(endpoint => {
-  router.get('/', (req, res) => {
-    res.json({
-      success: true,
-      message: `${endpoint} endpoint - not implemented for court booking system`,
-      data: []
-    });
-  });
-});
+// Middleware xác thực cho admin/staff
+const adminAuth = checkRole(['manager', 'staff']);
+
+// Routes
+router.get('/', adminAuth, customerController.getCustomersWithDeduplication);
+router.post(
+  '/',
+  adminAuth,
+  validation.validateCustomer,
+  customerController.createCustomer
+);
+router.get('/:id', adminAuth, customerController.getCustomerById);
 
 module.exports = router;

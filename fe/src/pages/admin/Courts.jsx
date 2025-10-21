@@ -76,13 +76,17 @@ const Courts = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
-        <h2>Quản lý sân</h2>
-        <div>
-          <button className="btn" onClick={openCreate}>
-            Tạo sân mới
-          </button>
-        </div>
+      <div className="page-header">
+        <h1>Quản lý sân</h1>
+        <p className="page-subtitle">
+          Thiết lập và bảo trì thông tin các sân pickleball
+        </p>
+      </div>
+
+      <div className="page-actions">
+        <button className="btn btn-primary" onClick={openCreate}>
+          ➕ Tạo sân mới
+        </button>
       </div>
 
       {loading ? (
