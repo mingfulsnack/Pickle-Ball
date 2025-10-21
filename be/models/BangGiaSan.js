@@ -21,9 +21,15 @@ class BangGiaSan extends BaseModel {
       // Use new shift-based pricing system
       return await Ca.calculateSlotPrice(san_id, ngay, start_time, end_time);
     } catch (error) {
-      console.error('Error calculating slot price with shifts:', error);
+      console.error('Error calculating slot price with shifts:', error.message || error);
 
-      // Fallback to old system if available
+      // If error message indicates validation/coverage issue (no shifts or uncovered time), rethrow
+      const msg = String(error.message || '').toLowerCase();
+      if (msg.includes('không có ca') || msg.includes('không nằm toàn bộ') || msg.includes('không nằm toàn bộ trong')) {
+        throw error;
+      }
+
+      // Otherwise, fallback to old system if available
       try {
         const result = await this.query(
           `SELECT calc_total_price_for_slot($1, $2::date, $3::time, $4::time) as total`,

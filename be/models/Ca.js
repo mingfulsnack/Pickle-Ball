@@ -94,6 +94,8 @@ class Ca extends BaseModel {
     let totalPrice = 0;
     const startMinutes = this.timeToMinutes(startTime);
     const endMinutes = this.timeToMinutes(endTime);
+  const requestedTotalHours = (endMinutes - startMinutes) / 60;
+  let totalOverlapMinutes = 0;
 
     for (const shift of shifts) {
       const shiftStartMinutes = this.timeToMinutes(shift.start_at);
@@ -105,12 +107,22 @@ class Ca extends BaseModel {
 
       if (overlapStart < overlapEnd) {
         const overlapHours = (overlapEnd - overlapStart) / 60;
+        totalOverlapMinutes += (overlapEnd - overlapStart);
         // support both column names if older rows exist: gia_tien or gia_theo_gio
         const shiftPriceRaw =
           shift.gia_tien !== undefined ? shift.gia_tien : shift.gia_theo_gio;
         const shiftPrice = parseFloat(shiftPriceRaw) || 0;
         totalPrice += overlapHours * shiftPrice;
       }
+    }
+
+    // Ensure the requested slot is fully covered by shifts (no uncovered hours)
+    const overlapHoursTotal = totalOverlapMinutes / 60;
+    // allow a small epsilon for fractional minutes calculation
+    if (overlapHoursTotal + 1e-6 < requestedTotalHours) {
+      throw new Error(
+        `Khung giờ đặt ${startTime} - ${endTime} không nằm toàn bộ trong giờ hoạt động của ca. Vui lòng chọn khung giờ hợp lệ.`
+      );
     }
 
     return Math.round(totalPrice);

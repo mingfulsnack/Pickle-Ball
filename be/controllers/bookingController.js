@@ -80,13 +80,17 @@ const createBooking = async (req, res) => {
       }
 
       // Calculate price using DB function
-      const priceRes = await BangGiaSan.query(
-        `SELECT calc_total_price_for_slot($1, $2::date, $3::time, $4::time) as total`,
-        [s.san_id, ngay_su_dung, s.start_time, s.end_time]
-      );
-      const slotTotal = parseFloat(priceRes.rows[0].total || 0);
-
-      slotResults.push({ ...s, slotTotal });
+      try {
+        const priceRes = await BangGiaSan.query(
+          `SELECT calc_total_price_for_slot($1, $2::date, $3::time, $4::time) as total`,
+          [s.san_id, ngay_su_dung, s.start_time, s.end_time]
+        );
+        const slotTotal = parseFloat(priceRes.rows[0].total || 0);
+        slotResults.push({ ...s, slotTotal });
+      } catch (err) {
+        console.warn('Price calc validation error during booking:', err.message || err);
+        return res.status(400).json(formatErrorResponse(err.message || 'Validation error'));
+      }
     }
 
     // Calculate services total
@@ -318,7 +322,7 @@ const getBookingByToken = async (req, res) => {
       };
     });
 
-    // Ensure totals are present in response (use stored values if available, else compute)
+  // Ensure totals are present in response (use stored values if available, else compute)
     const bookingTotals = {
       tien_san:
         result.tien_san !== undefined && result.tien_san !== null
@@ -355,18 +359,41 @@ const getBookingByToken = async (req, res) => {
       );
     }
 
-    res.json(
-      formatResponse(
-        true,
-        {
-          booking: result,
-          slots,
-          services: enrichedServices,
-          totals: bookingTotals,
-        },
-        'Lấy thông tin đặt sân thành công'
-      )
-    );
+    // Determine effective status: if booking still marked 'pending' but end time passed, expose as 'cancelled' in the response
+    let effectiveStatus = result.trang_thai;
+    let isExpired = false;
+    try {
+      // find latest end_time from slots
+      const latestEnd = slots.reduce((m, s) => {
+        if (!s || !s.end_time) return m;
+        return m && m > s.end_time ? m : s.end_time;
+      }, null);
+
+      if (latestEnd) {
+        // build a timestamp from ngay_su_dung + latestEnd (works when ngay_su_dung is a date string or Date)
+        const datePart = result.ngay_su_dung instanceof Date ? result.ngay_su_dung.toISOString().slice(0, 10) : String(result.ngay_su_dung);
+        const bookingEndTs = new Date(`${datePart}T${latestEnd}`);
+        if (!isNaN(bookingEndTs.getTime())) {
+          if (String(result.trang_thai) === 'pending' && bookingEndTs.getTime() < Date.now()) {
+            effectiveStatus = 'cancelled';
+            isExpired = true;
+          }
+        }
+      }
+    } catch (err) {
+      // non-fatal: if parsing fails, just fall back to stored status
+      console.warn('Could not compute effective booking status:', err && err.message ? err.message : err);
+    }
+
+    // Return booking info along with an effective status and expiration flag so frontend can show immediately
+    const bookingResponse = {
+      booking: { ...result, effective_status: effectiveStatus, is_expired: isExpired },
+      slots,
+      services: enrichedServices,
+      totals: bookingTotals,
+    };
+
+    res.json(formatResponse(true, bookingResponse, 'Lấy thông tin đặt sân thành công'));
   } catch (error) {
     console.error('Get booking by token error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));

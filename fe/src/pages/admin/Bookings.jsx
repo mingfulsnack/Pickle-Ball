@@ -84,27 +84,6 @@ const Bookings = () => {
     }
   };
 
-  const searchCustomers = async (query) => {
-    if (!query.trim()) {
-      setCustomers([]);
-      return;
-    }
-    try {
-      const res = await api.get(
-        `/customers?search=${encodeURIComponent(query)}`
-      );
-      if (res.data.success) {
-        setCustomers(res.data.data || []);
-      } else {
-        setCustomers([]);
-      }
-    } catch (err) {
-      console.error('Search customers error', err);
-      setCustomers([]);
-      toast.error('Lỗi khi tìm kiếm khách hàng');
-    }
-  };
-
   const handleCreateNewCustomer = async () => {
     const { full_name, phone, email } = newCustomerForm;
     if (!full_name || !phone) {
@@ -113,33 +92,42 @@ const Bookings = () => {
     }
 
     try {
-      const res = await api.post('/customers', {
-        ho_ten: full_name,
-        sdt: phone,
-        email: email || null,
-      });
-
-      if (res.data.success) {
-        const newCustomer = res.data.data;
-        setSelectedCustomer(newCustomer);
+      const res = await api.post('/customers', newCustomerForm);
+      if (res.data && res.data.success) {
+        setSelectedCustomer(res.data.data);
         setShowCustomerModal(false);
         setNewCustomerForm({ full_name: '', phone: '', email: '' });
         toast.success('Tạo khách hàng thành công');
       } else {
-        toast.error(res.data.message || 'Lỗi khi tạo khách hàng');
+        toast.error(res.data?.message || 'Không thể tạo khách hàng');
       }
     } catch (err) {
       console.error('Create customer error', err);
-      if (err.response?.data?.data?.duplicateCustomer) {
-        toast.error('Số điện thoại đã tồn tại trong hệ thống');
+      toast.error('Lỗi khi tạo khách hàng');
+    }
+  };
+
+  const searchCustomers = async (query) => {
+    if (!query) {
+      setCustomers([]);
+      return;
+    }
+    try {
+      const res = await api.get(`/customers?search=${encodeURIComponent(query)}`);
+      if (res.data && res.data.success) {
+        setCustomers(res.data.data || []);
       } else {
-        toast.error(err.response?.data?.message || 'Lỗi khi tạo khách hàng');
+        setCustomers([]);
       }
+    } catch (err) {
+      console.error('Search customers error', err);
+      setCustomers([]);
+      // do not spam toast on each keystroke
     }
   };
 
   const calculatePrice = useCallback(async () => {
-    if (selectedSlots.length === 0) {
+    if (!searchParams.date || selectedSlots.length === 0) {
       setPricing(null);
       return;
     }
@@ -148,15 +136,26 @@ const Bookings = () => {
       const response = await publicApi.post(
         '/public/availability/calculate-price',
         {
-          date: searchParams.date,
+          ngay_su_dung: searchParams.date,
           slots: selectedSlots,
           services: selectedServices,
         }
       );
       setPricing(response.data.data);
     } catch (error) {
-      console.error('Error calculating price:', error);
-      toast.error('Lỗi khi tính giá');
+      if (error?.response) {
+        const details = error.response.data?.details;
+        if (Array.isArray(details) && details.length > 0) {
+          toast.error(details.join('; '));
+        } else if (error.response.data?.message) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error('Lỗi khi tính giá (server)');
+        }
+      } else {
+        console.error('Error calculating price:', error);
+        toast.error('Lỗi khi tính giá');
+      }
     }
   }, [searchParams.date, selectedSlots, selectedServices]);
 
@@ -445,55 +444,61 @@ const Bookings = () => {
             <div className="available-courts">
               <h4>2. Chọn sân</h4>
               <div className="courts-grid">
-                {availability.map((court) => (
-                  <div
-                    key={`${court.san_id}-${court.start_time}`}
-                    className={`court-card ${
-                      selectedSlots.some(
-                        (slot) =>
-                          slot.san_id === court.san_id &&
-                          slot.start_time === court.start_time
-                      )
-                        ? 'selected'
-                        : ''
-                    }`}
-                    onClick={() => {
-                      const isSelected = selectedSlots.some(
-                        (slot) =>
-                          slot.san_id === court.san_id &&
-                          slot.start_time === court.start_time
-                      );
-                      if (isSelected) {
-                        setSelectedSlots(
-                          selectedSlots.filter(
-                            (slot) =>
-                              !(
-                                slot.san_id === court.san_id &&
-                                slot.start_time === court.start_time
-                              )
-                          )
-                        );
-                      } else {
-                        setSelectedSlots([
-                          ...selectedSlots,
-                          {
-                            san_id: court.san_id,
-                            start_time: court.start_time,
-                            end_time: court.end_time,
-                          },
-                        ]);
-                      }
-                    }}
-                  >
-                    <div className="court-name">{court.ten_san}</div>
-                    <div className="court-time">
-                      {court.start_time} - {court.end_time}
+                {availability.map((court) => {
+                  const slotStart = court.start_time || searchParams.startTime;
+                  const slotEnd = court.end_time || searchParams.endTime;
+                  const available = court.is_available !== false; // undefined or true => available
+                  const isSelected = selectedSlots.some(
+                    (slot) => slot.san_id === court.san_id && slot.start_time === slotStart
+                  );
+
+                  return (
+                    <div
+                      key={`${court.san_id}-${slotStart}`}
+                      className={`court-card ${isSelected ? 'selected' : ''} ${available ? '' : 'disabled'}`}
+                      onClick={() => {
+                        // require a selected start/end time (from the search form) or availability item
+                        if (!slotStart || !slotEnd) {
+                          toast.error('Vui lòng chọn giờ bắt đầu và giờ kết thúc trước khi chọn sân');
+                          return;
+                        }
+
+                        if (!available) {
+                          // match customer behaviour: cannot select unavailable courts
+                          toast.error('Sân đã được đặt trong khung giờ này');
+                          return;
+                        }
+
+                        if (isSelected) {
+                          setSelectedSlots(
+                            selectedSlots.filter(
+                              (slot) => !(slot.san_id === court.san_id && slot.start_time === slotStart)
+                            )
+                          );
+                        } else {
+                          setSelectedSlots([
+                            ...selectedSlots,
+                            {
+                              san_id: court.san_id,
+                              start_time: slotStart,
+                              end_time: slotEnd,
+                            },
+                          ]);
+                        }
+                      }}
+                    >
+                      <div className="court-name">{court.ten_san}</div>
+                      <div className="court-time">
+                        {slotStart || '-'} - {slotEnd || '-'}
+                      </div>
+                      {!available && (
+                        <div className="court-unavailable">
+                          <span>Đã đặt</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="court-price">
-                      {Number(court.gia_tien).toLocaleString('vi-VN')}đ
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -550,24 +555,34 @@ const Bookings = () => {
             <div className="pricing-summary">
               <h4>Tổng cộng</h4>
               <div className="pricing-details">
-                <div className="price-row">
-                  <span>Tiền sân:</span>
-                  <span>
-                    {Number(pricing.subtotal).toLocaleString('vi-VN')}đ
-                  </span>
-                </div>
-                {pricing.services_total > 0 && (
-                  <div className="price-row">
-                    <span>Dịch vụ:</span>
-                    <span>
-                      {Number(pricing.services_total).toLocaleString('vi-VN')}đ
-                    </span>
-                  </div>
-                )}
-                <div className="price-row total">
-                  <span>Tổng cộng:</span>
-                  <span>{Number(pricing.total).toLocaleString('vi-VN')}đ</span>
-                </div>
+                {(() => {
+                  // support both new controller shape and legacy keys
+                  const slotsTotal =
+                    pricing?.summary?.slots_total ?? pricing?.slots_total ?? pricing?.subtotal ?? 0;
+                  const servicesTotal =
+                    pricing?.summary?.services_total ?? pricing?.services_total ?? pricing?.services_total ?? 0;
+                  const grandTotal =
+                    pricing?.summary?.grand_total ?? pricing?.total ?? pricing?.grand_total ?? 0;
+
+                  return (
+                    <>
+                      <div className="price-row">
+                        <span>Tiền sân:</span>
+                        <span>{Number(slotsTotal).toLocaleString('vi-VN')}đ</span>
+                      </div>
+                      {Number(servicesTotal) > 0 && (
+                        <div className="price-row">
+                          <span>Dịch vụ:</span>
+                          <span>{Number(servicesTotal).toLocaleString('vi-VN')}đ</span>
+                        </div>
+                      )}
+                      <div className="price-row total">
+                        <span>Tổng cộng:</span>
+                        <span>{Number(grandTotal).toLocaleString('vi-VN')}đ</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}

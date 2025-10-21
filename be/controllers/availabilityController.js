@@ -180,13 +180,20 @@ const calculatePrice = async (req, res) => {
       }
 
       // Tính giá
-      const priceResult = await BangGiaSan.calcTotalPriceForSlot(
-        san_id,
-        ngay_su_dung,
-        start_time,
-        end_time
-      );
-      const slotPrice = parseFloat(priceResult || 0);
+      let slotPrice = 0;
+      try {
+        const priceResult = await BangGiaSan.calcTotalPriceForSlot(
+          san_id,
+          ngay_su_dung,
+          start_time,
+          end_time
+        );
+        slotPrice = parseFloat(priceResult || 0);
+      } catch (err) {
+        // If price calculation fails due to shift coverage, return a 400 to the client
+        console.warn('Price calc validation error:', err.message || err);
+        return res.status(400).json(formatErrorResponse(err.message || 'Validation error'));
+      }
       totalSlotsPrice += slotPrice;
 
       calculations.push({
