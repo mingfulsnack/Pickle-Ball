@@ -34,4 +34,11 @@ router.put(
 // Hủy đặt sân (khách hàng hoặc admin/staff)
 router.put('/:id/cancel', bookingController.cancelBooking);
 
+// Admin: update booking fields (status, payment)
+router.put(
+  '/:id',
+  checkRole(['manager', 'staff']),
+  bookingController.updateBooking
+);
+
 module.exports = router;

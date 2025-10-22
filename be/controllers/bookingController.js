@@ -88,8 +88,13 @@ const createBooking = async (req, res) => {
         const slotTotal = parseFloat(priceRes.rows[0].total || 0);
         slotResults.push({ ...s, slotTotal });
       } catch (err) {
-        console.warn('Price calc validation error during booking:', err.message || err);
-        return res.status(400).json(formatErrorResponse(err.message || 'Validation error'));
+        console.warn(
+          'Price calc validation error during booking:',
+          err.message || err
+        );
+        return res
+          .status(400)
+          .json(formatErrorResponse(err.message || 'Validation error'));
       }
     }
 
@@ -322,7 +327,7 @@ const getBookingByToken = async (req, res) => {
       };
     });
 
-  // Ensure totals are present in response (use stored values if available, else compute)
+    // Ensure totals are present in response (use stored values if available, else compute)
     const bookingTotals = {
       tien_san:
         result.tien_san !== undefined && result.tien_san !== null
@@ -371,10 +376,16 @@ const getBookingByToken = async (req, res) => {
 
       if (latestEnd) {
         // build a timestamp from ngay_su_dung + latestEnd (works when ngay_su_dung is a date string or Date)
-        const datePart = result.ngay_su_dung instanceof Date ? result.ngay_su_dung.toISOString().slice(0, 10) : String(result.ngay_su_dung);
+        const datePart =
+          result.ngay_su_dung instanceof Date
+            ? result.ngay_su_dung.toISOString().slice(0, 10)
+            : String(result.ngay_su_dung);
         const bookingEndTs = new Date(`${datePart}T${latestEnd}`);
         if (!isNaN(bookingEndTs.getTime())) {
-          if (String(result.trang_thai) === 'pending' && bookingEndTs.getTime() < Date.now()) {
+          if (
+            String(result.trang_thai) === 'pending' &&
+            bookingEndTs.getTime() < Date.now()
+          ) {
             effectiveStatus = 'cancelled';
             isExpired = true;
           }
@@ -382,18 +393,27 @@ const getBookingByToken = async (req, res) => {
       }
     } catch (err) {
       // non-fatal: if parsing fails, just fall back to stored status
-      console.warn('Could not compute effective booking status:', err && err.message ? err.message : err);
+      console.warn(
+        'Could not compute effective booking status:',
+        err && err.message ? err.message : err
+      );
     }
 
     // Return booking info along with an effective status and expiration flag so frontend can show immediately
     const bookingResponse = {
-      booking: { ...result, effective_status: effectiveStatus, is_expired: isExpired },
+      booking: {
+        ...result,
+        effective_status: effectiveStatus,
+        is_expired: isExpired,
+      },
       slots,
       services: enrichedServices,
       totals: bookingTotals,
     };
 
-    res.json(formatResponse(true, bookingResponse, 'Lấy thông tin đặt sân thành công'));
+    res.json(
+      formatResponse(true, bookingResponse, 'Lấy thông tin đặt sân thành công')
+    );
   } catch (error) {
     console.error('Get booking by token error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -613,5 +633,65 @@ module.exports = {
   getBookingDetail,
   confirmBooking,
   cancelBooking,
+  updateBooking,
   getBookingByToken,
 };
+
+// Admin: update booking (status/payment)
+async function updateBooking(req, res) {
+  try {
+    const { id } = req.params;
+    const { trang_thai, is_paid, payment_method, note } = req.body;
+
+    const q = await PhieuDatSan.query(
+      /^\d+$/.test(id)
+        ? 'SELECT * FROM phieu_dat_san WHERE id = $1'
+        : 'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
+      [id]
+    );
+    const booking = q.rows[0];
+    if (!booking) {
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt'));
+    }
+
+    // Build update parts
+    const updates = [];
+    const params = [];
+    let idx = 1;
+    if (trang_thai !== undefined) {
+      updates.push(`trang_thai = $${idx++}`);
+      params.push(trang_thai);
+    }
+    if (is_paid !== undefined) {
+      updates.push(`is_paid = $${idx++}`);
+      params.push(is_paid);
+    }
+    if (payment_method !== undefined) {
+      updates.push(`payment_method = $${idx++}`);
+      params.push(payment_method);
+    }
+    if (note !== undefined) {
+      updates.push(`note = $${idx++}`);
+      params.push(note);
+    }
+
+    if (updates.length === 0) {
+      return res.json(
+        formatResponse(true, null, 'Không có trường nào được cập nhật')
+      );
+    }
+
+    params.push(booking.id);
+    const sql = `UPDATE phieu_dat_san SET ${updates.join(
+      ', '
+    )} WHERE id = $${idx}`;
+    await PhieuDatSan.query(sql, params);
+
+    res.json(formatResponse(true, null, 'Cập nhật đặt sân thành công'));
+  } catch (error) {
+    console.error('Update booking error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+}

@@ -1,328 +1,268 @@
-/* Bookings admin styles - cohesive with Admin.scss and TimeFrames.scss */
+@use '../../styles/variables.scss' as *;
 
-.admin-page h2 {
-  margin-bottom: 1rem;
-  color: var(--primary-color);
-}
+// Inherits base styles from Admin.scss
 
-.admin-table tbody tr:hover {
-  background: #fbfdff;
-}
-
-.admin-table td {
-  vertical-align: middle;
-}
-
-.booking-status {
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.booking-status.pending {
-  background: #fef3c7;
-  color: #7c5a00;
-}
-.booking-status.confirmed {
-  background: #bbf7d0;
-  color: #064e3b;
-}
-.booking-status.cancelled {
-  background: #fee2e2;
-  color: #7f1d1d;
-}
-
-/* Modal and Form Styles */
-.booking-form,
-.customer-form {
-  .form-group {
-    margin-bottom: 1.5rem;
-
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
+// Booking table specific styles
+.admin-table {
+  td {
+    .booking-status {
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
       font-weight: 600;
-      color: var(--text-color);
+      font-size: 0.8rem;
+      text-transform: capitalize;
+      text-align: center;
+      min-width: 90px; // Ensure consistent width
+
+      &.pending {
+        background: #fffbeb; // Lighter yellow
+        color: #b45309;      // Darker amber
+        border: 1px solid #fde68a;
+      }
+      &.confirmed {
+        background: #f0fdf4; // Lighter green
+        color: #15803d;      // Darker green
+        border: 1px solid #bbf7d0;
+      }
+      &.cancelled {
+        background: #fff1f2; // Lighter red
+        color: #be123c;      // Darker rose
+        border: 1px solid #fecdd3;
+      }
+    }
+  }
+}
+
+// Styles specific to the "Create Booking" Modal
+.booking-form {
+  h4 { // Section titles within the modal
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: $primary-color; // Use primary color for section titles
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid $border-color;
+    &:first-of-type {
+      margin-top: 0; // No top margin for the very first title
+    }
+  }
+
+  // Customer Selection Area
+  .customer-selection {
+    position: relative; // Needed for positioning the dropdown
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end; // Align input and button nicely
+
+    input[type='text'] {
+      flex-grow: 1; // Allow input to take available space
     }
 
-    input,
-    select,
-    textarea {
-      width: 100%;
+    .btn-secondary { // Style the "Create New" button
+      flex-shrink: 0; // Prevent button from shrinking
+      padding: 0.7rem 1rem; // Adjust padding
+    }
+  }
+
+  .customer-list {
+    position: absolute;
+    background: white;
+    border: 1px solid $border-color;
+    border-top: none; // Attach visually to the input
+    border-radius: 0 0 $border-radius-md $border-radius-md;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10; // Ensure it's above other elements
+    width: calc(100% - 180px); // Adjust width relative to input+button
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    top: 100%; // Position below the input
+    left: 0;
+
+    .customer-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      &:hover {
+        background-color: $sidebar-item-hover;
+      }
+      &:not(:last-child) {
+        border-bottom: 1px solid $border-color;
+      }
+      span { display: block; }
+      .muted { font-size: 0.85rem; color: $text-light; }
+    }
+  }
+
+  .selected-customer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #eef2ff; // Light indigo background
+    color: #312e81; // Dark indigo text
+    padding: 0.75rem 1rem;
+    border-radius: $border-radius-md;
+    border: 1px solid #c7d2fe; // Indigo border
+
+    span {
+      font-weight: 600;
+    }
+  }
+
+  // Booking Search (Date/Time selection)
+  .booking-search {
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      align-items: end; // Align items to the bottom for better look
+    }
+    .form-group { margin-bottom: 0; } // Override default margin in this context
+  }
+
+  // Available Courts Grid
+  .available-courts {
+    .courts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); // Smaller cards
+      gap: 0.75rem;
+    }
+
+    .court-card {
       padding: 0.75rem;
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.2s ease;
+      border: 2px solid $border-color;
+      border-radius: $border-radius-md;
+      text-align: center;
 
-      &:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+      .court-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
       }
-
-      &::placeholder {
-        color: var(--text-muted);
+      .court-time {
+        font-size: 0.85rem;
+        color: $text-secondary;
       }
-    }
+       .court-unavailable {
+         margin-top: 0.5rem;
+         font-size: 0.75rem;
+         font-weight: 600;
+         color: $danger-color;
+       }
 
-    textarea {
-      resize: vertical;
-      min-height: 80px;
+      &.selected {
+        border-color: $primary-color;
+        background: lighten($primary-color, 40%);
+        .court-name { color: darken($primary-color, 15%); }
+      }
+       &.disabled {
+         background-color: #f8f8f8;
+         border-style: dashed;
+         color: #aaa;
+         .court-name, .court-time { color: #aaa; }
+       }
     }
   }
 
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+  // Services List
+  .services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 
-    .form-group {
-      margin-bottom: 1.5rem;
+    .service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: #f9fafb;
+      border: 1px solid $border-color;
+      border-radius: $border-radius-md;
+
+      .service-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        button {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 1px solid $border-color;
+          background: white;
+          font-weight: bold;
+          cursor: pointer;
+           &:hover { background: #f3f4f6; }
+        }
+        span {
+          min-width: 25px;
+          text-align: center;
+          font-weight: 600;
+        }
+      }
     }
   }
 
+  // Pricing Summary
+  .pricing-summary {
+     background: #f9fafb;
+     border: 1px solid $border-color;
+     padding: 1rem 1.5rem;
+     border-radius: $border-radius-md;
+
+    .pricing-details {
+      .price-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        &:not(:last-child) {
+           border-bottom: 1px dashed #eee;
+        }
+        &.total {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: $primary-color;
+          margin-top: 0.5rem;
+          padding-top: 0.75rem;
+          border-top: 1px solid $border-color;
+          border-bottom: none;
+        }
+      }
+    }
+  }
+
+   // Form Actions (Modal Footer)
   .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid $border-color;
 
-    .btn {
+    .btn { // General button styling within the modal footer
       padding: 0.75rem 1.5rem;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
-      border-radius: 8px;
-      min-width: 120px;
+      border-radius: $border-radius-md;
     }
-  }
-}
-
-.customer-selection {
-  .customer-list {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    margin-top: 0.5rem;
-  }
-
-  .customer-item {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: var(--bg-light);
+    .btn-secondary {
+       background-color: #e5e7eb;
+       color: #374151;
+       &:hover { background-color: #d1d5db; }
     }
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    span {
-      display: block;
-
-      &.muted {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-      }
-    }
-  }
-}
-
-.selected-customer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background: var(--bg-light);
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-
-  span {
-    font-weight: 500;
-  }
-}
-
-.services-list {
-  .service-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    background: var(--bg-light);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-
-    .service-controls {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      button {
-        width: 30px;
-        height: 30px;
-        border: 1px solid var(--border-color);
-        background: white;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-
-        &:hover {
-          background: var(--bg-light);
+     .btn-primary {
+       background-color: $primary-color;
+       color: white;
+        &:hover { background-color: darken($primary-color, 10%); }
+        &:disabled {
+          background-color: lighten($primary-color, 20%);
+          cursor: not-allowed;
         }
-      }
-
-      span {
-        min-width: 30px;
-        text-align: center;
-        font-weight: 600;
-      }
-    }
+     }
   }
 }
 
-/* New Booking Flow Styles */
-.booking-search {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--bg-light);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-
-  h4 {
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-  }
-
-  .form-row {
-    display: flex;
-    gap: 1rem;
-    align-items: end;
-
-    .form-group {
-      flex: 1;
-      margin-bottom: 0;
-    }
-  }
-}
-
-.available-courts {
-  margin-bottom: 2rem;
-
-  h4 {
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-  }
-
-  .courts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-
-  .court-card {
-    padding: 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-
-    &:hover {
-      border-color: var(--primary-color);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    &.disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-      border-style: dashed;
-      background: #f9f9f9;
-    }
-
-    .court-unavailable {
-      margin-top: 0.5rem;
-      padding: 0.25rem 0.5rem;
-      background: #fee2e2;
-      color: #7f1d1d;
-      border-radius: 6px;
-      font-weight: 600;
-      display: inline-block;
-    }
-
-    &.selected {
-      border-color: var(--primary-color);
-      background: var(--primary-color-light);
-      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-    }
-
-    .court-name {
-      font-weight: 600;
-      color: var(--text-color);
-      margin-bottom: 0.5rem;
-    }
-
-    .court-time {
-      color: var(--text-light);
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .court-price {
-      color: var(--primary-color);
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-  }
-}
-
-.services-section {
-  margin-bottom: 2rem;
-
-  h4 {
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-  }
-}
-
-.pricing-summary {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--bg-light);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-
-  h4 {
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-  }
-
-  .pricing-details {
-    .price-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      padding: 0.25rem 0;
-
-      &.total {
-        border-top: 1px solid var(--border-color);
-        margin-top: 1rem;
-        padding-top: 0.75rem;
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: var(--primary-color);
-      }
-    }
-  }
+// Ensure modal content is scrollable if it gets too long
+.modal-content.large .modal-body {
+  max-height: 70vh; // Adjust as needed
+  overflow-y: auto;
 }

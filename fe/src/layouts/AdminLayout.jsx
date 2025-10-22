@@ -30,6 +30,11 @@ const AdminLayout = () => {
       name: 'Khung giờ',
       icon: '⏰',
     },
+    {
+      path: '/admin/services',
+      name: 'Dịch vụ',
+      icon: '🛎️',
+    },
   ];
 
   const isActive = (path, exact = false) => {

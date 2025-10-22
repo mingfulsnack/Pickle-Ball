@@ -112,11 +112,11 @@ const Courts = () => {
                 <td>{c.suc_chua}</td>
                 <td>{c.ghi_chu}</td>
                 <td>
-                  <button className="btn-small" onClick={() => openEdit(c)}>
+                  <button className="btn btn-sm" onClick={() => openEdit(c)}>
                     Sửa
                   </button>
                   <button
-                    className="btn-small btn-danger"
+                    className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(c)}
                   >
                     Xóa

@@ -36,6 +36,9 @@ const Bookings = () => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [pricing, setPricing] = useState(null);
   const [bookingNote, setBookingNote] = useState('');
+  // Status modal state
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [editingBooking, setEditingBooking] = useState(null);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -85,7 +88,7 @@ const Bookings = () => {
   };
 
   const handleCreateNewCustomer = async () => {
-    const { full_name, phone, email } = newCustomerForm;
+    const { full_name, phone } = newCustomerForm;
     if (!full_name || !phone) {
       toast.error('Vui lòng nhập tên và số điện thoại');
       return;
@@ -113,7 +116,9 @@ const Bookings = () => {
       return;
     }
     try {
-      const res = await api.get(`/customers?search=${encodeURIComponent(query)}`);
+      const res = await api.get(
+        `/customers?search=${encodeURIComponent(query)}`
+      );
       if (res.data && res.data.success) {
         setCustomers(res.data.data || []);
       } else {
@@ -185,7 +190,7 @@ const Bookings = () => {
         },
       };
 
-      const res = await api.post('/bookings', payload);
+      await api.post('/bookings', payload);
 
       toast.success('Tạo đơn đặt thành công');
       setShowBookingModal(false);
@@ -211,6 +216,70 @@ const Bookings = () => {
     setSelectedServices([]);
     setPricing(null);
     setBookingNote('');
+  };
+
+  const handleSaveStatus = async (updated) => {
+    if (!editingBooking) return;
+    try {
+      await api.put(`/bookings/${editingBooking.id}`, updated);
+      toast.success('Cập nhật trạng thái thành công');
+      setShowStatusModal(false);
+      setEditingBooking(null);
+      fetchBookings();
+    } catch (err) {
+      console.error('Update booking status error', err);
+      toast.error(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái');
+    }
+  };
+
+  const handleExportInvoice = (booking) => {
+    // Call protected endpoint to get PDF (arraybuffer) and trigger download
+    return (async () => {
+      try {
+        const res = await api.get(`/invoices/create?bookingId=${booking.id}`, {
+          responseType: 'arraybuffer',
+        });
+
+        // Check if response is actually a PDF
+        const contentType =
+          res.headers['content-type'] || res.headers['Content-Type'];
+        if (!contentType || !contentType.includes('application/pdf')) {
+          // Try to decode response as text to show error message
+          const decoder = new TextDecoder();
+          const text = decoder.decode(res.data);
+          console.error('Server returned non-PDF response:', text);
+          toast.error(
+            'Server trả về lỗi: ' + (text.substring(0, 100) || 'Unknown error')
+          );
+          return;
+        }
+
+        // Validate that we have data
+        if (!res.data || res.data.byteLength === 0) {
+          toast.error('Received empty PDF file');
+          return;
+        }
+
+        const blob = new Blob([res.data], { type: 'application/pdf' });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        const filename = `invoice_${booking.ma_pd || booking.id}.pdf`;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+        toast.success('Đã tạo hóa đơn, đang tải xuống...');
+      } catch (err) {
+        console.error('Export invoice error', err);
+        if (err.response && err.response.status === 500) {
+          toast.error('Lỗi server khi tạo PDF. Vui lòng thử lại.');
+        } else {
+          toast.error(err.response?.data?.message || 'Lỗi khi xuất hóa đơn');
+        }
+      }
+    })();
   };
 
   const handleServiceToggle = (serviceId, quantity = 1) => {
@@ -269,25 +338,79 @@ const Bookings = () => {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>MaPD</th>
-              <th>Ngày</th>
-              <th>Người đặt</th>
-              <th>Trạng thái</th>
+              <th>Mã phiếu đặt</th>
+              <th>Ngày đặt</th>
+              <th>Tên khách hàng</th>
+              <th>Điện thoại</th>
               <th>Tổng tiền</th>
+              <th>Trạng thái</th>
+              <th>Thanh toán</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
             {bookings.map((b) => (
               <tr key={b.id}>
-                <td>{b.ma_pd}</td>
-                <td>{b.ngay_su_dung}</td>
+                <td>{b.ma_pd || '-'}</td>
+                <td>
+                  {
+                    // Format ngay_su_dung (ISO string) to dd/mm/yyyy
+                    (() => {
+                      const dateVal = b.ngay_su_dung;
+                      if (!dateVal) return '-';
+                      try {
+                        const d = new Date(dateVal);
+                        if (isNaN(d.getTime())) return dateVal;
+                        return d.toLocaleDateString('vi-VN');
+                      } catch (err) {
+                        console.error('Date parse error', err);
+                        return dateVal;
+                      }
+                    })()
+                  }
+                </td>
                 <td>{b.contact_name || b.user_id}</td>
+                <td>{b.contact_phone || b.sdt || b.phone || '-'}</td>
+                <td>{Number(b.tong_tien || 0).toLocaleString('vi-VN')}</td>
                 <td>
                   <span className={`booking-status ${b.trang_thai}`}>
                     {b.trang_thai}
                   </span>
                 </td>
-                <td>{Number(b.tong_tien || 0).toLocaleString('vi-VN')}đ</td>
+                <td>
+                  {b.is_paid ? (
+                    <span className="badge badge-success">Đã thanh toán</span>
+                  ) : (
+                    <span className="badge badge-warning">Chưa thanh toán</span>
+                  )}
+                </td>
+                <td>
+                  <div className="actions-cell">
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => {
+                        setEditingBooking(b);
+                        setShowStatusModal(true);
+                      }}
+                    >
+                      Thay đổi trạng thái
+                    </button>
+
+                    {(b.trang_thai === 'confirmed' ||
+                      b.trang_thai === 'received' ||
+                      String(b.trang_thai).toLowerCase().includes('nhận')) &&
+                      b.is_paid && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          onClick={() => handleExportInvoice(b)}
+                        >
+                          Xuất hóa đơn
+                        </button>
+                      )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -449,17 +572,23 @@ const Bookings = () => {
                   const slotEnd = court.end_time || searchParams.endTime;
                   const available = court.is_available !== false; // undefined or true => available
                   const isSelected = selectedSlots.some(
-                    (slot) => slot.san_id === court.san_id && slot.start_time === slotStart
+                    (slot) =>
+                      slot.san_id === court.san_id &&
+                      slot.start_time === slotStart
                   );
 
                   return (
                     <div
                       key={`${court.san_id}-${slotStart}`}
-                      className={`court-card ${isSelected ? 'selected' : ''} ${available ? '' : 'disabled'}`}
+                      className={`court-card ${isSelected ? 'selected' : ''} ${
+                        available ? '' : 'disabled'
+                      }`}
                       onClick={() => {
                         // require a selected start/end time (from the search form) or availability item
                         if (!slotStart || !slotEnd) {
-                          toast.error('Vui lòng chọn giờ bắt đầu và giờ kết thúc trước khi chọn sân');
+                          toast.error(
+                            'Vui lòng chọn giờ bắt đầu và giờ kết thúc trước khi chọn sân'
+                          );
                           return;
                         }
 
@@ -472,7 +601,11 @@ const Bookings = () => {
                         if (isSelected) {
                           setSelectedSlots(
                             selectedSlots.filter(
-                              (slot) => !(slot.san_id === court.san_id && slot.start_time === slotStart)
+                              (slot) =>
+                                !(
+                                  slot.san_id === court.san_id &&
+                                  slot.start_time === slotStart
+                                )
                             )
                           );
                         } else {
@@ -558,27 +691,42 @@ const Bookings = () => {
                 {(() => {
                   // support both new controller shape and legacy keys
                   const slotsTotal =
-                    pricing?.summary?.slots_total ?? pricing?.slots_total ?? pricing?.subtotal ?? 0;
+                    pricing?.summary?.slots_total ??
+                    pricing?.slots_total ??
+                    pricing?.subtotal ??
+                    0;
                   const servicesTotal =
-                    pricing?.summary?.services_total ?? pricing?.services_total ?? pricing?.services_total ?? 0;
+                    pricing?.summary?.services_total ??
+                    pricing?.services_total ??
+                    pricing?.services_total ??
+                    0;
                   const grandTotal =
-                    pricing?.summary?.grand_total ?? pricing?.total ?? pricing?.grand_total ?? 0;
+                    pricing?.summary?.grand_total ??
+                    pricing?.total ??
+                    pricing?.grand_total ??
+                    0;
 
                   return (
                     <>
                       <div className="price-row">
                         <span>Tiền sân:</span>
-                        <span>{Number(slotsTotal).toLocaleString('vi-VN')}đ</span>
+                        <span>
+                          {Number(slotsTotal).toLocaleString('vi-VN')}đ
+                        </span>
                       </div>
                       {Number(servicesTotal) > 0 && (
                         <div className="price-row">
                           <span>Dịch vụ:</span>
-                          <span>{Number(servicesTotal).toLocaleString('vi-VN')}đ</span>
+                          <span>
+                            {Number(servicesTotal).toLocaleString('vi-VN')}đ
+                          </span>
                         </div>
                       )}
                       <div className="price-row total">
                         <span>Tổng cộng:</span>
-                        <span>{Number(grandTotal).toLocaleString('vi-VN')}đ</span>
+                        <span>
+                          {Number(grandTotal).toLocaleString('vi-VN')}đ
+                        </span>
                       </div>
                     </>
                   );
@@ -681,6 +829,84 @@ const Bookings = () => {
               Tạo khách hàng
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Modal chỉnh trạng thái đơn */}
+      <Modal
+        isOpen={showStatusModal}
+        onClose={() => {
+          setShowStatusModal(false);
+          setEditingBooking(null);
+        }}
+        title="Chỉnh trạng thái đơn"
+      >
+        <div className="status-form">
+          {editingBooking ? (
+            <>
+              <div className="form-group">
+                <label>Trạng thái đơn:</label>
+                <select
+                  value={editingBooking.trang_thai || ''}
+                  onChange={(e) =>
+                    setEditingBooking({
+                      ...editingBooking,
+                      trang_thai: e.target.value,
+                    })
+                  }
+                >
+                  <option value="">-- Chọn trạng thái --</option>
+                  <option value="pending">pending</option>
+                  <option value="confirmed">confirmed</option>
+                  <option value="canceled">canceled</option>
+                  <option value="received">received</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!!editingBooking.is_paid}
+                    onChange={(e) =>
+                      setEditingBooking({
+                        ...editingBooking,
+                        is_paid: e.target.checked,
+                      })
+                    }
+                  />{' '}
+                  Đã thanh toán
+                </label>
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowStatusModal(false);
+                    setEditingBooking(null);
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() =>
+                    handleSaveStatus({
+                      trang_thai: editingBooking.trang_thai,
+                      is_paid: editingBooking.is_paid,
+                    })
+                  }
+                >
+                  Lưu
+                </button>
+              </div>
+            </>
+          ) : (
+            <div>Không có đơn để chỉnh sửa</div>
+          )}
         </div>
       </Modal>
     </div>

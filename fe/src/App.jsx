@@ -27,6 +27,7 @@ import Bookings from './pages/admin/Bookings';
 import Courts from './pages/admin/Courts';
 import TimeFrames from './pages/admin/TimeFrames';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import Services from './pages/admin/Services';
 
 import './styles/globals.scss';
 import 'react-toastify/dist/ReactToastify.css';
@@ -174,6 +175,14 @@ function App() {
               element={
                 <ProtectedRoute adminOnly={true}>
                   <TimeFrames />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="services"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <Services />
                 </ProtectedRoute>
               }
             />

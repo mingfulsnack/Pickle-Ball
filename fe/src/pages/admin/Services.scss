@@ -1,0 +1,114 @@
+@use '../../styles/variables.scss' as *;
+@use './Admin.scss'; // Import base admin styles
+
+.services-page {
+  // Inherits general layout from .admin-page in Admin.scss
+
+  .page-header {
+    // Uses styles from Admin.scss
+    .subtitle {
+      // Add specific style for the subtitle if needed
+      color: $text-secondary;
+      margin-top: 0.25rem;
+      font-size: 1rem;
+    }
+  }
+
+  // Use standard content card styles from Admin.scss (no overrides needed)
+
+  // Adjust table specifically for services if needed
+  .admin-table {
+    // Specific overrides or additions for the services table can go here
+    td,
+    th {
+      &:nth-child(1) {
+        width: 15%;
+      } // Mã DV
+      &:nth-child(2) {
+        width: 30%;
+      } // Tên DV
+      &:nth-child(3) {
+        width: 10%;
+        text-align: center;
+      } // Loại
+      &:nth-child(4) {
+        width: 15%;
+        text-align: right;
+      } // Đơn giá
+      &:nth-child(5) {
+        width: 15%;
+      } // Ghi chú
+      &:nth-child(6) {
+        width: 15%;
+        text-align: center;
+      } // Hành động
+    }
+
+    td {
+      .action-buttons {
+        justify-content: center; // Center action buttons in the cell
+      }
+    }
+  }
+}
+
+// Styles for the modal form (using admin-form classes)
+.modal-body {
+  .admin-form {
+    // Ensure modal form uses admin styles
+    grid-template-columns: 1fr 1fr; // Keep 2 columns for the modal form
+
+    .form-row {
+      // Use form-group from Admin.scss instead
+      @extend .form-group
+          !optional; // Inherit styles from .form-group if available
+      margin-bottom: 1rem; // Adjust spacing if needed
+
+      &.inline {
+        // Style for side-by-side elements (Loại & Đơn giá)
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        grid-column: 1 / -1; // Span full width
+      }
+    }
+  }
+}
+
+// Style modal footer buttons to match admin theme
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid $border-color;
+
+  .btn {
+    // General style for buttons in footer
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .btn-cancel,
+  .btn-secondary {
+    // Style for Cancel button
+    background-color: #e5e7eb;
+    color: #374151;
+    border: none;
+    &:hover {
+      background-color: #d1d5db;
+    }
+  }
+
+  .btn-primary,
+  .btn-save {
+    // Style for Save/Create button
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    &:hover {
+      background-color: darken($primary-color, 10%);
+    }
+  }
+}
