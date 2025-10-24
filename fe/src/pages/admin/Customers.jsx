@@ -3,7 +3,6 @@ import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Modal from '../../components/Modal';
 import toast from '../../utils/toast';
-import './Admin.scss';
 import './Customers.scss';
 
 const Customers = () => {
@@ -179,7 +178,9 @@ const Customers = () => {
       </div>
 
       <div className="page-actions">
-        <div className="search-section">
+          <button className="btn btn-primary" onClick={openCreateModal}>
+          ➕ Thêm khách hàng
+        </button>
           <input
             type="text"
             placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
@@ -190,10 +191,6 @@ const Customers = () => {
           <button className="btn btn-secondary" onClick={handleSearch}>
             Tìm kiếm
           </button>
-        </div>
-        <button className="btn btn-primary" onClick={openCreateModal}>
-          ➕ Thêm khách hàng
-        </button>
       </div>
 
       {loading ? (

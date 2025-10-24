@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminLayout.scss';
+import appleImg from '../assets/apple.png';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -66,8 +67,8 @@ const AdminLayout = () => {
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon">🏓</span>
-            <span className="logo-text">Pickle Ball Admin</span>
+            <img src={appleImg} alt="Apple" className="logo-icon" />
+            <span className="logo-text">Pickleball Bồ Đề</span>
           </div>
         </div>
 

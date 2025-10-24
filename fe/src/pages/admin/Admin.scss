@@ -36,12 +36,11 @@
   }
 
   .page-actions {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    align-items: center;
-    justify-content: flex-end;
-  }
+  margin-bottom: 1.5rem !important; /* separate action row from the table */
+  display: flex !important;
+  gap: 0.75rem !important;
+  align-items: center !important;
+}
 }
 
 /* Cards */
@@ -218,4 +217,11 @@
     font-size: 0.875rem;
     margin: 0;
   }
+}
+
+/* Reusable actions cell: spacing for small action buttons (edit/delete) */
+.actions-cell {
+  display: inline-flex;
+  gap: 0.5rem; /* small gap between action buttons */
+  align-items: center;
 }

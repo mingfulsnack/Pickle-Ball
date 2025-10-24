@@ -112,15 +112,17 @@ const Courts = () => {
                 <td>{c.suc_chua}</td>
                 <td>{c.ghi_chu}</td>
                 <td>
-                  <button className="btn btn-sm" onClick={() => openEdit(c)}>
-                    Sửa
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(c)}
-                  >
-                    Xóa
-                  </button>
+                  <div className="actions-cell">
+                    <button className="btn btn-sm" onClick={() => openEdit(c)}>
+                      Sửa
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDelete(c)}
+                    >
+                      Xóa
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -133,15 +133,20 @@ export default function Services() {
                   </td>
                   <td>{s.ghi_chu}</td>
                   <td>
-                    <button className="btn btn-sm" onClick={() => openEdit(s)}>
-                      Sửa
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(s.id)}
-                    >
-                      Xóa
-                    </button>
+                    <div className="actions-cell">
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => openEdit(s)}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDelete(s.id)}
+                      >
+                        Xóa
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
