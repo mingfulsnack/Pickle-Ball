@@ -1,0 +1,138 @@
+.customers-page {
+  .search-section {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+
+    input {
+      flex: 1;
+      max-width: 400px;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+
+      &:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+    }
+  }
+
+  .customer-form {
+    .form-group {
+      margin-bottom: 20px;
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        &:disabled {
+          background-color: #f8f9fa;
+          color: #6c757d;
+        }
+      }
+    }
+
+    .form-note {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+
+      p {
+        margin: 0 0 10px 0;
+        font-weight: 500;
+        color: #495057;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #6c757d;
+
+        li {
+          margin-bottom: 5px;
+          font-size: 13px;
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+
+    p {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+}
+
+// Make the page actions section more flexible
+.admin-page .page-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+
+  .search-section {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+
+    input {
+      flex: 1;
+      max-width: 400px;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+
+      &:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+    }
+  }
+}

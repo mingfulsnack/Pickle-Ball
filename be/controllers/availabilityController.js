@@ -1,5 +1,13 @@
 const { San, PhieuDatSan, BangGiaSan } = require('../models');
+const Ca = require('../models/Ca');
 const { formatResponse, formatErrorResponse } = require('../utils/helpers');
+
+// Helper function to convert time string (HH:MM) to minutes
+const timeToMinutes = (timeString) => {
+  if (!timeString) return 0;
+  const parts = timeString.split(':');
+  return parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+};
 
 // Kiểm tra tình trạng sân trống theo ngày
 const getAvailability = async (req, res) => {
@@ -20,28 +28,84 @@ const getAvailability = async (req, res) => {
       let conflictDetails = null;
 
       if (start_time && end_time) {
-        // Kiểm tra khung giờ cụ thể
-        const checkResult = await San.query(
-          `SELECT is_court_available($1, $2::date, $3::time, $4::time) as available`,
-          [court.id, date, start_time, end_time]
-        );
-        isAvailable = checkResult.rows[0].available;
-        console.debug(
-          `Checked availability court=${court.id} date=${date} start=${start_time} end=${end_time} => available=${isAvailable}`
-        );
+        // First check if there are shifts covering the requested time range
+        const dateObj = new Date(date);
+        const dayOfWeek = dateObj.getDay();
 
-        if (!isAvailable) {
-          // Lấy thông tin booking xung đột
-          const conflicts = await San.query(
-            `SELECT pds.ma_pd, ctps.start_time, ctps.end_time, pds.trang_thai
-             FROM phieu_dat_san pds
-             JOIN chi_tiet_phieu_san ctps ON pds.id = ctps.phieu_dat_id
-             WHERE ctps.san_id = $1 AND pds.ngay_su_dung = $2
-               AND pds.trang_thai NOT IN ('cancelled')
-               AND NOT (ctps.end_time <= $3::time OR ctps.start_time >= $4::time)`,
-            [court.id, date, start_time, end_time]
+        try {
+          const shifts = await Ca.findShiftsInRange(
+            dayOfWeek,
+            start_time,
+            end_time
           );
-          conflictDetails = conflicts.rows;
+
+          if (shifts.length === 0) {
+            // No shifts available for this time range - court not available
+            isAvailable = false;
+            conflictDetails = [
+              { reason: 'Không có ca làm việc trong khung giờ này' },
+            ];
+          } else {
+            // Validate that the requested time is fully covered by shifts
+            const startMinutes = timeToMinutes(start_time);
+            const endMinutes = timeToMinutes(end_time);
+            const requestedTotalMinutes = endMinutes - startMinutes;
+
+            let totalCoveredMinutes = 0;
+            for (const shift of shifts) {
+              const shiftStartMinutes = timeToMinutes(shift.start_at);
+              const shiftEndMinutes = timeToMinutes(shift.end_at);
+
+              const overlapStart = Math.max(startMinutes, shiftStartMinutes);
+              const overlapEnd = Math.min(endMinutes, shiftEndMinutes);
+
+              if (overlapStart < overlapEnd) {
+                totalCoveredMinutes += overlapEnd - overlapStart;
+              }
+            }
+
+            if (totalCoveredMinutes < requestedTotalMinutes) {
+              // Requested time not fully covered by shifts
+              isAvailable = false;
+              conflictDetails = [
+                {
+                  reason:
+                    'Khung giờ đặt không nằm hoàn toàn trong giờ hoạt động',
+                },
+              ];
+            } else {
+              // Check for booking conflicts only if shifts are available
+              const checkResult = await San.query(
+                `SELECT is_court_available($1, $2::date, $3::time, $4::time) as available`,
+                [court.id, date, start_time, end_time]
+              );
+              isAvailable = checkResult.rows[0].available;
+              console.debug(
+                `Checked availability court=${court.id} date=${date} start=${start_time} end=${end_time} => available=${isAvailable}`
+              );
+
+              if (!isAvailable) {
+                // Lấy thông tin booking xung đột
+                const conflicts = await San.query(
+                  `SELECT pds.ma_pd, ctps.start_time, ctps.end_time, pds.trang_thai
+                   FROM phieu_dat_san pds
+                   JOIN chi_tiet_phieu_san ctps ON pds.id = ctps.phieu_dat_id
+                   WHERE ctps.san_id = $1 AND pds.ngay_su_dung = $2
+                     AND pds.trang_thai NOT IN ('cancelled')
+                     AND NOT (ctps.end_time <= $3::time OR ctps.start_time >= $4::time)`,
+                  [court.id, date, start_time, end_time]
+                );
+                conflictDetails = conflicts.rows;
+              }
+            }
+          }
+        } catch (shiftError) {
+          console.error(
+            'Error checking shifts for court availability:',
+            shiftError
+          );
+          isAvailable = false;
+          conflictDetails = [{ reason: 'Lỗi kiểm tra ca làm việc' }];
         }
       } else {
         // Kiểm tra cả ngày - lấy tất cả booking trong ngày
@@ -192,7 +256,9 @@ const calculatePrice = async (req, res) => {
       } catch (err) {
         // If price calculation fails due to shift coverage, return a 400 to the client
         console.warn('Price calc validation error:', err.message || err);
-        return res.status(400).json(formatErrorResponse(err.message || 'Validation error'));
+        return res
+          .status(400)
+          .json(formatErrorResponse(err.message || 'Validation error'));
       }
       totalSlotsPrice += slotPrice;
 

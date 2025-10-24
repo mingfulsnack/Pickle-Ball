@@ -78,7 +78,36 @@ const Bookings = () => {
           end_time: searchParams.endTime,
         },
       });
-      setAvailability(response.data.data || []);
+      const availabilityData = response.data.data || [];
+      setAvailability(availabilityData);
+
+      // Check if any courts are available
+      const availableCourts = availabilityData.filter(
+        (court) => court.is_available
+      );
+      if (availabilityData.length > 0 && availableCourts.length === 0) {
+        // Courts exist but none are available
+        const hasShiftIssues = availabilityData.some(
+          (court) =>
+            court.bookings &&
+            court.bookings.some(
+              (booking) =>
+                booking.reason &&
+                (booking.reason.includes('ca làm việc') ||
+                  booking.reason.includes('giờ hoạt động'))
+            )
+        );
+
+        if (hasShiftIssues) {
+          toast.error(
+            'Không có sân trống vào khung giờ này. Vui lòng chọn khung giờ khác.'
+          );
+        } else {
+          toast.error(
+            'Tất cả sân đã được đặt trong khung giờ này. Vui lòng chọn khung giờ khác.'
+          );
+        }
+      }
     } catch (error) {
       console.error('Error checking availability:', error);
       toast.error('Lỗi khi kiểm tra tình trạng sân');
@@ -116,11 +145,18 @@ const Bookings = () => {
       return;
     }
     try {
-      const res = await api.get(
-        `/customers?search=${encodeURIComponent(query)}`
-      );
+      // use params object (consistent with Customers page) and normalize returned fields
+      const res = await api.get('/customers', { params: { search: query } });
       if (res.data && res.data.success) {
-        setCustomers(res.data.data || []);
+        const raw = res.data.data || [];
+        const mapped = raw.map((c) => ({
+          id: c.id,
+          full_name: c.full_name || c.ho_ten || c.fullName || c.name || '',
+          phone: c.phone || c.sdt || c.mobile || '',
+          email: c.email || '',
+          created_at: c.created_at,
+        }));
+        setCustomers(mapped);
       } else {
         setCustomers([]);
       }
@@ -593,8 +629,23 @@ const Bookings = () => {
                         }
 
                         if (!available) {
-                          // match customer behaviour: cannot select unavailable courts
-                          toast.error('Sân đã được đặt trong khung giờ này');
+                          // Check if unavailable due to shift issues
+                          const hasShiftIssue =
+                            court.bookings &&
+                            court.bookings.some(
+                              (booking) =>
+                                booking.reason &&
+                                (booking.reason.includes('ca làm việc') ||
+                                  booking.reason.includes('giờ hoạt động'))
+                            );
+
+                          if (hasShiftIssue) {
+                            toast.error(
+                              'Không có ca làm việc trong khung giờ này'
+                            );
+                          } else {
+                            toast.error('Sân đã được đặt trong khung giờ này');
+                          }
                           return;
                         }
 
@@ -626,7 +677,21 @@ const Bookings = () => {
                       </div>
                       {!available && (
                         <div className="court-unavailable">
-                          <span>Đã đặt</span>
+                          {(() => {
+                            const hasShiftIssue =
+                              court.bookings &&
+                              court.bookings.some(
+                                (booking) =>
+                                  booking.reason &&
+                                  (booking.reason.includes('ca làm việc') ||
+                                    booking.reason.includes('giờ hoạt động'))
+                              );
+                            return (
+                              <span>
+                                {hasShiftIssue ? 'Không có ca' : 'Đã đặt'}
+                              </span>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>

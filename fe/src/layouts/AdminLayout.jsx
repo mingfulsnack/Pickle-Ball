@@ -35,6 +35,11 @@ const AdminLayout = () => {
       name: 'Dịch vụ',
       icon: '🛎️',
     },
+    {
+      path: '/admin/customers',
+      name: 'Khách hàng',
+      icon: '👥',
+    },
   ];
 
   const isActive = (path, exact = false) => {

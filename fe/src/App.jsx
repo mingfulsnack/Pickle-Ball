@@ -28,6 +28,7 @@ import Courts from './pages/admin/Courts';
 import TimeFrames from './pages/admin/TimeFrames';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Services from './pages/admin/Services';
+import Customers from './pages/admin/Customers';
 
 import './styles/globals.scss';
 import 'react-toastify/dist/ReactToastify.css';
@@ -183,6 +184,14 @@ function App() {
               element={
                 <ProtectedRoute adminOnly={true}>
                   <Services />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="customers"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <Customers />
                 </ProtectedRoute>
               }
             />

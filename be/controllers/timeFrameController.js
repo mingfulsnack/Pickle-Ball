@@ -73,6 +73,13 @@ const createTimeFrame = async (req, res) => {
       .json(formatResponse(true, timeFrame, 'Tạo khung giờ thành công'));
   } catch (error) {
     console.error('Create time frame error:', error);
+    // If Postgres unique constraint violation (duplicate day for active frame)
+    if (error && error.code === '23505') {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Khung giờ cho ngày này đã tồn tại'));
+    }
+
     res.status(500).json(formatErrorResponse('Lỗi server'));
   }
 };

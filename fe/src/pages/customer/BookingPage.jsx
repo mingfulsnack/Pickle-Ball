@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { publicApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import toast from '../../utils/toast';
 import './BookingPage.scss';
 
 const BookingPage = () => {
@@ -87,9 +88,39 @@ const BookingPage = () => {
           end_time: searchParams.endTime,
         },
       });
-      setAvailability(response.data.data || []);
+      const availabilityData = response.data.data || [];
+      setAvailability(availabilityData);
+
+      // Check if any courts are available
+      const availableCourts = availabilityData.filter(
+        (court) => court.is_available
+      );
+      if (availabilityData.length > 0 && availableCourts.length === 0) {
+        // Courts exist but none are available
+        const hasShiftIssues = availabilityData.some(
+          (court) =>
+            court.bookings &&
+            court.bookings.some(
+              (booking) =>
+                booking.reason &&
+                (booking.reason.includes('ca làm việc') ||
+                  booking.reason.includes('giờ hoạt động'))
+            )
+        );
+
+        if (hasShiftIssues) {
+          toast.error(
+            'Không có sân trống vào khung giờ này. Vui lòng chọn khung giờ khác.'
+          );
+        } else {
+          toast.error(
+            'Tất cả sân đã được đặt trong khung giờ này. Vui lòng chọn khung giờ khác.'
+          );
+        }
+      }
     } catch (error) {
       console.error('Error checking availability:', error);
+      toast.error('Lỗi khi kiểm tra tình trạng sân');
     } finally {
       setLoading(false);
     }
@@ -389,12 +420,34 @@ const BookingPage = () => {
                     </div>
                   ) : (
                     <div className="unavailable">
-                      <p>Không có sẵn trong khung giờ này</p>
-                      {court.bookings?.map((booking, index) => (
-                        <div key={index} className="existing-booking">
-                          {booking.start_time} - {booking.end_time} (Đã đặt)
-                        </div>
-                      ))}
+                      {(() => {
+                        const hasShiftIssue =
+                          court.bookings &&
+                          court.bookings.some(
+                            (booking) =>
+                              booking.reason &&
+                              (booking.reason.includes('ca làm việc') ||
+                                booking.reason.includes('giờ hoạt động'))
+                          );
+
+                        if (hasShiftIssue) {
+                          return (
+                            <p>Không có ca làm việc trong khung giờ này</p>
+                          );
+                        } else {
+                          return (
+                            <>
+                              <p>Không có sẵn trong khung giờ này</p>
+                              {court.bookings?.map((booking, index) => (
+                                <div key={index} className="existing-booking">
+                                  {booking.start_time} - {booking.end_time} (Đã
+                                  đặt)
+                                </div>
+                              ))}
+                            </>
+                          );
+                        }
+                      })()}
                     </div>
                   )}
                 </div>
