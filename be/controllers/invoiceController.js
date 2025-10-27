@@ -197,7 +197,7 @@ const createInvoicePdf = async (req, res) => {
     if (!firstChunk.includes('%PDF')) {
       // Try to save the buffer to a file for debugging
       const fs = require('fs');
-      const debugPath = path.join(__dirname, '..', 'debug_output.pdf');
+
       try {
         fs.writeFileSync(debugPath, pdfBuffer);
       } catch (writeError) {
@@ -209,7 +209,7 @@ const createInvoicePdf = async (req, res) => {
     res.setHeader('Content-Length', pdfBuffer.length.toString());
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="invoice_${data.invoiceNumber}.pdf"`
+      `attachment; filename="Invoice_${data.invoiceNumber}.pdf"`
     );
     res.end(pdfBuffer);
   } catch (error) {
