@@ -89,7 +89,7 @@ export default function Services() {
   };
 
   return (
-    <div className="admin-page">
+    <div className="admin-page services-page">
       <div className="page-header">
         <h1>Quản lý dịch vụ</h1>
         <p className="page-subtitle">Thêm, sửa hoặc xóa dịch vụ</p>
@@ -112,7 +112,7 @@ export default function Services() {
               <th>Loại</th>
               <th>Đơn giá</th>
               <th>Ghi chú</th>
-              <th></th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>

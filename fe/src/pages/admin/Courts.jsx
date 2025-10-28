@@ -100,7 +100,7 @@ const Courts = () => {
               <th>Tên</th>
               <th>Sức chứa</th>
               <th>Ghi chú</th>
-              <th></th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>

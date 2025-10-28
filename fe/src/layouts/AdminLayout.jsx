@@ -12,7 +12,7 @@ const AdminLayout = () => {
   const menuItems = [
     {
       path: '/admin',
-      name: 'Dashboard',
+      name: 'Báo cáo',
       icon: '📊',
       exact: true,
     },

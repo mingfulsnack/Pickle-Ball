@@ -4,9 +4,106 @@
 
 /* Improve spacing between the page action row (create button) and the table */
 
-
 // Booking table specific styles
 .admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  thead {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+
+    th {
+      padding: 1rem;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f3f4f6;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #f9fafb;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 1rem;
+      color: #374151;
+      vertical-align: middle;
+    }
+  }
+
+  // Bookings table column alignment
+  th,
+  td {
+    &:nth-child(1) {
+      // Mã phiếu đặt
+      width: 120px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    &:nth-child(2) {
+      // Ngày đặt
+      width: 100px;
+      text-align: center;
+    }
+
+    &:nth-child(3) {
+      // Tên khách hàng
+      width: auto;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    &:nth-child(4) {
+      // Điện thoại
+      width: 120px;
+      text-align: left;
+    }
+
+    &:nth-child(5) {
+      // Tổng tiền
+      width: 120px;
+      text-align: right;
+      font-weight: 600;
+      color: #059669;
+    }
+
+    &:nth-child(6) {
+      // Trạng thái
+      width: 120px;
+      text-align: center;
+    }
+
+    &:nth-child(7) {
+      // Thanh toán
+      width: 120px;
+      text-align: center;
+    }
+
+    &:nth-child(8) {
+      // Hành động
+      width: 200px;
+      text-align: center;
+    }
+  }
+
   td {
     .booking-status {
       padding: 0.3rem 0.8rem;
@@ -16,21 +113,74 @@
       text-transform: capitalize;
       text-align: center;
       min-width: 90px; // Ensure consistent width
+      display: inline-block;
 
       &.pending {
         background: #fffbeb; // Lighter yellow
-        color: #b45309;      // Darker amber
+        color: #b45309; // Darker amber
         border: 1px solid #fde68a;
       }
       &.confirmed {
         background: #f0fdf4; // Lighter green
-        color: #15803d;      // Darker green
+        color: #15803d; // Darker green
         border: 1px solid #bbf7d0;
       }
       &.cancelled {
         background: #fff1f2; // Lighter red
-        color: #be123c;      // Darker rose
+        color: #be123c; // Darker rose
         border: 1px solid #fecdd3;
+      }
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+
+      &.badge-success {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+      }
+
+      &.badge-warning {
+        background: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fcd34d;
+      }
+    }
+  }
+
+  // Action buttons in table cells
+  .actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .btn {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      white-space: nowrap;
+
+      &.btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+      }
+
+      &.btn-primary {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+
+        &:hover {
+          background-color: #2563eb;
+        }
       }
     }
   }
@@ -38,7 +188,8 @@
 
 // Styles specific to the "Create Booking" Modal
 .booking-form {
-  h4 { // Section titles within the modal
+  h4 {
+    // Section titles within the modal
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
     font-size: 1.1rem;
@@ -62,7 +213,8 @@
       flex-grow: 1; // Allow input to take available space
     }
 
-    .btn-secondary { // Style the "Create New" button
+    .btn-secondary {
+      // Style the "Create New" button
       flex-shrink: 0; // Prevent button from shrinking
       padding: 0.7rem 1rem; // Adjust padding
     }
@@ -91,8 +243,13 @@
       &:not(:last-child) {
         border-bottom: 1px solid $border-color;
       }
-      span { display: block; }
-      .muted { font-size: 0.85rem; color: $text-light; }
+      span {
+        display: block;
+      }
+      .muted {
+        font-size: 0.85rem;
+        color: $text-light;
+      }
     }
   }
 
@@ -119,14 +276,19 @@
       gap: 1rem;
       align-items: end; // Align items to the bottom for better look
     }
-    .form-group { margin-bottom: 0; } // Override default margin in this context
+    .form-group {
+      margin-bottom: 0;
+    } // Override default margin in this context
   }
 
   // Available Courts Grid
   .available-courts {
     .courts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); // Smaller cards
+      grid-template-columns: repeat(
+        auto-fill,
+        minmax(130px, 1fr)
+      ); // Smaller cards
       gap: 0.75rem;
     }
 
@@ -144,24 +306,29 @@
         font-size: 0.85rem;
         color: $text-secondary;
       }
-       .court-unavailable {
-         margin-top: 0.5rem;
-         font-size: 0.75rem;
-         font-weight: 600;
-         color: $danger-color;
-       }
+      .court-unavailable {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: $danger-color;
+      }
 
       &.selected {
         border-color: $primary-color;
         background: lighten($primary-color, 40%);
-        .court-name { color: darken($primary-color, 15%); }
+        .court-name {
+          color: darken($primary-color, 15%);
+        }
       }
-       &.disabled {
-         background-color: #f8f8f8;
-         border-style: dashed;
-         color: #aaa;
-         .court-name, .court-time { color: #aaa; }
-       }
+      &.disabled {
+        background-color: #f8f8f8;
+        border-style: dashed;
+        color: #aaa;
+        .court-name,
+        .court-time {
+          color: #aaa;
+        }
+      }
     }
   }
 
@@ -193,7 +360,9 @@
           background: white;
           font-weight: bold;
           cursor: pointer;
-           &:hover { background: #f3f4f6; }
+          &:hover {
+            background: #f3f4f6;
+          }
         }
         span {
           min-width: 25px;
@@ -206,10 +375,10 @@
 
   // Pricing Summary
   .pricing-summary {
-     background: #f9fafb;
-     border: 1px solid $border-color;
-     padding: 1rem 1.5rem;
-     border-radius: $border-radius-md;
+    background: #f9fafb;
+    border: 1px solid $border-color;
+    padding: 1rem 1.5rem;
+    border-radius: $border-radius-md;
 
     .pricing-details {
       .price-row {
@@ -217,7 +386,7 @@
         justify-content: space-between;
         padding: 0.4rem 0;
         &:not(:last-child) {
-           border-bottom: 1px dashed #eee;
+          border-bottom: 1px dashed #eee;
         }
         &.total {
           font-size: 1.1rem;
@@ -232,7 +401,7 @@
     }
   }
 
-   // Form Actions (Modal Footer)
+  // Form Actions (Modal Footer)
   .form-actions {
     display: flex;
     justify-content: flex-end;
@@ -241,26 +410,31 @@
     padding-top: 1.5rem;
     border-top: 1px solid $border-color;
 
-    .btn { // General button styling within the modal footer
+    .btn {
+      // General button styling within the modal footer
       padding: 0.75rem 1.5rem;
       font-size: 0.95rem;
       font-weight: 600;
       border-radius: $border-radius-md;
     }
     .btn-secondary {
-       background-color: #e5e7eb;
-       color: #374151;
-       &:hover { background-color: #d1d5db; }
+      background-color: #e5e7eb;
+      color: #374151;
+      &:hover {
+        background-color: #d1d5db;
+      }
     }
-     .btn-primary {
-       background-color: $primary-color;
-       color: white;
-        &:hover { background-color: darken($primary-color, 10%); }
-        &:disabled {
-          background-color: lighten($primary-color, 20%);
-          cursor: not-allowed;
-        }
-     }
+    .btn-primary {
+      background-color: $primary-color;
+      color: white;
+      &:hover {
+        background-color: darken($primary-color, 10%);
+      }
+      &:disabled {
+        background-color: lighten($primary-color, 20%);
+        cursor: not-allowed;
+      }
+    }
   }
 }
 
@@ -268,4 +442,113 @@
 .modal-content.large .modal-body {
   max-height: 70vh; // Adjust as needed
   overflow-y: auto;
+}
+
+// Status Modal Styles
+.status-form {
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      background-color: white;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 0, 123, 255), 0.1);
+      }
+
+      &:hover {
+        border-color: #9ca3af;
+      }
+    }
+
+    // Checkbox styling
+    label.checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      background-color: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #f3f4f6;
+        border-color: #d1d5db;
+      }
+
+      input[type='checkbox'] {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin: 0;
+        cursor: pointer;
+        accent-color: $primary-color;
+      }
+
+      span {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 100px;
+
+      &.btn-secondary {
+        background-color: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+
+        &:hover {
+          background-color: #e5e7eb;
+          border-color: #9ca3af;
+        }
+      }
+
+      &.btn-primary {
+        background-color: $primary-color;
+        color: white;
+
+        &:hover {
+          background-color: darken($primary-color, 8%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
 }

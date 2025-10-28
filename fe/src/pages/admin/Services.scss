@@ -1,52 +1,147 @@
 @use '../../styles/variables.scss' as *;
-@use './Admin.scss'; // Import base admin styles
+
+/* Services page uses page-scoped admin-like styles (no global Admin.scss dependency) */
 
 .services-page {
-  // Inherits general layout from .admin-page in Admin.scss
+  // Page actions (create button area)
+  .page-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
 
-  .page-header {
-    // Uses styles from Admin.scss
-    .subtitle {
-      // Add specific style for the subtitle if needed
-      color: $text-secondary;
-      margin-top: 0.25rem;
-      font-size: 1rem;
+    .btn {
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      border-radius: 8px;
     }
   }
 
-  // Use standard content card styles from Admin.scss (no overrides needed)
-
-  // Adjust table specifically for services if needed
+  // Services table with proper column alignment
   .admin-table {
-    // Specific overrides or additions for the services table can go here
-    td,
-    th {
-      &:nth-child(1) {
-        width: 15%;
-      } // Mã DV
-      &:nth-child(2) {
-        width: 30%;
-      } // Tên DV
-      &:nth-child(3) {
-        width: 10%;
-        text-align: center;
-      } // Loại
-      &:nth-child(4) {
-        width: 15%;
-        text-align: right;
-      } // Đơn giá
-      &:nth-child(5) {
-        width: 15%;
-      } // Ghi chú
-      &:nth-child(6) {
-        width: 15%;
-        text-align: center;
-      } // Hành động
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    thead {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+
+      th {
+        padding: 1rem;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
     }
 
+    tbody {
+      tr {
+        border-bottom: 1px solid #f3f4f6;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: #f9fafb;
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+
+      td {
+        padding: 1rem;
+        color: #374151;
+        vertical-align: middle;
+      }
+    }
+
+    // Column-specific styling
+    th,
     td {
-      .action-buttons {
-        justify-content: center; // Center action buttons in the cell
+      &:nth-child(1) {
+        // ID
+        width: 80px;
+        text-align: center;
+        font-weight: 600;
+        color: #6b7280;
+      }
+
+      &:nth-child(2) {
+        // Tên dịch vụ
+        width: auto;
+        text-align: left;
+        font-weight: 500;
+      }
+
+      &:nth-child(3) {
+        // Loại
+        width: 100px;
+        text-align: center;
+      }
+
+      &:nth-child(4) {
+        // Đơn giá
+        width: 120px;
+        text-align: right;
+        font-weight: 600;
+        color: #059669;
+      }
+
+      &:nth-child(5) {
+        // Ghi chú
+        width: auto;
+        text-align: left;
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      &:nth-child(6) {
+        // Hành động
+        width: 140px;
+        text-align: center;
+      }
+    }
+
+    // Empty state styling
+    td[colspan] {
+      text-align: center !important;
+      color: #9ca3af;
+      font-style: italic;
+      padding: 2rem;
+    }
+  }
+
+  // Action buttons in table cells
+  .actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+
+    .btn {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+
+      &.btn-sm {
+        padding: 0.25rem 0.5rem;
+      }
+
+      &.btn-danger {
+        background-color: #ef4444;
+        color: white;
+        border: none;
+
+        &:hover {
+          background-color: #dc2626;
+        }
       }
     }
   }

@@ -929,7 +929,7 @@ const Bookings = () => {
               </div>
 
               <div className="form-group">
-                <label>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
                     checked={!!editingBooking.is_paid}
@@ -939,8 +939,8 @@ const Bookings = () => {
                         is_paid: e.target.checked,
                       })
                     }
-                  />{' '}
-                  Đã thanh toán
+                  />
+                  <span>Đã thanh toán</span>
                 </label>
               </div>
 
