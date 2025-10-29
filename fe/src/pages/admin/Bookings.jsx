@@ -9,6 +9,19 @@ import './Bookings.scss';
 const Bookings = () => {
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
+  // Search states
+  const [searchName, setSearchName] = useState('');
+  const [searchPhone, setSearchPhone] = useState('');
+
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
 
@@ -40,13 +53,36 @@ const Bookings = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api.get('/bookings');
-      setBookings(res.data.data || []);
+      const params = {
+        page,
+        limit: 10,
+      };
+
+      if (searchName.trim()) {
+        params.search_name = searchName.trim();
+      }
+
+      if (searchPhone.trim()) {
+        params.search_phone = searchPhone.trim();
+      }
+
+      const res = await api.get('/bookings', { params });
+      const responseData = res.data.data;
+
+      if (responseData.bookings) {
+        // New paginated response format
+        setBookings(responseData.bookings || []);
+        setPagination(responseData.pagination || {});
+      } else {
+        // Legacy format fallback
+        setBookings(responseData || []);
+      }
     } catch (err) {
       console.error('Fetch bookings error', err);
+      toast.error('Lỗi khi tải danh sách đơn đặt');
     } finally {
       setLoading(false);
     }
@@ -231,7 +267,7 @@ const Bookings = () => {
       toast.success('Tạo đơn đặt thành công');
       setShowBookingModal(false);
       resetBookingForm();
-      fetchBookings();
+      fetchBookings(pagination.currentPage);
     } catch (err) {
       console.error('Create booking error', err);
       toast.error(err.response?.data?.message || 'Lỗi khi tạo đơn đặt');
@@ -261,7 +297,7 @@ const Bookings = () => {
       toast.success('Cập nhật trạng thái thành công');
       setShowStatusModal(false);
       setEditingBooking(null);
-      fetchBookings();
+      fetchBookings(pagination.currentPage);
     } catch (err) {
       console.error('Update booking status error', err);
       toast.error(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái');
@@ -342,10 +378,29 @@ const Bookings = () => {
     }
   };
 
+  const handleSearch = () => {
+    fetchBookings(1); // Reset to page 1 when searching
+  };
+
+  const handlePageChange = (newPage) => {
+    fetchBookings(newPage);
+  };
+
+
+  // Live search: fetch when searchName or searchPhone changes with debounce
+  useEffect(() => {
+    const t = setTimeout(() => {
+      fetchBookings(1); // Reset to page 1 when search terms change
+    }, 300);
+
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchName, searchPhone]);
+
   useEffect(() => {
     fetchBookings();
     fetchServices();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculate price when selections change
   useEffect(() => {
@@ -366,6 +421,26 @@ const Bookings = () => {
         >
           ➕ Tạo đơn đặt
         </button>
+
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Tìm theo tên khách hàng..."
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <input
+            type="text"
+            placeholder="Tìm theo số điện thoại..."
+            value={searchPhone}
+            onChange={(e) => setSearchPhone(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <button className="btn btn-secondary" onClick={handleSearch}>
+            🔍 Tìm kiếm
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -451,6 +526,70 @@ const Bookings = () => {
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="pagination-container">
+          <div className="pagination-info">
+            Hiển thị{' '}
+            {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} -{' '}
+            {Math.min(
+              pagination.currentPage * pagination.itemsPerPage,
+              pagination.totalItems
+            )}{' '}
+            của {pagination.totalItems} đơn đặt
+          </div>
+          <div className="pagination">
+            <button
+              className="btn btn-sm"
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrevPage}
+            >
+              ‹ Trước
+            </button>
+
+            {/* Page numbers */}
+            {Array.from(
+              { length: Math.min(5, pagination.totalPages) },
+              (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (pagination.currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (
+                  pagination.currentPage >=
+                  pagination.totalPages - 2
+                ) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = pagination.currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    className={`btn btn-sm ${
+                      pageNum === pagination.currentPage ? 'btn-primary' : ''
+                    }`}
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              }
+            )}
+
+            <button
+              className="btn btn-sm"
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
+              disabled={!pagination.hasNextPage}
+            >
+              Sau ›
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Modal tạo đơn đặt */}

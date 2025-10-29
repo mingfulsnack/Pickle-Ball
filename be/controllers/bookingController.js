@@ -506,13 +506,73 @@ const cancelBooking = async (req, res) => {
 // Admin: list bookings (simple)
 const getBookings = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search_name = '',
+      search_phone = '',
+    } = req.query;
+
     const offset = (page - 1) * limit;
-    const q = await PhieuDatSan.query(
-      `SELECT * FROM phieu_dat_san ORDER BY ngay_tao DESC LIMIT $1 OFFSET $2`,
-      [limit, offset]
+
+    // Build WHERE clause for search
+    let whereClause = '';
+    const queryParams = [];
+    let paramIndex = 1;
+
+    if (search_name || search_phone) {
+      const conditions = [];
+
+      if (search_name) {
+        conditions.push(`contact_name ILIKE $${paramIndex}`);
+        queryParams.push(`%${search_name}%`);
+        paramIndex++;
+      }
+
+      if (search_phone) {
+        conditions.push(`contact_phone ILIKE $${paramIndex}`);
+        queryParams.push(`%${search_phone}%`);
+        paramIndex++;
+      }
+
+      whereClause = 'WHERE ' + conditions.join(' AND ');
+    }
+
+    // Get total count for pagination
+    const countQuery = `SELECT COUNT(*) FROM phieu_dat_san ${whereClause}`;
+    const countResult = await PhieuDatSan.query(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].count);
+
+    // Get paginated results
+    queryParams.push(limit, offset);
+    const dataQuery = `
+      SELECT * FROM phieu_dat_san 
+      ${whereClause}
+      ORDER BY ngay_tao DESC 
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const q = await PhieuDatSan.query(dataQuery, queryParams);
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.json(
+      formatResponse(
+        true,
+        {
+          bookings: q.rows,
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages,
+            totalItems: total,
+            itemsPerPage: parseInt(limit),
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+          },
+        },
+        'Lấy danh sách đặt sân thành công'
+      )
     );
-    res.json(formatResponse(true, q.rows, 'Lấy danh sách đặt sân thành công'));
   } catch (error) {
     console.error('Get bookings error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
