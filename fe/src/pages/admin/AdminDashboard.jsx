@@ -67,10 +67,14 @@ const AdminDashboard = () => {
     setChartLoading(true);
     try {
       // Fetch all paid bookings from the bookings endpoint
-      const bookingsResponse = await api.get('/bookings');
+      const bookingsResponse = await api.get('/bookings', {
+        params: { limit: 1000 }, // Get more data for dashboard calculations
+      });
 
       if (bookingsResponse?.data?.success) {
-        const allBookings = bookingsResponse.data.data || [];
+        const responseData = bookingsResponse.data.data || [];
+        // Handle new paginated format vs legacy format
+        const allBookings = responseData.bookings || responseData || [];
 
         // Filter only paid bookings
         const paidBookings = allBookings.filter(
@@ -278,7 +282,9 @@ const AdminDashboard = () => {
       try {
         const [cRes, bRes, tRes] = await Promise.all([
           api.get('/courts').catch(() => ({ data: { data: [] } })),
-          api.get('/bookings').catch(() => ({ data: { data: [] } })),
+          api
+            .get('/bookings', { params: { limit: 1000 } })
+            .catch(() => ({ data: { data: [] } })),
           api.get('/timeframes').catch(() => ({ data: { data: [] } })),
         ]);
 
@@ -291,7 +297,9 @@ const AdminDashboard = () => {
         }
 
         // Calculate total revenue and cancelled bookings from all bookings
-        const allBookings = bRes.data.data || [];
+        const responseData = bRes.data.data || [];
+        // Handle new paginated format vs legacy format
+        const allBookings = responseData.bookings || responseData || [];
         const paidBookings = allBookings.filter(
           (booking) => booking.is_paid === true
         );
@@ -307,7 +315,7 @@ const AdminDashboard = () => {
 
         setCounts({
           courts: (cRes.data.data || []).length,
-          bookings: (bRes.data.data || []).length,
+          bookings: allBookings.length,
           timeframes: (tRes.data.data || []).length,
           customers: (custRes.data.data || []).length,
           totalRevenue: totalRevenue,

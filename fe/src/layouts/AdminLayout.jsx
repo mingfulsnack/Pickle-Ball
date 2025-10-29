@@ -3,6 +3,7 @@ import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminLayout.scss';
 import appleImg from '../assets/apple.png';
+import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -102,7 +103,7 @@ const AdminLayout = () => {
             </div>
           </div>
           <button onClick={logout} className="logout-btn" title="Đăng xuất">
-            🚪
+            <FaSignOutAlt />
           </button>
         </div>
       </aside>
