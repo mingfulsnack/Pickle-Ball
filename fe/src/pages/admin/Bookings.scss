@@ -12,6 +12,7 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  table-layout: fixed; // Fixed layout for better column control
 
   thead {
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -45,41 +46,43 @@
       padding: 1rem;
       color: #374151;
       vertical-align: middle;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
   }
 
-  // Bookings table column alignment
+  // Bookings table column alignment with balanced widths
   th,
   td {
     &:nth-child(1) {
       // Mã phiếu đặt
-      width: 120px;
-      text-align: left;
+      width: 10%;
+      text-align: center;
       font-weight: 600;
     }
 
     &:nth-child(2) {
       // Ngày đặt
-      width: 100px;
+      width: 12%;
       text-align: center;
     }
 
     &:nth-child(3) {
       // Tên khách hàng
-      width: auto;
+      width: 20%;
       text-align: left;
       font-weight: 500;
     }
 
     &:nth-child(4) {
       // Điện thoại
-      width: 120px;
+      width: 12%;
       text-align: left;
     }
 
     &:nth-child(5) {
       // Tổng tiền
-      width: 120px;
+      width: 12%;
       text-align: right;
       font-weight: 600;
       color: #059669;
@@ -87,57 +90,70 @@
 
     &:nth-child(6) {
       // Trạng thái
-      width: 120px;
+      width: 12%;
       text-align: center;
     }
 
     &:nth-child(7) {
       // Thanh toán
-      width: 120px;
+      width: 12%;
       text-align: center;
     }
 
     &:nth-child(8) {
       // Hành động
-      width: 200px;
+      width: 10%;
       text-align: center;
     }
   }
 
   td {
     .booking-status {
-      padding: 0.3rem 0.8rem;
-      border-radius: 999px;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       text-transform: capitalize;
       text-align: center;
-      min-width: 90px; // Ensure consistent width
       display: inline-block;
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       &.pending {
-        background: #fffbeb; // Lighter yellow
-        color: #b45309; // Darker amber
+        background: #fffbeb;
+        color: #b45309;
         border: 1px solid #fde68a;
       }
       &.confirmed {
-        background: #f0fdf4; // Lighter green
-        color: #15803d; // Darker green
+        background: #f0fdf4;
+        color: #15803d;
         border: 1px solid #bbf7d0;
       }
       &.cancelled {
-        background: #fff1f2; // Lighter red
-        color: #be123c; // Darker rose
+        background: #fff1f2;
+        color: #be123c;
         border: 1px solid #fecdd3;
+      }
+      &.received {
+        background: #f0f9ff;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
       }
     }
 
     .badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
+      display: inline-block;
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       &.badge-success {
         background: #dcfce7;
@@ -156,21 +172,23 @@
   // Action buttons in table cells
   .actions-cell {
     display: flex;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.25rem;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap;
 
     .btn {
-      padding: 0.375rem 0.75rem;
-      font-size: 0.75rem;
-      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.7rem;
+      border-radius: 4px;
       font-weight: 600;
       white-space: nowrap;
+      width: 100%;
+      max-width: 80px;
 
       &.btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+        font-size: 0.65rem;
       }
 
       &.btn-primary {

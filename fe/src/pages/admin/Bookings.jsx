@@ -430,7 +430,7 @@ const Bookings = () => {
                         setShowStatusModal(true);
                       }}
                     >
-                      Thay đổi trạng thái
+                      Sửa
                     </button>
 
                     {(b.trang_thai === 'confirmed' ||

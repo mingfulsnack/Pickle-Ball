@@ -2,11 +2,92 @@
 
 /* Inherit admin base styles */
 
-.page-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
+.customers-page {
+  .page-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+
+    .btn {
+      flex-shrink: 0;
+
+      &.btn-primary {
+        padding: 0.75rem 1.25rem;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      max-width: 500px;
+      margin-left: auto;
+
+      input[type='text'] {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        &::placeholder {
+          color: #9ca3af;
+          font-style: italic;
+        }
+      }
+
+      .btn-secondary {
+        padding: 0.75rem 1.25rem;
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
 }
 
 /* Customer Form in Modal */

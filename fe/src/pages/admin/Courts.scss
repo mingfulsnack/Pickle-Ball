@@ -58,32 +58,43 @@
   td {
     &:nth-child(1) {
       // ID
-      width: 80px;
+      width: 60px;
       text-align: center;
       font-weight: 600;
       color: #6b7280;
     }
 
     &:nth-child(2) {
-      // Tên sân
-      width: auto;
+      // Mã sân
+      width: 120px;
       text-align: left;
       font-weight: 500;
     }
 
     &:nth-child(3) {
-      // Loại sân
-      width: 120px;
-      text-align: center;
+      // Tên sân - smaller width
+      width: 140px;
+      text-align: left;
+      font-weight: 500;
     }
 
     &:nth-child(4) {
-      // Trạng thái
-      width: 120px;
+      // Sức chứa
+      width: 100px;
       text-align: center;
     }
 
     &:nth-child(5) {
+      // Ghi chú - much wider for more content
+      width: auto;
+      min-width: 200px;
+      text-align: left;
+      word-wrap: break-word;
+      white-space: normal;
+      max-width: 300px;
+    }
+
+    &:nth-child(6) {
       // Hành động
       width: 140px;
       text-align: center;

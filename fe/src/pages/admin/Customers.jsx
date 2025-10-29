@@ -169,7 +169,7 @@ const Customers = () => {
   // initial data load handled by debounce effect (searchTerm initially empty)
 
   return (
-    <div className="admin-page">
+    <div className="admin-page customers-page">
       <div className="page-header">
         <h1>Quản lý khách hàng</h1>
         <p className="page-subtitle">
@@ -178,9 +178,11 @@ const Customers = () => {
       </div>
 
       <div className="page-actions">
-          <button className="btn btn-primary" onClick={openCreateModal}>
+        <button className="btn btn-primary" onClick={openCreateModal}>
           ➕ Thêm khách hàng
         </button>
+
+        <div className="search-container">
           <input
             type="text"
             placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
@@ -189,8 +191,9 @@ const Customers = () => {
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
           <button className="btn btn-secondary" onClick={handleSearch}>
-            Tìm kiếm
+            🔍 Tìm kiếm
           </button>
+        </div>
       </div>
 
       {loading ? (
