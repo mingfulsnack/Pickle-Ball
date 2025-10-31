@@ -436,7 +436,7 @@ const TimeFrames = () => {
 
       <div className="page-actions">
         <button className="btn btn-primary" onClick={handleCreateTimeFrame}>
-          ➕ Thêm khung giờ
+          Thêm khung giờ
         </button>
       </div>
 

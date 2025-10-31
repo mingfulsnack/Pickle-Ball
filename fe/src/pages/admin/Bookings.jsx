@@ -386,7 +386,6 @@ const Bookings = () => {
     fetchBookings(newPage);
   };
 
-
   // Live search: fetch when searchName or searchPhone changes with debounce
   useEffect(() => {
     const t = setTimeout(() => {
@@ -407,6 +406,58 @@ const Bookings = () => {
     calculatePrice();
   }, [calculatePrice]);
 
+  // Function to get available time options based on selected date
+  const getAvailableTimeOptions = useCallback(() => {
+    const options = [];
+    const now = new Date();
+    const selectedDate = new Date(searchParams.date);
+    const isToday = selectedDate.toDateString() === now.toDateString();
+
+    for (let hour = 0; hour <= 23; hour++) {
+      // If it's today, only show hours after current hour
+      if (isToday) {
+        const currentHour = now.getHours();
+        if (hour <= currentHour) {
+          continue; // Skip hours that have passed or current hour
+        }
+      }
+      options.push({
+        value: `${hour.toString().padStart(2, '0')}:00`,
+        label: `${hour.toString().padStart(2, '0')}:00`,
+      });
+    }
+
+    return options;
+  }, [searchParams.date]);
+
+  // Reset time selections when date changes and selected times are no longer valid
+  useEffect(() => {
+    if (searchParams.date) {
+      const availableOptions = getAvailableTimeOptions();
+      const availableTimeValues = availableOptions.map((opt) => opt.value);
+
+      // Reset start time if it's no longer available
+      if (
+        searchParams.startTime &&
+        !availableTimeValues.includes(searchParams.startTime)
+      ) {
+        setSearchParams((prev) => ({ ...prev, startTime: '', endTime: '' }));
+      }
+      // Reset end time if start time was reset or end time is no longer available
+      else if (
+        searchParams.endTime &&
+        !availableTimeValues.includes(searchParams.endTime)
+      ) {
+        setSearchParams((prev) => ({ ...prev, endTime: '' }));
+      }
+    }
+  }, [
+    searchParams.date,
+    searchParams.startTime,
+    searchParams.endTime,
+    getAvailableTimeOptions,
+  ]);
+
   return (
     <div className="admin-page">
       <div className="page-header">
@@ -419,7 +470,7 @@ const Bookings = () => {
           className="btn btn-primary"
           onClick={() => setShowBookingModal(true)}
         >
-          ➕ Tạo đơn đặt
+          Tạo đơn đặt
         </button>
 
         <div className="search-container">
@@ -692,12 +743,9 @@ const Bookings = () => {
                   }
                 >
                   <option value="">Chọn giờ</option>
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <option
-                      key={i}
-                      value={`${i.toString().padStart(2, '0')}:00`}
-                    >
-                      {`${i.toString().padStart(2, '0')}:00`}
+                  {getAvailableTimeOptions().map((timeOption) => (
+                    <option key={timeOption.value} value={timeOption.value}>
+                      {timeOption.label}
                     </option>
                   ))}
                 </select>
@@ -714,12 +762,9 @@ const Bookings = () => {
                   }
                 >
                   <option value="">Chọn giờ</option>
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <option
-                      key={i}
-                      value={`${i.toString().padStart(2, '0')}:00`}
-                    >
-                      {`${i.toString().padStart(2, '0')}:00`}
+                  {getAvailableTimeOptions().map((timeOption) => (
+                    <option key={timeOption.value} value={timeOption.value}>
+                      {timeOption.label}
                     </option>
                   ))}
                 </select>

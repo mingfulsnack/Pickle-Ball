@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Homepage.scss';
 import { publicApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import appleImg from '../../assets/apple.png';
 import pickleballImg from '../../assets/pickleball.png';
 
 const Homepage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [bookingForm, setBookingForm] = useState({
     date: '',
     startTime: '',
@@ -53,6 +55,14 @@ const Homepage = () => {
       return;
     }
 
+    // Check if user is authenticated before proceeding
+    if (!isAuthenticated()) {
+      navigate('/login', {
+        state: { redirectTo: '/booking' },
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await publicApi.get('/public/availability', {
@@ -79,7 +89,14 @@ const Homepage = () => {
   };
 
   const handleBookNow = () => {
-    navigate('/booking');
+    // Check if user is authenticated, if not redirect to login
+    if (!isAuthenticated()) {
+      navigate('/login', {
+        state: { redirectTo: '/booking' },
+      });
+    } else {
+      navigate('/booking');
+    }
   };
 
   // Generate time options (6:00 AM to 10:00 PM)
@@ -222,8 +239,10 @@ const Homepage = () => {
               </div>
               <h3>Đáp ứng mọi khung giờ</h3>
               <p>
-                Pickleball Bồ Đề cung cấp tới khách hàng các khung giờ đẹp và hợp lý. Tổng đài của chúng tôi luôn sẵn sàng hỗ trợ khách hàng, mang lại sự tiện lợi và thoải mái cho khách hàng trong quá trình sử dụng dịch vụ.
-
+                Pickleball Bồ Đề cung cấp tới khách hàng các khung giờ đẹp và
+                hợp lý. Tổng đài của chúng tôi luôn sẵn sàng hỗ trợ khách hàng,
+                mang lại sự tiện lợi và thoải mái cho khách hàng trong quá trình
+                sử dụng dịch vụ.
               </p>
               <ul className="service-features">
                 <li>Mở cửa từ 6h sáng đến 10h tối</li>
@@ -259,7 +278,9 @@ const Homepage = () => {
               </div>
               <h3>Đẳng cấp dịch vụ</h3>
               <p>
-                Đội ngũ nhân viên  phục vụ chuyên nghiệp. Pickleball Bồ Đề luôn đặt chất lượng dịch vụ lên hàng đầu với khẩu hiệu “Chất lượng là danh dự”. 
+                Đội ngũ nhân viên phục vụ chuyên nghiệp. Pickleball Bồ Đề luôn
+                đặt chất lượng dịch vụ lên hàng đầu với khẩu hiệu “Chất lượng là
+                danh dự”.
               </p>
               <ul className="service-features">
                 <li>Nhân viên hỗ trợ 24/7</li>

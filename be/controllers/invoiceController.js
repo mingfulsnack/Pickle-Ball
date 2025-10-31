@@ -7,6 +7,8 @@ const {
   PhieuDatSan,
   ChiTietPhieuDichVu,
   ChiTietPhieuSan,
+  San,
+  BangGiaSan,
 } = require('../models');
 
 // Helper to render template with data
@@ -35,17 +37,24 @@ const buildInvoiceData = async (bookingId) => {
   );
   const services = svcQ.rows || [];
 
-  // For rent services, quantity = total hours from slots
+  // fetch court slots with court names and pricing
   const slotsQ = await ChiTietPhieuSan.query(
-    'SELECT * FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1',
+    `SELECT ctps.*, s.ten_san, s.ma_san
+     FROM chi_tiet_phieu_san ctps
+     LEFT JOIN san s ON ctps.san_id = s.id
+     WHERE ctps.phieu_dat_id = $1
+     ORDER BY s.ten_san, ctps.start_time`,
     [booking.id]
   );
   const slots = slotsQ.rows || [];
+
   const parseToMinutes = (t) => {
     if (!t) return 0;
     const parts = t.split(':').map(Number);
     return parts[0] * 60 + (parts[1] || 0);
   };
+
+  // Calculate total hours for rent services
   const totalHours = slots.reduce((acc, s) => {
     const start = parseToMinutes(s.start_time);
     const end = parseToMinutes(s.end_time);
@@ -53,7 +62,50 @@ const buildInvoiceData = async (bookingId) => {
     return acc + dur;
   }, 0);
 
-  const items = services.map((s, idx) => {
+  // Group slots by court and calculate hours per court
+  const courtHours = {};
+  slots.forEach((slot) => {
+    const courtKey = `${slot.san_id}-${slot.ten_san}`;
+    if (!courtHours[courtKey]) {
+      courtHours[courtKey] = {
+        san_id: slot.san_id,
+        ten_san: slot.ten_san || `Sân ${slot.san_id}`,
+        ma_san: slot.ma_san,
+        hours: 0,
+        total_price: 0, // Use total price instead of hourly rate
+      };
+    }
+    const start = parseToMinutes(slot.start_time);
+    const end = parseToMinutes(slot.end_time);
+    const dur = Math.max(0, (end - start) / 60);
+    courtHours[courtKey].hours += dur;
+    courtHours[courtKey].total_price += Number(slot.don_gia || 0);
+  });
+
+  const items = [];
+  let itemIndex = 1;
+
+  // Add court rental items
+  Object.values(courtHours).forEach((court) => {
+    if (court.hours > 0) {
+      const avgPricePerHour = Math.round(court.total_price / court.hours);
+      const displayQuantity =
+        court.hours % 1 === 0
+          ? `${court.hours}`
+          : `${court.hours.toFixed(1)}`;
+      items.push({
+        index: itemIndex++,
+        ten_dv: court.ten_san,
+        quantity: displayQuantity,
+        don_gia: avgPricePerHour.toLocaleString('vi-VN') + 'đ',
+        amount: court.total_price.toLocaleString('vi-VN') + 'đ',
+        rawAmount: court.total_price,
+      });
+    }
+  });
+
+  // Add service items
+  services.forEach((s) => {
     const ten_dv = s.ten_dv || s.ten_dich_vu || 'Dịch vụ';
     const loai = s.dv_loai || s.loai || 'buy';
     const don_gia =
@@ -63,14 +115,14 @@ const buildInvoiceData = async (bookingId) => {
     const quantity =
       loai === 'rent' ? totalHours || 1 : s.so_luong || s.qty || 1;
     const amount = Number((don_gia * quantity).toFixed(2));
-    return {
-      index: idx + 1,
+    items.push({
+      index: itemIndex++,
       ten_dv,
       quantity,
       don_gia: don_gia.toLocaleString('vi-VN') + 'đ',
       amount: amount.toLocaleString('vi-VN') + 'đ',
       rawAmount: amount,
-    };
+    });
   });
 
   const subtotal = items.reduce((acc, it) => acc + (it.rawAmount || 0), 0);
@@ -175,7 +227,7 @@ const createInvoicePdf = async (req, res) => {
 
     const templatePath = path.join(__dirname, '..', 'template', 'invoice.hbs');
 
-    const html = renderTemplate(templatePath, data);;
+    const html = renderTemplate(templatePath, data);
 
     const pdfBuffer = await generatePdfFromHtml(html);
 
@@ -222,4 +274,5 @@ const createInvoicePdf = async (req, res) => {
 
 module.exports = {
   createInvoicePdf,
+  buildInvoiceData, // Export for testing
 };

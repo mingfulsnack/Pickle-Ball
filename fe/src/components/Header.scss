@@ -33,18 +33,18 @@
       display: flex;
       align-items: center;
       gap: 60px;
-      
+
       .logo {
         display: flex;
         align-items: center;
         gap: 12px;
         cursor: pointer;
         transition: transform 0.2s ease;
-        
+
         &:hover {
           transform: scale(1.05);
         }
-        
+
         .logo-icon {
           /* image logo size: match the visual scale of the old emoji icon but smaller to avoid oversized logo */
           width: 1.5rem;
@@ -52,7 +52,7 @@
           display: block;
           object-fit: contain;
         }
-        
+
         .logo-text {
           font-size: 1.5rem;
           font-weight: 700;
@@ -60,7 +60,7 @@
           text-decoration: none;
         }
       }
-      
+
       .main-nav {
         .nav-list {
           display: flex;
@@ -68,10 +68,10 @@
           margin: 0;
           padding: 0;
           gap: 40px;
-          
+
           .nav-item {
             position: relative;
-            
+
             button {
               background: none;
               border: none;
@@ -81,18 +81,18 @@
               cursor: pointer;
               padding: 8px 0;
               transition: color 0.3s ease;
-              
+
               &:hover {
-                color: #4CAF50;
+                color: #4caf50;
               }
             }
-            
+
             &.active {
               button {
                 color: #212121;
                 font-weight: 600;
               }
-              
+
               &::after {
                 content: '';
                 position: absolute;
@@ -112,21 +112,81 @@
       display: flex;
       align-items: center;
 
+      .auth-buttons {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .login-btn {
+          width: 105px;
+          height: 40px;
+          background-color: transparent;
+          border: 2px solid #4caf50;
+          color: #4caf50;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: #4caf50;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+          }
+
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+
+          svg {
+            font-size: $font-sm;
+          }
+        }
+
+        .register-btn {
+          width: 100px;
+          height: 40px;
+          background-color: #4caf50;
+          border: 2px solid #4caf50;
+          color: white;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: #2e7d32;
+            border-color: #2e7d32;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+          }
+
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+
+          svg {
+            font-size: $font-sm;
+          }
+        }
+      }
+
       .login-btn {
-        background-color: #4CAF50;
-        border-color: #4CAF50;
+        background-color: #4caf50;
+        border-color: #4caf50;
         color: white;
         border-radius: 8px;
         padding: 12px 24px;
         font-weight: 600;
         transition: all 0.3s ease;
-        
+
         &:hover {
-          background-color: #2E7D32 !important;
+          background-color: #2e7d32 !important;
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
         }
-        
+
         display: flex;
         align-items: center;
         gap: $spacing-sm;
@@ -202,7 +262,7 @@
           }
         }
       }
-      
+
       .header-left {
         .logo {
           .logo-icon {

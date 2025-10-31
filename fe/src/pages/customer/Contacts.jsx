@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import './Contacts.scss';
 import { contactsAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const emptyContact = {
@@ -16,17 +15,30 @@ export default function Contacts() {
   const [contacts, setContacts] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyContact);
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   // currently selected contact id/object
   const [selectedContact, setSelectedContact] = useState(() => {
+    // First check localStorage for previously selected contact
     try {
-      const raw = localStorage.getItem('selectedContact');
-      return raw ? JSON.parse(raw) : null;
+      const storageKey = `selectedContact_${user?.id || 'unknown'}`;
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        return JSON.parse(raw);
+      }
     } catch {
-      return null;
+      // ignore localStorage errors
     }
+
+    // Default to user's own information if no previous selection
+    if (user) {
+      return {
+        full_name: user.full_name || user.username,
+        phone: user.phone,
+        email: user.email,
+      };
+    }
+    return null;
   });
 
   const load = async () => {
@@ -93,19 +105,15 @@ export default function Contacts() {
   };
 
   const handleSelectForBooking = (c) => {
-    // mark as selected (persist in localStorage). Do not auto-navigate.
+    // mark as selected and save to localStorage
     setSelectedContact(c);
     try {
-      localStorage.setItem('selectedContact', JSON.stringify(c));
+      const storageKey = `selectedContact_${user?.id || 'unknown'}`;
+      localStorage.setItem(storageKey, JSON.stringify(c));
     } catch (e) {
       console.warn('Failed to persist selectedContact', e);
     }
-    toast.success('Đã chọn liên hệ');
-  };
-
-  const handleUseAndBack = (c) => {
-    handleSelectForBooking(c);
-    navigate('/booking');
+    toast.success('Đã chọn thông tin liên hệ');
   };
 
   return (
@@ -125,7 +133,7 @@ export default function Contacts() {
           <div
             className={`contact-card user-card ${
               selectedContact &&
-              selectedContact.id == null &&
+              !selectedContact.id &&
               selectedContact?.phone === user.phone
                 ? 'selected'
                 : ''
@@ -144,11 +152,9 @@ export default function Contacts() {
                 <input
                   type="radio"
                   checked={
-                    selectedContact
-                      ? selectedContact.id
-                        ? false
-                        : selectedContact.phone === user.phone
-                      : false
+                    selectedContact &&
+                    !selectedContact.id &&
+                    selectedContact.phone === user.phone
                   }
                   onChange={() =>
                     handleSelectForBooking({
@@ -160,18 +166,6 @@ export default function Contacts() {
                 />{' '}
                 Chọn
               </label>
-              <button
-                className="btn"
-                onClick={() =>
-                  handleUseAndBack({
-                    full_name: user.full_name || user.username,
-                    phone: user.phone,
-                    email: user.email,
-                  })
-                }
-              >
-                Sử dụng và quay lại đặt sân
-              </button>
             </div>
           </div>
         )}
@@ -202,9 +196,6 @@ export default function Contacts() {
                   />{' '}
                   Chọn
                 </label>
-                <button className="btn" onClick={() => handleUseAndBack(c)}>
-                  Sử dụng và quay lại đặt sân
-                </button>
                 <button className="btn" onClick={() => handleEdit(c)}>
                   Sửa
                 </button>

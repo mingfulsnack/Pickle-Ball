@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Modal from '../../components/Modal';
 import './AdminDashboard.scss';
 
 ChartJS.register(
@@ -61,6 +62,15 @@ const AdminDashboard = () => {
   const [revenueData, setRevenueData] = useState([]);
   const [overallStats, setOverallStats] = useState(null);
   const [chartLoading, setChartLoading] = useState(false);
+
+  // Report modal states
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportConfig, setReportConfig] = useState({
+    type: 'service_revenue', // service_revenue, booking_details, court_revenue, customer_revenue
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+  });
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   // Load revenue data based on report type
   const loadRevenueData = async () => {
@@ -253,6 +263,55 @@ const AdminDashboard = () => {
     }).format(amount);
   };
 
+  // Generate report function
+  const generateReport = async () => {
+    if (!reportConfig.startDate || !reportConfig.endDate) {
+      alert('Vui lòng chọn ngày bắt đầu và ngày kết thúc');
+      return;
+    }
+
+    setGeneratingReport(true);
+    try {
+      const response = await api.get('/reports/generate', {
+        params: {
+          type: reportConfig.type,
+          start_date: reportConfig.startDate,
+          end_date: reportConfig.endDate,
+        },
+        responseType: 'blob', // Important for file download
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Set filename based on report type
+      const reportNames = {
+        service_revenue: 'Báo_Cáo_Doanh_Thu_Dịch_Vụ',
+        booking_details: 'Báo_Cáo_Chi_Tiết_Phiếu_Đặt_Sân',
+        court_revenue: 'Báo_Cáo_Doanh_Thu_Theo_Sân',
+        customer_revenue: 'Báo_Cáo_Doanh_Thu_Theo_Khách_Hàng',
+      };
+
+      const filename = `${reportNames[reportConfig.type]}_${
+        reportConfig.startDate
+      }_${reportConfig.endDate}.pdf`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setShowReportModal(false);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Lỗi khi tạo báo cáo. Vui lòng thử lại.');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   const chartOptions = {
     responsive: true,
     plugins: {
@@ -346,10 +405,20 @@ const AdminDashboard = () => {
   return (
     <div className="admin-page admin-dashboard-page">
       <div className="page-header">
-        <h1>Báo cáo</h1>
-        <p className="page-subtitle">
-          Tổng quan hệ thống quản lý sân pickleball
-        </p>
+        <div className="header-content">
+          <div className="header-text">
+            <h1>Báo cáo</h1>
+            <p className="page-subtitle">
+              Tổng quan hệ thống quản lý sân pickleball
+            </p>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowReportModal(true)}
+          >
+            Tạo báo cáo
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-grid">
@@ -478,6 +547,107 @@ const AdminDashboard = () => {
           )}
         </div>
       </section>
+
+      {/* Report Generation Modal */}
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        title="Tạo báo cáo"
+        size="medium"
+      >
+        <div className="report-form">
+          <div className="form-group">
+            <label>Loại báo cáo:</label>
+            <select
+              value={reportConfig.type}
+              onChange={(e) =>
+                setReportConfig({ ...reportConfig, type: e.target.value })
+              }
+            >
+              <option value="service_revenue">Báo cáo doanh thu dịch vụ</option>
+              <option value="booking_details">
+                Báo cáo chi tiết phiếu đặt sân
+              </option>
+              <option value="court_revenue">Báo cáo doanh thu theo sân</option>
+              <option value="customer_revenue">
+                Báo cáo doanh thu theo khách hàng
+              </option>
+            </select>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Ngày bắt đầu:</label>
+              <input
+                type="date"
+                value={reportConfig.startDate}
+                onChange={(e) =>
+                  setReportConfig({
+                    ...reportConfig,
+                    startDate: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="form-group">
+              <label>Ngày kết thúc:</label>
+              <input
+                type="date"
+                value={reportConfig.endDate}
+                onChange={(e) =>
+                  setReportConfig({ ...reportConfig, endDate: e.target.value })
+                }
+              />
+            </div>
+          </div>
+
+          {/* <div className="report-description">
+            {reportConfig.type === 'service_revenue' && (
+              <p>
+                📈 <strong>Doanh thu dịch vụ:</strong> Báo cáo tổng doanh thu
+                của riêng dịch vụ (chỉ tính những đơn đã xác nhận và thanh toán)
+              </p>
+            )}
+            {reportConfig.type === 'booking_details' && (
+              <p>
+                📋 <strong>Chi tiết phiếu đặt sân:</strong> Danh sách chi tiết
+                các phiếu đặt sân (chỉ những phiếu đã thanh toán và xác nhận)
+              </p>
+            )}
+            {reportConfig.type === 'court_revenue' && (
+              <p>
+                🏟️ <strong>Doanh thu theo sân:</strong> Báo cáo doanh thu và số
+                lần đặt theo từng sân (chỉ tính những đơn đặt đã thanh toán)
+              </p>
+            )}
+            {reportConfig.type === 'customer_revenue' && (
+              <p>
+                👥 <strong>Doanh thu theo khách hàng:</strong> Số lần đặt và
+                tổng tiền của từng khách (tiền sân, tiền dịch vụ - chỉ tính đơn
+                đã xác nhận và thanh toán)
+              </p>
+            )}
+          </div> */}
+
+          <div className="form-actions">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowReportModal(false)}
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={generateReport}
+              disabled={generatingReport}
+            >
+              {generatingReport ? 'Đang tạo...' : 'Tạo báo cáo'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

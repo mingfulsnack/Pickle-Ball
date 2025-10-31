@@ -179,7 +179,7 @@ const Customers = () => {
 
       <div className="page-actions">
         <button className="btn btn-primary" onClick={openCreateModal}>
-          ➕ Thêm khách hàng
+          Thêm khách hàng
         </button>
 
         <div className="search-container">

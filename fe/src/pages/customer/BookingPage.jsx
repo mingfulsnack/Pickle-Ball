@@ -25,34 +25,27 @@ const BookingPage = () => {
   const [pricing, setPricing] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedContact, setSelectedContact] = useState(
-    location.state?.selectedContact ||
-      (function () {
-        try {
-          const raw = localStorage.getItem('selectedContact');
-          return raw ? JSON.parse(raw) : null;
-        } catch {
-          return null;
-        }
-      })()
+    location.state?.selectedContact || null
   );
 
   useEffect(() => {
-    // if navigated back from Contacts with selectedContact in state, use it
+    // Update selectedContact if coming from Contacts page
     if (location.state?.selectedContact) {
       setSelectedContact(location.state.selectedContact);
     }
-    // if not present in nav state, try localStorage
-    if (!location.state?.selectedContact) {
+    // Load from localStorage if not coming from navigation and user is available
+    else if (user?.id && !selectedContact) {
       try {
-        const raw = localStorage.getItem('selectedContact');
-        if (raw) setSelectedContact(JSON.parse(raw));
+        const storageKey = `selectedContact_${user.id}`;
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+          setSelectedContact(JSON.parse(raw));
+        }
       } catch {
-        // ignore
+        // ignore localStorage errors
       }
     }
-  }, [location.state]);
 
-  useEffect(() => {
     fetchServices();
 
     // If navigated from Homepage with availability/searchParams prefilled, use them.
@@ -61,7 +54,55 @@ const BookingPage = () => {
       setSearchParams(location.state.searchParams);
     }
     // Otherwise, do not auto-fetch. User must explicitly search to load availability.
-  }, [location.state]);
+  }, [location.state, user?.id, selectedContact]);
+
+  // Function to get available time options based on selected date
+  const getAvailableTimeOptions = useCallback(() => {
+    const options = [];
+    const now = new Date();
+    const selectedDate = new Date(searchParams.date);
+    const isToday = selectedDate.toDateString() === now.toDateString();
+
+    for (let hour = 6; hour <= 22; hour++) {
+      // If it's today, only show hours after current hour
+      if (isToday) {
+        const currentHour = now.getHours();
+        if (hour <= currentHour) {
+          continue; // Skip hours that have passed or current hour
+        }
+      }
+      options.push(`${hour.toString().padStart(2, '0')}:00`);
+    }
+
+    return options;
+  }, [searchParams.date]);
+
+  // Reset time selections when date changes and selected times are no longer valid
+  useEffect(() => {
+    if (searchParams.date) {
+      const availableOptions = getAvailableTimeOptions();
+
+      // Reset start time if it's no longer available
+      if (
+        searchParams.startTime &&
+        !availableOptions.includes(searchParams.startTime)
+      ) {
+        setSearchParams((prev) => ({ ...prev, startTime: '', endTime: '' }));
+      }
+      // Reset end time if start time was reset or end time is no longer available
+      else if (
+        searchParams.endTime &&
+        !availableOptions.includes(searchParams.endTime)
+      ) {
+        setSearchParams((prev) => ({ ...prev, endTime: '' }));
+      }
+    }
+  }, [
+    searchParams.date,
+    searchParams.startTime,
+    searchParams.endTime,
+    getAvailableTimeOptions,
+  ]);
 
   const fetchServices = async () => {
     try {
@@ -239,19 +280,6 @@ const BookingPage = () => {
 
     setLoading(true);
     try {
-      // prepare contact_id as numeric if present
-      const preparedContactId =
-        selectedContact && selectedContact.id
-          ? Number(selectedContact.id)
-          : null;
-      if (
-        selectedContact &&
-        selectedContact.id &&
-        !Number.isInteger(preparedContactId)
-      ) {
-        throw new Error('contact_id must be a number');
-      }
-
       const bookingData = {
         user_id: user?.id,
         ngay_su_dung: searchParams.date,
@@ -264,10 +292,8 @@ const BookingPage = () => {
         note: 'Đặt sân từ website',
       };
 
-      // attach contact info only when available and valid
-      if (preparedContactId !== null) {
-        bookingData.contact_id = preparedContactId;
-      } else if (selectedContact) {
+      // Use selectedContact info if available, otherwise use user info
+      if (selectedContact) {
         bookingData.contact_snapshot = {
           contact_name: selectedContact.full_name,
           contact_phone: selectedContact.phone,
@@ -309,10 +335,7 @@ const BookingPage = () => {
     }
   };
 
-  const timeOptions = [];
-  for (let hour = 6; hour <= 22; hour++) {
-    timeOptions.push(`${hour.toString().padStart(2, '0')}:00`);
-  }
+  const timeOptions = getAvailableTimeOptions();
 
   return (
     <div className="booking-page">
@@ -490,63 +513,44 @@ const BookingPage = () => {
           </div>
         )}
 
-        {/* Customer Information (from logged-in user) */}
+        {/* Customer Information (from logged-in user or selected contact) */}
         <div className="customer-section">
           <h2>Thông tin khách hàng</h2>
           <div className="customer-form">
-            {selectedContact ? (
-              <div className="selected-contact">
-                <div className="form-group">
-                  <label>Họ tên</label>
-                  <input
-                    type="text"
-                    value={selectedContact.full_name}
-                    readOnly
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Số điện thoại</label>
-                  <input type="tel" value={selectedContact.phone} readOnly />
-                </div>
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    value={selectedContact.email || ''}
-                    readOnly
-                  />
-                </div>
-                <div className="form-group">
-                  <button className="btn" onClick={() => navigate('/contacts')}>
-                    Chọn liên hệ khác
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="form-group">
-                  <label>Họ tên</label>
-                  <input
-                    type="text"
-                    value={user?.full_name || user?.username || ''}
-                    readOnly
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Số điện thoại</label>
-                  <input type="tel" value={user?.phone || ''} readOnly />
-                </div>
-                <div className="form-group">
-                  <label>Email</label>
-                  <input type="email" value={user?.email || ''} readOnly />
-                </div>
-                <div className="form-group">
-                  <button className="btn" onClick={() => navigate('/contacts')}>
-                    Chọn liên hệ
-                  </button>
-                </div>
-              </>
-            )}
+            <div className="form-group">
+              <label>Họ tên</label>
+              <input
+                type="text"
+                value={
+                  selectedContact?.full_name ||
+                  user?.full_name ||
+                  user?.username ||
+                  ''
+                }
+                readOnly
+              />
+            </div>
+            <div className="form-group">
+              <label>Số điện thoại</label>
+              <input
+                type="tel"
+                value={selectedContact?.phone || user?.phone || ''}
+                readOnly
+              />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={selectedContact?.email || user?.email || ''}
+                readOnly
+              />
+            </div>
+            {/* <div className="form-group">
+              <button className="btn" onClick={() => navigate('/contacts')}>
+                Thay đổi thông tin liên hệ
+              </button>
+            </div> */}
           </div>
         </div>
 

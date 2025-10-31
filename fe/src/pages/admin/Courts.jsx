@@ -85,7 +85,7 @@ const Courts = () => {
 
       <div className="page-actions">
         <button className="btn btn-primary" onClick={openCreate}>
-          ➕ Tạo sân mới
+          Tạo sân mới
         </button>
       </div>
 
@@ -133,53 +133,80 @@ const Courts = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        size="small"
+        size="medium"
       >
-        <div className="admin-modal">
-          <h3>{editing ? 'Sửa sân' : 'Tạo sân mới'}</h3>
-          <form onSubmit={handleSubmit}>
-            <label>Mã sân</label>
-            <input
-              name="ma_san"
-              value={form.ma_san}
-              onChange={(e) => setForm({ ...form, ma_san: e.target.value })}
-              required
-            />
-            <label>Tên sân</label>
-            <input
-              name="ten_san"
-              value={form.ten_san}
-              onChange={(e) => setForm({ ...form, ten_san: e.target.value })}
-              required
-            />
-            <label>Sức chứa</label>
-            <input
-              type="number"
-              name="suc_chua"
-              value={form.suc_chua}
-              onChange={(e) =>
-                setForm({ ...form, suc_chua: Number(e.target.value) })
-              }
-            />
-            <label>Ghi chú</label>
-            <textarea
-              name="ghi_chu"
-              value={form.ghi_chu}
-              onChange={(e) => setForm({ ...form, ghi_chu: e.target.value })}
-            />
-            <div style={{ marginTop: '1rem' }}>
-              <button className="btn" type="submit">
-                Lưu
-              </button>
-              <button
-                className="btn btn-outline"
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Hủy
-              </button>
-            </div>
-          </form>
+        <div className="court-modal">
+          <div className="modal-custom-header">
+            <h2>{editing ? 'Sửa thông tin sân' : 'Tạo sân mới'}</h2>
+          </div>
+          <div className="modal-custom-body">
+            <form onSubmit={handleSubmit}>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Mã sân *</label>
+                  <input
+                    name="ma_san"
+                    value={form.ma_san}
+                    onChange={(e) =>
+                      setForm({ ...form, ma_san: e.target.value })
+                    }
+                    required
+                    placeholder="Nhập mã sân (VD: A1, B2)"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Tên sân *</label>
+                  <input
+                    name="ten_san"
+                    value={form.ten_san}
+                    onChange={(e) =>
+                      setForm({ ...form, ten_san: e.target.value })
+                    }
+                    required
+                    placeholder="Nhập tên sân"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Sức chứa (người)</label>
+                  <input
+                    type="number"
+                    name="suc_chua"
+                    value={form.suc_chua}
+                    onChange={(e) =>
+                      setForm({ ...form, suc_chua: Number(e.target.value) })
+                    }
+                    min="1"
+                    max="20"
+                    placeholder="Số người tối đa"
+                  />
+                </div>
+                <div className="form-group full-width">
+                  <label>Ghi chú</label>
+                  <textarea
+                    name="ghi_chu"
+                    value={form.ghi_chu}
+                    onChange={(e) =>
+                      setForm({ ...form, ghi_chu: e.target.value })
+                    }
+                    placeholder="Mô tả thêm về sân (tùy chọn)"
+                    rows="3"
+                  />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="btn btn-outline"
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Hủy
+                </button>
+                <button className="btn btn-primary" type="submit">
+                  {editing ? 'Cập nhật' : 'Tạo sân'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </Modal>
     </div>

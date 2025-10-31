@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.scss';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
+
+  // Get redirect path from location state
+  const redirectTo = location.state?.redirectTo || '/';
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,7 +41,8 @@ const Login = () => {
       if (isAdminUser) {
         navigate('/admin/dashboard');
       } else {
-        navigate('/');
+        // Redirect to the intended page or home
+        navigate(redirectTo);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');

@@ -97,7 +97,7 @@ export default function Services() {
 
       <div className="page-actions">
         <button className="btn btn-primary" onClick={openCreate}>
-          ➕ Tạo dịch vụ
+          Tạo dịch vụ
         </button>
       </div>
 

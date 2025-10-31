@@ -46,15 +46,30 @@ const Header = ({ isPublic = false }) => {
                     Trang chủ
                   </button>
                 </li>
-                <li
-                  className={`nav-item ${
-                    isActive('/booking-history') ? 'active' : ''
-                  }`}
-                >
-                  <button onClick={() => handleNavigation('/booking-history')}>
-                    Lịch sử đặt sân
-                  </button>
-                </li>
+                {isAuthenticated() && (
+                  <>
+                    <li
+                      className={`nav-item ${
+                        isActive('/booking') ? 'active' : ''
+                      }`}
+                    >
+                      <button onClick={() => handleNavigation('/booking')}>
+                        Đặt sân
+                      </button>
+                    </li>
+                    <li
+                      className={`nav-item ${
+                        isActive('/booking-history') ? 'active' : ''
+                      }`}
+                    >
+                      <button
+                        onClick={() => handleNavigation('/booking-history')}
+                      >
+                        Lịch sử đặt sân
+                      </button>
+                    </li>
+                  </>
+                )}
                 <li
                   className={`nav-item ${isActive('/about') ? 'active' : ''}`}
                 >
@@ -139,10 +154,20 @@ const Header = ({ isPublic = false }) => {
               </button>
             </div>
           ) : (
-            <button className="btn btn-primary login-btn" onClick={handleLogin}>
-              <FaSignInAlt />
-              <span>Đăng nhập</span>
-            </button>
+            <div className="auth-buttons">
+              <button
+                className="btn btn-outline login-btn"
+                onClick={handleLogin}
+              >
+                <span>Đăng nhập</span>
+              </button>
+              <button
+                className="btn btn-primary register-btn"
+                onClick={() => navigate('/register')}
+              >
+                <span>Đăng ký</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -63,35 +63,25 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   return children;
 };
 
-// Public Route component (redirects to admin dashboard if already logged in as admin)
+// Public Route component (requires authentication for protected customer routes)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   console.log(
     'PublicRoute - isLoading:',
     isLoading,
     'isAuthenticated:',
-    isAuthenticated(),
-    'isAdmin:',
-    isAdmin()
+    isAuthenticated()
   );
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  // Require authentication for public routes
+  // Require authentication for protected customer routes
   if (!isAuthenticated()) {
     console.log('PublicRoute - user not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
-  }
-
-  // If an admin user is accessing public route, redirect to admin dashboard
-  if (isAdmin()) {
-    console.log(
-      'Admin user accessing public route, redirecting to admin dashboard'
-    );
-    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return children;
@@ -102,7 +92,12 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public routes with PublicLayout */}
+          {/* Public homepage - no authentication required */}
+          <Route path="/" element={<PublicLayout />}>
+            <Route index element={<Homepage />} />
+          </Route>
+
+          {/* Protected customer routes */}
           <Route
             path="/"
             element={
@@ -111,10 +106,10 @@ function App() {
               </PublicRoute>
             }
           >
-            <Route index element={<Homepage />} />
             <Route path="booking" element={<BookingPage />} />
             <Route path="contacts" element={<Contacts />} />
             <Route path="booking-history" element={<BookingLookup />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="about" element={<div>Giới thiệu (Coming soon)</div>} />
             <Route
               path="booking-confirmation"
