@@ -7,6 +7,9 @@ const authController = require('../controllers/authController');
 // Đăng nhập
 router.post('/login', validate(schemas.login), authController.login);
 
+// Admin login
+router.post('/admin-login', validate(schemas.login), authController.adminLogin);
+
 // Public registration
 router.post('/register', validate(schemas.register), authController.register);
 

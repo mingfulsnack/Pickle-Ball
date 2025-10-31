@@ -90,9 +90,7 @@ const buildInvoiceData = async (bookingId) => {
     if (court.hours > 0) {
       const avgPricePerHour = Math.round(court.total_price / court.hours);
       const displayQuantity =
-        court.hours % 1 === 0
-          ? `${court.hours}`
-          : `${court.hours.toFixed(1)}`;
+        court.hours % 1 === 0 ? `${court.hours}` : `${court.hours.toFixed(1)}`;
       items.push({
         index: itemIndex++,
         ten_dv: court.ten_san,
@@ -112,13 +110,21 @@ const buildInvoiceData = async (bookingId) => {
       s.don_gia !== null && s.don_gia !== undefined
         ? Number(s.don_gia)
         : Number(s.dv_don_gia || 0);
-    const quantity =
-      loai === 'rent' ? totalHours || 1 : s.so_luong || s.qty || 1;
+    const so_luong = Number(s.so_luong || s.qty || 1);
+
+    // For rent services: quantity = số lượng × số giờ
+    // For buy services: quantity = số lượng only
+    const quantity = loai === 'rent' ? so_luong * (totalHours || 1) : so_luong;
     const amount = Number((don_gia * quantity).toFixed(2));
+
+    // Display quantity differently for rent vs buy services
+    const displayQuantity =
+      loai === 'rent' ? `${so_luong} × ${totalHours || 1}h` : `${so_luong}`;
+
     items.push({
       index: itemIndex++,
       ten_dv,
-      quantity,
+      quantity: displayQuantity,
       don_gia: don_gia.toLocaleString('vi-VN') + 'đ',
       amount: amount.toLocaleString('vi-VN') + 'đ',
       rawAmount: amount,

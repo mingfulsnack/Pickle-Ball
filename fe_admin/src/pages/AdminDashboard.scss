@@ -1,0 +1,323 @@
+@use '../styles/variables.scss' as *;
+
+/* Admin Dashboard page-scoped styles */
+.admin-dashboard-page {
+  .page-header {
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      .header-text {
+        flex: 1;
+
+        h1 {
+          margin: 0 0 0.5rem 0;
+        }
+
+        .page-subtitle {
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  .revenue-section {
+    margin-top: 2rem;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      h2 {
+        margin: 0;
+        color: var(--primary-color, #007bff);
+      }
+
+      .revenue-filters {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+
+          label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+          }
+
+          select,
+          input {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            min-width: 120px;
+
+            &:focus {
+              outline: none;
+              border-color: var(--primary-color, #007bff);
+              box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.12);
+            }
+          }
+
+          input[type='number'] {
+            min-width: 80px;
+          }
+
+          input[type='date'] {
+            min-width: 140px;
+          }
+        }
+      }
+    }
+
+    .revenue-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+
+      .revenue-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 1px solid #cbd5e1;
+        text-align: center; /* Center align all text content */
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Vertically center content */
+        align-items: center; /* Horizontally center content */
+        padding: 1.5rem;
+
+        h4 {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.875rem;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 700;
+
+          &.revenue {
+            color: #059669;
+          }
+
+          &.count {
+            color: #7c3aed;
+          }
+
+          &.average {
+            color: #dc2626;
+          }
+        }
+      }
+    }
+
+    .chart-container {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1.5rem;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .chart-loading,
+      .no-chart-data {
+        color: #6b7280;
+        font-style: italic;
+        text-align: center;
+      }
+
+      canvas {
+        max-height: 100%;
+      }
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .revenue-section {
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+
+        .revenue-filters {
+          width: 100%;
+          flex-direction: column;
+          align-items: stretch;
+
+          .filter-group {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+
+            label {
+              min-width: 80px;
+            }
+
+            select,
+            input {
+              flex: 1;
+              min-width: 0;
+            }
+          }
+        }
+      }
+
+      .chart-container {
+        height: 300px;
+        padding: 1rem;
+      }
+    }
+  }
+}
+
+/* Inherit other admin styles from existing Admin.scss if needed */
+.admin-dashboard-page .admin-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-style: italic;
+  }
+}
+
+.admin-dashboard-page .dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.admin-dashboard-page .admin-section {
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0 0 1rem 0;
+    color: #374151;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .muted {
+    color: #6b7280;
+    font-style: italic;
+  }
+
+  // Report modal specific styles
+  .report-form {
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      select,
+      input[type='date'] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary-color, #007bff);
+          box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+      }
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .report-description {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+
+      p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #475569;
+
+        strong {
+          color: #1e293b;
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 1.5rem;
+
+      .btn {
+        min-width: 120px;
+      }
+    }
+  }
+}

@@ -1,0 +1,276 @@
+@use '../styles/variables.scss' as *;
+
+.header {
+  position: fixed;
+  top: 0;
+  left: $sidebar-width;
+  right: 0;
+  height: $header-height;
+  background-color: $header-bg;
+  border-bottom: 1px solid $border-color;
+  box-shadow: $header-shadow;
+  z-index: $z-header;
+
+  // Modifier cho public layout (không có sidebar)
+  &.public {
+    left: 0;
+    background-color: #ffffff;
+    height: 80px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .header-content {
+    height: 100%;
+    padding: 0 $spacing-xl;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .header-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 60px;
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+
+        &:hover {
+          transform: scale(1.05);
+        }
+
+        .logo-icon {
+          /* image logo size: match the visual scale of the old emoji icon but smaller to avoid oversized logo */
+          width: 1.5rem;
+          height: 1.5rem;
+          display: block;
+          object-fit: contain;
+        }
+
+        .logo-text {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #000000;
+          text-decoration: none;
+        }
+      }
+
+      .main-nav {
+        .nav-list {
+          display: flex;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          gap: 40px;
+
+          .nav-item {
+            position: relative;
+
+            button {
+              background: none;
+              border: none;
+              color: #212121;
+              font-size: 1rem;
+              font-weight: 500;
+              cursor: pointer;
+              padding: 8px 0;
+              transition: color 0.3s ease;
+
+              &:hover {
+                color: #4caf50;
+              }
+            }
+
+            &.active {
+              button {
+                color: #212121;
+                font-weight: 600;
+              }
+
+              &::after {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background-color: #000000;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+
+      .auth-buttons {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .login-btn {
+          width: 105px;
+          height: 40px;
+          background-color: transparent;
+          border: 2px solid #4caf50;
+          color: #4caf50;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: #4caf50;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+          }
+
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+
+          svg {
+            font-size: $font-sm;
+          }
+        }
+
+        .register-btn {
+          width: 100px;
+          height: 40px;
+          background-color: #4caf50;
+          border: 2px solid #4caf50;
+          color: white;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: #2e7d32;
+            border-color: #2e7d32;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+          }
+
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+
+          svg {
+            font-size: $font-sm;
+          }
+        }
+      }
+
+      .login-btn {
+        background-color: #4caf50;
+        border-color: #4caf50;
+        color: white;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: #2e7d32 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+
+        svg {
+          font-size: $font-sm;
+        }
+      }
+
+      .user-menu {
+        display: flex;
+        align-items: center;
+        gap: $spacing-lg;
+
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          color: $text-primary;
+
+          .user-icon {
+            font-size: $font-lg;
+            color: $text-secondary;
+          }
+
+          .user-name {
+            font-weight: $font-semibold;
+            font-size: $font-md;
+          }
+
+          .user-role {
+            font-size: $font-sm;
+            color: $text-secondary;
+          }
+        }
+
+        .logout-btn {
+          background-color: #ffac1c;
+          border-color: #ffac1c;
+
+          &:hover {
+            background-color: darken(#ffac1c, 10%) !important;
+          }
+
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+
+          svg {
+            font-size: $font-sm;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .header {
+    left: 0;
+
+    .header-content {
+      padding: 0 $spacing-lg;
+
+      .user-menu {
+        gap: $spacing-md;
+
+        .user-info {
+          .user-name,
+          .user-role {
+            display: none;
+          }
+        }
+      }
+
+      .header-left {
+        .logo {
+          .logo-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+          }
+        }
+      }
+    }
+  }
+}

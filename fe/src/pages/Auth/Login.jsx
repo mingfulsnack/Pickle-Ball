@@ -26,8 +26,8 @@ const Login = () => {
         password: form.password,
       });
       const { token, user } = res.data.data;
-      login(user, token);
-      // Immediately route admin/manager/staff users to admin dashboard to avoid race with AuthContext state
+
+      // Check if user is admin/staff - prevent admin login on customer app
       const role = user?.tenvaitro || user?.role;
       const code = user?.mavaitro || user?.role_id;
       const isAdminUser =
@@ -39,11 +39,15 @@ const Login = () => {
         code === 3;
 
       if (isAdminUser) {
-        navigate('/admin/dashboard');
-      } else {
-        // Redirect to the intended page or home
-        navigate(redirectTo);
+        alert(
+          'Admin users should use the admin portal. Please contact support for access.'
+        );
+        return;
       }
+
+      login(user, token);
+      // Redirect to the intended page or home
+      navigate(redirectTo);
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
     } finally {

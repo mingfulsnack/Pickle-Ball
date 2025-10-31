@@ -8,9 +8,7 @@ import {
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './layouts/AppLayout';
-import AdminLayout from './layouts/AdminLayout';
 import PublicLayout from './layouts/PublicLayout';
-//import Login from './pages/Login';
 
 // Customer/Public pages
 import Homepage from './pages/customer/Homepage';
@@ -22,65 +20,18 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Contacts from './pages/customer/Contacts';
 
-// Admin pages
-import Bookings from './pages/admin/Bookings';
-import Courts from './pages/admin/Courts';
-import TimeFrames from './pages/admin/TimeFrames';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import Services from './pages/admin/Services';
-import Customers from './pages/admin/Customers';
-
 import './styles/globals.scss';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Protected Route component
-const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
-
-  console.log(
-    'ProtectedRoute - isLoading:',
-    isLoading,
-    'isAuthenticated:',
-    isAuthenticated(),
-    'adminOnly:',
-    adminOnly
-  );
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAuthenticated()) {
-    console.log('User not authenticated, redirecting to login');
-    return <Navigate to="/login" replace />;
-  }
-
-  if (adminOnly && !isAdmin()) {
-    console.log('User not admin, redirecting to home');
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
-// Public Route component (requires authentication for protected customer routes)
-const PublicRoute = ({ children }) => {
+// Protected Route component for customer routes
+const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
-  console.log(
-    'PublicRoute - isLoading:',
-    isLoading,
-    'isAuthenticated:',
-    isAuthenticated()
-  );
-
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  // Require authentication for protected customer routes
   if (!isAuthenticated()) {
-    console.log('PublicRoute - user not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
@@ -101,9 +52,9 @@ function App() {
           <Route
             path="/"
             element={
-              <PublicRoute>
+              <ProtectedRoute>
                 <PublicLayout />
-              </PublicRoute>
+              </ProtectedRoute>
             }
           >
             <Route path="booking" element={<BookingPage />} />
@@ -120,83 +71,6 @@ function App() {
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
-          {/* Login route (standalone) */}
-          {/* <Route 
-            path="/login" 
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            } 
-          /> */}
-
-          {/* Admin routes with AdminLayout */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route
-              index
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="dashboard"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            {/* Add more admin routes here as needed */}
-            <Route
-              path="bookings"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <Bookings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="courts"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <Courts />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="timeframes"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <TimeFrames />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="services"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <Services />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="customers"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <Customers />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Redirect admin root to dashboard */}
-            <Route
-              path=""
-              element={<Navigate to="/admin/dashboard" replace />}
-            />
-          </Route>
 
           {/* Catch all route - redirect to homepage */}
           <Route path="*" element={<Navigate to="/" replace />} />

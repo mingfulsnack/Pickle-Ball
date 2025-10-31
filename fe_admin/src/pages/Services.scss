@@ -1,0 +1,264 @@
+@use '../styles/variables.scss' as *;
+
+/* Services page uses page-scoped admin-like styles (no global Admin.scss dependency) */
+
+.services-page {
+  // Page actions (create button area)
+  .page-actions {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      border-radius: 8px;
+
+      &.btn-primary {
+        border: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  // Services table with proper column alignment
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    thead {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+
+      th {
+        padding: 1rem;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid #f3f4f6;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: #f9fafb;
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+
+      td {
+        padding: 1rem;
+        color: #374151;
+        vertical-align: middle;
+      }
+    }
+
+    // Column-specific styling
+    th,
+    td {
+      &:nth-child(1) {
+        // ID
+        width: 80px;
+        text-align: center;
+        font-weight: 600;
+        color: #6b7280;
+      }
+
+      &:nth-child(2) {
+        // Tên dịch vụ
+        width: auto;
+        text-align: left;
+        font-weight: 500;
+      }
+
+      &:nth-child(3) {
+        // Loại
+        width: 100px;
+        text-align: center;
+      }
+
+      &:nth-child(4) {
+        // Đơn giá
+        width: 120px;
+        text-align: right;
+        font-weight: 600;
+        color: #059669;
+      }
+
+      &:nth-child(5) {
+        // Ghi chú
+        width: auto;
+        text-align: left;
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      &:nth-child(6) {
+        // Hành động
+        width: 140px;
+        text-align: center;
+      }
+    }
+
+    // Empty state styling
+    td[colspan] {
+      text-align: center !important;
+      color: #9ca3af;
+      font-style: italic;
+      padding: 2rem;
+    }
+  }
+
+  // Action buttons in table cells
+  .actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+
+    .btn {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+
+      &.btn-sm {
+        padding: 0.25rem 0.5rem;
+      }
+
+      &.btn-danger {
+        background-color: #ef4444;
+        color: white;
+        border: none;
+
+        &:hover {
+          background-color: #dc2626;
+        }
+      }
+    }
+  }
+}
+
+// Modal styling for Services
+.services-page .admin-modal {
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      background-color: #ffffff;
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      &:hover {
+        border-color: #d1d5db;
+      }
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    select.form-control {
+      cursor: pointer;
+    }
+  }
+
+  .form-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 1.5rem !important;
+    padding-top: 1.5rem !important;
+    border-top: 1px solid #e5e7eb !important;
+    margin-top: 2rem !important;
+
+    .btn {
+      padding: 0.75rem 1.5rem !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      font-size: 0.875rem !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      min-width: 100px !important;
+      border: none !important;
+
+      &.btn-secondary {
+        background: #f3f4f6 !important;
+        color: #6b7280 !important;
+
+        &:hover {
+          background: #e5e7eb !important;
+          color: #374151 !important;
+        }
+      }
+
+      &.btn-primary {
+        background: linear-gradient(
+          135deg,
+          #3b82f6 0%,
+          #1d4ed8 100%
+        ) !important;
+        color: white !important;
+
+        &:hover {
+          background: linear-gradient(
+            135deg,
+            #2563eb 0%,
+            #1e40af 100%
+          ) !important;
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+        }
+      }
+    }
+  }
+}

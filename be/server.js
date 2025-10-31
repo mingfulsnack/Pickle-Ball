@@ -41,10 +41,14 @@ const corsOptions = {
     ? process.env.CORS_ORIGIN.split(',')
     : [
         'http://localhost:3000',
-        'http://localhost:5173', // Vite dev server
+        'http://localhost:5173', // Vite dev server - customer
+        'http://localhost:5174', // Vite dev server - admin
         'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
       ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['*'],
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
@@ -221,10 +225,14 @@ const startServer = async () => {
       // Schedule periodic cleanup job to cancel overdue pending bookings
       try {
         // Run every 10 minutes
-        cron.schedule('*/10 * * * *', async () => {
-          try {
-            console.log('🕒 Running scheduled cleanup: cancel overdue pending bookings');
-            const res = await pool.query(`
+        cron.schedule(
+          '*/10 * * * *',
+          async () => {
+            try {
+              console.log(
+                '🕒 Running scheduled cleanup: cancel overdue pending bookings'
+              );
+              const res = await pool.query(`
               UPDATE phieu_dat_san p
               SET trang_thai = 'cancelled', updated_at = now()
               FROM (
@@ -238,18 +246,26 @@ const startServer = async () => {
               RETURNING p.id, p.ma_pd
             `);
 
-            if (res && res.rowCount) {
-              console.log(`✅ Auto-cancelled ${res.rowCount} overdue booking(s):`, res.rows.map(r => r.ma_pd).join(', '));
-            } else {
-              console.log('✅ No overdue pending bookings found');
+              if (res && res.rowCount) {
+                console.log(
+                  `✅ Auto-cancelled ${res.rowCount} overdue booking(s):`,
+                  res.rows.map((r) => r.ma_pd).join(', ')
+                );
+              } else {
+                console.log('✅ No overdue pending bookings found');
+              }
+            } catch (err) {
+              console.error(
+                'Error during scheduled cleanup:',
+                err.message || err
+              );
             }
-          } catch (err) {
-            console.error('Error during scheduled cleanup:', err.message || err);
+          },
+          {
+            scheduled: true,
+            timezone: process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh',
           }
-        }, {
-          scheduled: true,
-          timezone: process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh'
-        });
+        );
       } catch (cronErr) {
         console.error('Failed to schedule cleanup job:', cronErr);
       }

@@ -1,0 +1,178 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import appleImg from '../assets/apple.png';
+import './Header.scss';
+
+const Header = ({ isPublic = false }) => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleLogout = () => {
+    console.log('Logging out user...');
+    logout(); // AuthContext sẽ tự handle redirect
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
+  return (
+    <header className={`header ${isPublic ? 'public' : ''}`}>
+      <div className="header-content">
+        <div className="header-left">
+          {/* Logo */}
+          <div className="logo" onClick={() => handleNavigation('/')}>
+            <img src={appleImg} alt="Apple" className="logo-icon" />
+            <span className="logo-text">Pickleball Bồ Đề</span>
+          </div>
+
+          {/* Navigation Menu (only for public layout) */}
+          {isPublic && (
+            <nav className="main-nav">
+              <ul className="nav-list">
+                <li className={`nav-item ${isActive('/') ? 'active' : ''}`}>
+                  <button onClick={() => handleNavigation('/')}>
+                    Trang chủ
+                  </button>
+                </li>
+                {isAuthenticated() && (
+                  <>
+                    <li
+                      className={`nav-item ${
+                        isActive('/booking') ? 'active' : ''
+                      }`}
+                    >
+                      <button onClick={() => handleNavigation('/booking')}>
+                        Đặt sân
+                      </button>
+                    </li>
+                    <li
+                      className={`nav-item ${
+                        isActive('/booking-history') ? 'active' : ''
+                      }`}
+                    >
+                      <button
+                        onClick={() => handleNavigation('/booking-history')}
+                      >
+                        Lịch sử đặt sân
+                      </button>
+                    </li>
+                  </>
+                )}
+                <li
+                  className={`nav-item ${isActive('/about') ? 'active' : ''}`}
+                >
+                  <button onClick={() => handleNavigation('/about')}>
+                    Giới thiệu
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          )}
+
+          {/* Admin quick links for admin users */}
+          {!isPublic &&
+            isAuthenticated() &&
+            (user?.role === 'manager' || user?.role === 'staff') && (
+              <nav className="admin-nav">
+                <ul className="nav-list">
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/dashboard') ? 'active' : ''
+                    }`}
+                  >
+                    <button
+                      onClick={() => handleNavigation('/admin/dashboard')}
+                    >
+                      Admin
+                    </button>
+                  </li>
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/bookings') ? 'active' : ''
+                    }`}
+                  >
+                    <button onClick={() => handleNavigation('/admin/bookings')}>
+                      Đơn đặt
+                    </button>
+                  </li>
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/courts') ? 'active' : ''
+                    }`}
+                  >
+                    <button onClick={() => handleNavigation('/admin/courts')}>
+                      Sân
+                    </button>
+                  </li>
+                  <li
+                    className={`nav-item ${
+                      isActive('/admin/timeframes') ? 'active' : ''
+                    }`}
+                  >
+                    <button
+                      onClick={() => handleNavigation('/admin/timeframes')}
+                    >
+                      Khung giờ
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            )}
+        </div>
+
+        <div className="header-right">
+          {isAuthenticated() ? (
+            <div className="user-menu">
+              <div
+                className="user-info"
+                onClick={() => handleNavigation('/contacts')}
+                style={{ cursor: 'pointer' }}
+              >
+                <FaUser className="user-icon" />
+                <span className="user-name">
+                  {user?.full_name || user?.username || 'User'}
+                </span>
+              </div>
+              <button
+                className="btn btn-secondary logout-btn"
+                onClick={handleLogout}
+              >
+                <FaSignOutAlt />
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          ) : (
+            <div className="auth-buttons">
+              <button
+                className="btn btn-outline login-btn"
+                onClick={handleLogin}
+              >
+                <span>Đăng nhập</span>
+              </button>
+              <button
+                className="btn btn-primary register-btn"
+                onClick={() => navigate('/register')}
+              >
+                <span>Đăng ký</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

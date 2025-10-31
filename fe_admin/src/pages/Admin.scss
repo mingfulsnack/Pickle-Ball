@@ -1,0 +1,227 @@
+/* Modern Admin Styles */
+@use '../styles/variables.scss' as *;
+
+:root {
+  --admin-primary: #4f46e5;
+  --admin-primary-light: #6366f1;
+  --admin-bg: #f8fafc;
+  --admin-bg-card: #ffffff;
+  --admin-border: #e2e8f0;
+  --admin-text: #1e293b;
+  --admin-text-muted: #64748b;
+  --admin-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.admin-page {
+  min-height: 100vh;
+
+  .page-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--admin-text);
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.025em;
+    }
+
+    .page-subtitle {
+      color: var(--admin-text-muted);
+      font-size: 1rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+
+  .page-actions {
+  margin-bottom: 1.5rem !important; /* separate action row from the table */
+  display: flex !important;
+  gap: 0.75rem !important;
+  align-items: center !important;
+}
+}
+
+/* Cards */
+.admin-card {
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 0.75rem;
+  box-shadow: var(--admin-shadow);
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--admin-shadow-lg);
+    transform: translateY(-1px);
+  }
+
+  &__body {
+    padding: 1.5rem;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  &__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    margin-bottom: 0.25rem;
+  }
+
+  &__hint {
+    font-size: 0.875rem;
+    color: var(--admin-text-muted);
+  }
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.btn-primary {
+    background: var(--admin-primary);
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: var(--admin-primary-light);
+      transform: translateY(-1px);
+      box-shadow: var(--admin-shadow-lg);
+    }
+  }
+
+  &.btn-secondary {
+    background: var(--admin-bg-card);
+    color: var(--admin-text);
+    border: 1px solid var(--admin-border);
+
+    &:hover:not(:disabled) {
+      background: var(--admin-bg);
+      border-color: var(--admin-primary);
+    }
+  }
+
+  &.btn-danger {
+    background: #ef4444;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #dc2626;
+    }
+  }
+
+  &.btn-success {
+    background: #10b981;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #059669;
+    }
+  }
+
+  &.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Tables */
+.admin-table {
+  width: 100%;
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--admin-shadow);
+
+  th {
+    background: var(--admin-bg);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--admin-text);
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--admin-border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 1rem;
+    color: var(--admin-text);
+    border-bottom: 1px solid var(--admin-border);
+    font-size: 0.875rem;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background: #f8fafc;
+    }
+  }
+}
+
+/* Sections */
+.admin-section {
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--admin-shadow);
+
+  h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--admin-text);
+  }
+
+  .muted {
+    color: var(--admin-text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+}
+
+/* Reusable actions cell: spacing for small action buttons (edit/delete) */
+.actions-cell {
+  display: inline-flex;
+  gap: 0.5rem; /* small gap between action buttons */
+  align-items: center;
+}

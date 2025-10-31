@@ -57,6 +57,73 @@ const login = async (req, res) => {
   }
 };
 
+// Admin login - only allows admin/staff users
+const adminLogin = async (req, res) => {
+  try {
+    console.debug('Admin login payload:', req.body);
+    const username = req.body.username || req.body.tendangnhap;
+    const password = req.body.password || req.body.matkhau;
+
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Tên đăng nhập và mật khẩu là bắt buộc'));
+    }
+
+    // Find user by username
+    const user = await User.findByUsername(username);
+
+    if (!user) {
+      return res
+        .status(401)
+        .json(formatErrorResponse('Tên đăng nhập hoặc mật khẩu không đúng'));
+    }
+
+    // Check if user is admin/staff
+    const role = user?.tenvaitro || user?.role || null;
+    const code = user?.mavaitro || user?.role_id || null;
+    const isAdminUser =
+      role === 'admin' ||
+      role === 'manager' ||
+      role === 'staff' ||
+      code === 1 ||
+      code === 2 ||
+      code === 3;
+
+    if (!isAdminUser) {
+      return res
+        .status(403)
+        .json(formatErrorResponse('Không có quyền truy cập trang quản trị'));
+    }
+
+    // Verify password
+    const isValidPassword = await verifyPassword(password, user.password_hash);
+    if (!isValidPassword) {
+      return res
+        .status(401)
+        .json(formatErrorResponse('Tên đăng nhập hoặc mật khẩu không đúng'));
+    }
+
+    // Create token
+    const token = generateToken({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    });
+
+    // Remove password before returning
+    const safeUser = { ...user };
+    delete safeUser.password_hash;
+
+    res.json(
+      formatResponse(true, { token, user: safeUser }, 'Đăng nhập thành công')
+    );
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
 // Đổi mật khẩu
 const changePassword = async (req, res) => {
   try {
@@ -128,6 +195,7 @@ const getProfile = async (req, res) => {
 
 module.exports = {
   login,
+  adminLogin,
   changePassword,
   getProfile,
 };

@@ -1,0 +1,23 @@
+@use '../styles/variables.scss' as *;
+
+.public-layout {
+  min-height: 100vh;
+  background-color: #ffffff;
+
+  .main-content {
+    padding-top: 80px; // Account for fixed header height (80px for public header)
+    min-height: calc(100vh - 80px);
+
+    .content-wrapper {
+      width: 100%;
+      // Remove max-width and padding to let pages control their own layout
+      // max-width: 1200px;
+      margin: 0 auto;
+      // padding: 2rem;
+
+      @media (max-width: 768px) {
+        // padding: 1rem;
+      }
+    }
+  }
+}

@@ -1,0 +1,328 @@
+/* Courts admin styles - cohesive with Admin.scss */
+
+.admin-header h2 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.admin-modal {
+  max-width: 520px;
+}
+
+// Courts table styling
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  thead {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+
+    th {
+      padding: 1rem;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f3f4f6;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #f9fafb;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 1rem;
+      color: #374151;
+      vertical-align: middle;
+    }
+  }
+
+  // Courts table column alignment
+  th,
+  td {
+    &:nth-child(1) {
+      // ID
+      width: 60px;
+      text-align: center;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    &:nth-child(2) {
+      // Mã sân
+      width: 120px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    &:nth-child(3) {
+      // Tên sân - smaller width
+      width: 140px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    &:nth-child(4) {
+      // Sức chứa
+      width: 100px;
+      text-align: center;
+    }
+
+    &:nth-child(5) {
+      // Ghi chú - much wider for more content
+      width: auto;
+      min-width: 200px;
+      text-align: left;
+      word-wrap: break-word;
+      white-space: normal;
+      max-width: 300px;
+    }
+
+    &:nth-child(6) {
+      // Hành động
+      width: 140px;
+      text-align: center;
+    }
+  }
+
+  // Action buttons in table cells
+  .actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+
+    .btn {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+
+      &.btn-sm {
+        padding: 0.25rem 0.5rem;
+      }
+
+      &.btn-danger {
+        background-color: #ef4444;
+        color: white;
+        border: none;
+
+        &:hover {
+          background-color: #dc2626;
+        }
+      }
+    }
+  }
+}
+
+.btn-small {
+  margin-right: 0.5rem;
+}
+
+// Modern Court Modal Styles
+.court-modal {
+  .modal-custom-header {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+
+    .header-icon {
+      font-size: 1.5rem;
+      margin-right: 1rem;
+    }
+
+    h2 {
+      flex: 1;
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .close-btn {
+      background: #f3f4f6;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #6b7280;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #e5e7eb;
+        color: #374151;
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .modal-custom-body {
+    padding: 1.5rem;
+    background-color: #ffffff;
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+
+        &.full-width {
+          grid-column: 1 / -1;
+        }
+
+        label {
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 0.5rem;
+          font-size: 0.875rem;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+
+        input,
+        textarea {
+          padding: 0.75rem;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 1rem;
+          transition: all 0.2s ease;
+          background-color: #ffffff;
+
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+
+          &::placeholder {
+            color: #9ca3af;
+          }
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        input[type='number'] {
+          appearance: textfield;
+          -moz-appearance: textfield;
+
+          &::-webkit-outer-spin-button,
+          &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+        }
+      }
+    }
+
+    .modal-actions {
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 1.5rem !important;
+      padding-top: 1rem !important;
+      border-top: 1px solid #e5e7eb !important;
+
+      .btn {
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        min-width: 100px !important;
+
+        &.btn-outline {
+          background: #ffffff !important;
+          border: 2px solid #e5e7eb !important;
+          color: #6b7280 !important;
+
+          &:hover {
+            background-color: #f9fafb !important;
+            border-color: #d1d5db !important;
+            color: #374151 !important;
+          }
+        }
+
+        &.btn-primary {
+          background: linear-gradient(
+            135deg,
+            #3b82f6 0%,
+            #1d4ed8 100%
+          ) !important;
+          border: 2px solid #3b82f6 !important;
+          color: white !important;
+
+          &:hover {
+            background: linear-gradient(
+              135deg,
+              #2563eb 0%,
+              #1e40af 100%
+            ) !important;
+            border-color: #2563eb !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design for court modal
+@media (max-width: 768px) {
+  .court-modal {
+    .modal-custom-header {
+      padding: 1rem;
+
+      h2 {
+        font-size: 1.1rem;
+      }
+    }
+
+    .modal-custom-body {
+      padding: 1rem;
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .modal-actions {
+        flex-direction: column;
+
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
