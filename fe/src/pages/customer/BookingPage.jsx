@@ -27,11 +27,22 @@ const BookingPage = () => {
   const [selectedContact, setSelectedContact] = useState(
     location.state?.selectedContact || null
   );
+  const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to cash
 
   useEffect(() => {
     // Update selectedContact if coming from Contacts page
     if (location.state?.selectedContact) {
       setSelectedContact(location.state.selectedContact);
+    }
+    // restore selected slots/services/paymentMethod when navigating back from payment
+    if (location.state?.selectedSlots) {
+      setSelectedSlots(location.state.selectedSlots);
+    }
+    if (location.state?.selectedServices) {
+      setSelectedServices(location.state.selectedServices);
+    }
+    if (location.state?.paymentMethod) {
+      setPaymentMethod(location.state.paymentMethod);
     }
     // Load from localStorage if not coming from navigation and user is available
     else if (user?.id && !selectedContact) {
@@ -288,7 +299,7 @@ const BookingPage = () => {
           ghi_chu: `Đặt sân ${slot.san_id}`,
         })),
         services: selectedServices,
-        payment_method: 'cash',
+        payment_method: paymentMethod,
         note: 'Đặt sân từ website',
       };
 
@@ -302,10 +313,34 @@ const BookingPage = () => {
       }
 
       console.debug('Booking payload:', bookingData);
+
+      // If user chose online payment, defer actual booking creation until
+      // they confirm payment on the /payment page. Pass the booking payload
+      // and useful UI state so Payment can post it later or user can go back.
+      if (paymentMethod === 'bank_transfer') {
+        // stop loading before navigating
+        setLoading(false);
+        navigate('/payment', {
+          state: {
+            bookingData,
+            pricing,
+            searchParams,
+            selectedContact,
+            selectedSlots,
+            selectedServices,
+            paymentMethod,
+          },
+        });
+        return;
+      }
+
+      // For cash payment, create booking immediately as before
       const response = await publicApi.post('/public/bookings', bookingData);
 
       if (response.data && response.data.success) {
         const bookingToken = response.data.data.booking.ma_pd;
+
+        // Navigate directly to confirmation for cash payment
         navigate('/booking-confirmation', {
           state: {
             booking: response.data.data,
@@ -554,6 +589,46 @@ const BookingPage = () => {
           </div>
         </div>
 
+        {/* Payment Method Selection */}
+        <div className="payment-method-section">
+          <h2>Phương thức thanh toán</h2>
+          <div className="payment-options">
+            <label className="payment-option">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="cash"
+                checked={paymentMethod === 'cash'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              <div className="payment-option-content">
+                <span className="payment-icon">💵</span>
+                <div className="payment-details">
+                  <strong>Trả tiền mặt</strong>
+                  <p>Thanh toán trực tiếp tại quầy</p>
+                </div>
+              </div>
+            </label>
+
+            <label className="payment-option">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="bank_transfer"
+                checked={paymentMethod === 'bank_transfer'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              <div className="payment-option-content">
+                <span className="payment-icon">🏦</span>
+                <div className="payment-details">
+                  <strong>Thanh toán online</strong>
+                  <p>Chuyển khoản qua ngân hàng</p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
         {/* Pricing Summary */}
         {pricing && (
           <div className="pricing-section">
@@ -582,7 +657,11 @@ const BookingPage = () => {
             onClick={handleBooking}
             disabled={loading || selectedSlots.length === 0}
           >
-            {loading ? 'Đang đặt sân...' : 'Đặt sân ngay'}
+            {loading
+              ? 'Đang đặt sân...'
+              : paymentMethod === 'bank_transfer'
+              ? 'Đặt sân & Thanh toán Online'
+              : 'Đặt sân (Trả tiền mặt)'}
           </button>
         </div>
       </div>

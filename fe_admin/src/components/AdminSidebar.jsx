@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminSidebar.scss';
+import appleImg from '../assets/apple.png';
 
 const AdminSidebar = () => {
   const { user, logout } = useAuth();
@@ -48,10 +49,9 @@ const AdminSidebar = () => {
     <div className="admin-sidebar">
       <div className="sidebar-header">
         <div className="logo">
-          <span className="logo-icon">🏓</span>
+          <img src={appleImg} alt="Apple" className="logo-icon" />
           <div className="logo-text">
-            <h3>Pickleball</h3>
-            <p>Admin Panel</p>
+            <h3>Pickleball Bồ Đề</h3>
           </div>
         </div>
       </div>

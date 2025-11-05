@@ -33,7 +33,7 @@
 
       .logo-text {
         color: white;
-        font-size: 1.5rem;
+        font-size: 22px !important;
         font-weight: bold;
       }
     }
@@ -96,16 +96,17 @@
     }
 
     .logout-btn {
-      align-items: center;
-      width: 100px;
+      align-items: center !important;
+      width: 100px !important;
+      height: 50px !important;
       padding: 0.75rem;
       background: rgba(255, 255, 255, 0.1);
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
+      border-radius: 8px !important;
       cursor: pointer;
       transition: all 0.2s ease;
-      font-size: 0.95rem;
+      font-size: 15px !important;
 
       &:hover {
         background: rgba(255, 255, 255, 0.2);

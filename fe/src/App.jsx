@@ -15,6 +15,7 @@ import Homepage from './pages/customer/Homepage';
 import BookingPage from './pages/customer/BookingPage';
 import BookingLookup from './pages/customer/BookingLookup';
 import BookingConfirmation from './pages/customer/BookingConfirmation';
+import Payment from './pages/customer/Payment';
 import Dashboard from './pages/customer/Dashboard';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -58,6 +59,7 @@ function App() {
             }
           >
             <Route path="booking" element={<BookingPage />} />
+            <Route path="payment" element={<Payment />} />
             <Route path="contacts" element={<Contacts />} />
             <Route path="booking-history" element={<BookingLookup />} />
             <Route path="dashboard" element={<Dashboard />} />
