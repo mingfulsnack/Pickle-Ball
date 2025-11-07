@@ -43,6 +43,11 @@ const AdminSidebar = () => {
       icon: '👥',
       label: 'Khách hàng',
     },
+    {
+      path: '/admin/employees',
+      icon: '👨‍💼',
+      label: 'Quản lý nhân viên',
+    },
   ];
 
   return (
