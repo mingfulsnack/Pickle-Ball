@@ -1107,7 +1107,7 @@ const Bookings = () => {
                   <option value="">-- Chọn trạng thái --</option>
                   <option value="pending">pending</option>
                   <option value="confirmed">confirmed</option>
-                  <option value="canceled">canceled</option>
+                  <option value="cancelled">cancelled</option>
                   <option value="received">received</option>
                 </select>
               </div>

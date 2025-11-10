@@ -364,7 +364,6 @@ const AdminDashboard = () => {
         );
         const cancelledBookings = allBookings.filter(
           (booking) =>
-            booking.trang_thai === 'canceled' ||
             booking.trang_thai === 'cancelled'
         );
 

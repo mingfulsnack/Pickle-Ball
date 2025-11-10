@@ -3,6 +3,13 @@ import api, { publicApi } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import toast from '../utils/toast';
+import {
+  FaTicketAlt,
+  FaTimes,
+  FaMapMarkerAlt,
+  FaInfoCircle,
+  FaCalendarAlt,
+} from 'react-icons/fa';
 import './Admin.scss';
 import './Bookings.scss';
 
@@ -52,6 +59,62 @@ const Bookings = () => {
   // Status modal state
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
+  // Detail modal state
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedBookingDetail, setSelectedBookingDetail] = useState(null);
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString('vi-VN', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch (err) {
+      return dateString || '';
+    }
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    return timeString.slice(0, 5);
+  };
+
+  const getStatusText = (status) => {
+    switch (String(status).toLowerCase()) {
+      case 'pending':
+        return 'Chưa nhận sân';
+      case 'confirmed':
+        return 'Đã nhận sân';
+      case 'cancelled':
+      case 'canceled':
+        return 'Đã hủy';
+      default:
+        return status || '';
+    }
+  };
+
+  const handleOpenDetail = async (booking) => {
+    setDetailLoading(true);
+    setIsDetailOpen(true);
+    try {
+      const ma = booking.ma_pd || booking.id;
+      const res = await publicApi.get(`/public/bookings/${ma}`);
+      setSelectedBookingDetail(res.data.data);
+    } catch (err) {
+      console.error('Error fetching booking detail:', err);
+      toast.error('Không thể tải chi tiết phiếu đặt');
+      setIsDetailOpen(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setIsDetailOpen(false);
+    setSelectedBookingDetail(null);
+  };
 
   const fetchBookings = async (page = 1) => {
     setLoading(true);
@@ -535,9 +598,27 @@ const Bookings = () => {
                 <td>{b.contact_phone || b.sdt || b.phone || '-'}</td>
                 <td>{Number(b.tong_tien || 0).toLocaleString('vi-VN')}</td>
                 <td>
-                  <span className={`booking-status ${b.trang_thai}`}>
-                    {b.trang_thai}
-                  </span>
+                  {(() => {
+                    // normalize possible status variants and map to Vietnamese labels
+                    const normalize = (s) => {
+                      if (!s) return '';
+                      const key = String(s).toLowerCase();
+                      if (key === 'canceled') return 'cancelled'; // accept single-L variant
+                      return key;
+                    };
+                    const labels = {
+                      pending: 'Đang đặt',
+                      confirmed: 'Đã xác nhận',
+                      cancelled: 'Đã hủy',
+                    };
+                    const key = normalize(b.trang_thai);
+                    const label = labels[key] || b.trang_thai || '';
+                    return (
+                      <span className={`booking-status ${key}`}>
+                        {label}
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td>
                   {b.is_paid ? (
@@ -557,6 +638,15 @@ const Bookings = () => {
                       }}
                     >
                       Sửa
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => handleOpenDetail(b)}
+                      style={{ marginLeft: 6 }}
+                    >
+                      Xem
                     </button>
 
                     {(b.trang_thai === 'confirmed' ||
@@ -1081,6 +1171,138 @@ const Bookings = () => {
         </div>
       </Modal>
 
+      {/* Detail Modal (show booking info) */}
+      <Modal isOpen={isDetailOpen} onClose={handleCloseDetail} size="large">
+        <div className="booking-detail-modal">
+          {detailLoading ? (
+            <LoadingSpinner />
+          ) : (
+            selectedBookingDetail &&
+            (() => {
+              const detail = selectedBookingDetail;
+              const bookingObj = detail.booking || detail;
+              const slots = detail.slots || bookingObj.slots || [];
+              const services = detail.services || [];
+              const totals = detail.totals || detail || {};
+
+              return (
+                <>
+                  <div className="modal-custom-header">
+                    <FaTicketAlt className="header-icon" />
+                    <h2>Chi tiết phiếu đặt sân</h2>
+                  </div>
+                  <div className="modal-custom-body">
+                    <div className="booking-id-header">
+                      <h3>Phiếu đặt #{bookingObj.ma_pd}</h3>
+                      <span
+                        className={`status-badge status-${bookingObj.trang_thai}`}
+                      >
+                        <FaCalendarAlt /> {getStatusText(bookingObj.trang_thai)}
+                      </span>
+                    </div>
+                    <div className="detail-grid">
+                      <div className="info-section">
+                        <p>
+                          <strong>Thời gian</strong>
+                          <br />
+                          {bookingObj.ngay_su_dung
+                            ? formatDate(bookingObj.ngay_su_dung)
+                            : ''}{' '}
+                          ●{' '}
+                          {slots.length > 0
+                            ? `${formatTime(slots[0].start_time)} - ${formatTime(
+                                slots[0].end_time
+                              )}`
+                            : ''}
+                        </p>
+                        <p>
+                          <strong>Sân</strong>
+                          <br />
+                          {slots.length > 0 ? `Sân ${slots[0].san_id}` : ''}
+                        </p>
+                        <p>
+                          <strong>Người đặt</strong>
+                          <br />
+                          {bookingObj.contact_name || '-' }
+                        </p>
+                        <hr />
+                        <p className="location-info">
+                          <FaMapMarkerAlt /> 237 Phú Viên, Bồ Đề, Long Biên
+                        </p>
+                        <p className="note-info">
+                          <FaInfoCircle /> Hãy đến sớm 10 phút để thực hiện thủ
+                          tục nhận sân ở cửa trước
+                        </p>
+                      </div>
+                      <div className="pricing-section">
+                        <p>
+                          <span>Tiền sân:</span>{' '}
+                          <span>
+                            {totals.tien_san
+                              ? Number(totals.tien_san).toLocaleString() + 'đ'
+                              : '0đ'}
+                          </span>
+                        </p>
+                        <p>
+                          <span>Dịch vụ:</span>
+                        </p>
+                        {services && services.length > 0 ? (
+                          services.map((s) => (
+                            <p className="service-item" key={s.id || s.dich_vu_id}>
+                              <span>
+                                - {s.dv?.ten_dv || s.ten_dv || s.ten || s.name}{' '}
+                                x{s.so_luong || s.quantity || 1}:
+                              </span>{' '}
+                              <span>
+                                {s.lineTotal
+                                  ? Number(s.lineTotal).toLocaleString() + 'đ'
+                                  : s.so_luong && s.don_gia
+                                  ? Number(s.so_luong * s.don_gia).toLocaleString() + 'đ'
+                                  : '0đ'}
+                              </span>
+                            </p>
+                          ))
+                        ) : (
+                          <p className="service-item">
+                            <span>- Không có</span>
+                            <span>0đ</span>
+                          </p>
+                        )}
+                        <p>
+                          <span>Phương thức thanh toán:</span>{' '}
+                          <span>Trả sau</span>
+                        </p>
+                        <hr />
+                        <p className="total">
+                          <span>Tổng tiền:</span>{' '}
+                          <span>
+                            {totals.tong_tien
+                              ? Number(totals.tong_tien).toLocaleString() + 'đ'
+                              : '0đ'}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    {bookingObj.trang_thai === 'pending' && (
+                      <div className="modal-actions">
+                        <button className="btn-cancel-main" onClick={() => {
+                          // open status modal to allow cancellation from admin
+                          setEditingBooking(bookingObj);
+                          setShowStatusModal(true);
+                          handleCloseDetail();
+                        }}>
+                          Hủy đặt sân
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()
+          )}
+        </div>
+      </Modal>
+
       {/* Modal chỉnh trạng thái đơn */}
       <Modal
         isOpen={showStatusModal}
@@ -1105,10 +1327,9 @@ const Bookings = () => {
                   }
                 >
                   <option value="">-- Chọn trạng thái --</option>
-                  <option value="pending">pending</option>
-                  <option value="confirmed">confirmed</option>
-                  <option value="canceled">canceled</option>
-                  <option value="received">received</option>
+                  <option value="pending">Đang đặt</option>
+                  <option value="confirmed">Đã xác nhận</option>
+                  <option value="cancelled">Đã hủy</option>
                 </select>
               </div>
 

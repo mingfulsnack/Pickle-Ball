@@ -127,7 +127,26 @@ export default function Services() {
                 <tr key={s.id}>
                   <td>{s.id}</td>
                   <td>{s.ten_dv || s.ten_dich_vu}</td>
-                  <td style={{ textAlign: 'center' }}>{s.loai}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    {(() => {
+                    const normalize = (s) => {
+                      if (!s) return '';
+                      const key = String(s).toLowerCase();
+                      return key;
+                    };
+                    const labels = {
+                      rent: 'Thuê',
+                      buy: 'Mua',
+                    };
+                    const key = normalize(s.loai);
+                    const label = labels[key] || s.loai || '';
+                    return (
+                      <span className={`type ${key}`}>
+                        {label}
+                      </span>
+                    );
+                  })()}
+                  </td>
                   <td style={{ textAlign: 'right' }}>
                     {Number(s.don_gia).toLocaleString('vi-VN')}đ
                   </td>
