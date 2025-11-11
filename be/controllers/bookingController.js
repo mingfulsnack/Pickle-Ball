@@ -184,9 +184,12 @@ const createBooking = async (req, res) => {
         }
       }
 
+      // Mark booking as paid immediately when payment_method indicates online transfer
+      const isPaid = payment_method === 'bank_transfer';
+
       const insertBookingSql = `
         INSERT INTO phieu_dat_san (ma_pd, user_id, contact_id, contact_name, contact_phone, contact_email, created_by, ngay_su_dung, trang_thai, payment_method, is_paid, note, tien_san, tien_dich_vu, tong_tien)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,false,$11,$12,$13,$14)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
         RETURNING *
       `;
       const bookingRes = await client.query(insertBookingSql, [
@@ -200,6 +203,7 @@ const createBooking = async (req, res) => {
         ngay_su_dung,
         'pending',
         payment_method || null,
+        isPaid,
         note || null,
         slotsTotal,
         servicesTotal,

@@ -88,6 +88,13 @@ const BookingPage = () => {
     return options;
   }, [searchParams.date]);
 
+  // Helper to parse hour number from a time string like '09:00'
+  const parseHour = (timeStr) => {
+    if (!timeStr) return null;
+    const parts = timeStr.split(':').map(Number);
+    return Number.isFinite(parts[0]) ? parts[0] : null;
+  };
+
   // Reset time selections when date changes and selected times are no longer valid
   useEffect(() => {
     if (searchParams.date) {
@@ -126,6 +133,18 @@ const BookingPage = () => {
 
   const checkAvailability = async () => {
     if (!searchParams.date) return;
+    // Validate start/end times
+    if (!searchParams.startTime || !searchParams.endTime) {
+      toast.error('Vui lòng chọn giờ bắt đầu và giờ kết thúc');
+      return;
+    }
+
+    const startHour = parseHour(searchParams.startTime);
+    const endHour = parseHour(searchParams.endTime);
+    if (startHour === null || endHour === null || endHour <= startHour) {
+      toast.error('Giờ kết thúc phải lớn hơn giờ bắt đầu');
+      return;
+    }
 
     setLoading(true);
     // Clear previous selections/pricing when running a fresh availability check
@@ -177,6 +196,15 @@ const BookingPage = () => {
       setLoading(false);
     }
   };
+
+  // compute end time options so user can't pick an end <= start
+  const timeOptions = getAvailableTimeOptions();
+  const endTimeOptions = timeOptions.filter((t) => {
+    if (!searchParams.startTime) return true;
+    const startH = parseHour(searchParams.startTime);
+    const h = parseHour(t);
+    return h > startH;
+  });
 
   const calculatePrice = useCallback(async () => {
     if (selectedSlots.length === 0) {
@@ -370,8 +398,6 @@ const BookingPage = () => {
     }
   };
 
-  const timeOptions = getAvailableTimeOptions();
-
   return (
     <div className="booking-page">
       <div className="booking-container">
@@ -423,7 +449,7 @@ const BookingPage = () => {
                 }
               >
                 <option value="">Chọn giờ</option>
-                {timeOptions.map((time) => (
+                {endTimeOptions.map((time) => (
                   <option key={time} value={time}>
                     {time}
                   </option>
