@@ -39,6 +39,11 @@ const AdminSidebar = () => {
       label: 'Dịch vụ',
     },
     {
+      path: '/admin/court-status',
+      icon: '📍',
+      label: 'Tình trạng sân',
+    },
+    {
       path: '/admin/customers',
       icon: '👥',
       label: 'Khách hàng',

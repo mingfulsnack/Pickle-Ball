@@ -170,8 +170,49 @@ const getCourtAvailableSlots = async (req, res) => {
     );
 
     // Tạo danh sách khung giờ có thể (từ 6:00 đến 23:00)
+    // Determine operating hours for the court using shifts for that day.
+    // Fall back to defaults if no shifts are defined.
+    const dateObj = new Date(date);
+    const dayOfWeek = dateObj.getDay();
+
+    let minStartHour = 5; // prefer earlier start if venue opens early
+    let maxEndHour = 23; // exclusive end hour
+
+    try {
+      const shifts = await Ca.findShiftsInRange(dayOfWeek, '00:00', '23:59');
+      if (Array.isArray(shifts) && shifts.length > 0) {
+        // compute earliest start and latest end across shifts
+        let minStartMinutes = Infinity;
+        let maxEndMinutes = -Infinity;
+        for (const s of shifts) {
+          const ss = timeToMinutes(s.start_at);
+          const ee = timeToMinutes(s.end_at);
+          if (ss < minStartMinutes) minStartMinutes = ss;
+          if (ee > maxEndMinutes) maxEndMinutes = ee;
+        }
+        if (isFinite(minStartMinutes)) {
+          minStartHour = Math.max(0, Math.floor(minStartMinutes / 60));
+        }
+        if (maxEndMinutes > 0) {
+          // If the shift ends exactly on the hour (e.g. 22:00), include that last hour slot
+          // so a shift ending at 22:00 will show the 22:00-23:00 slot as available/booked.
+          if (maxEndMinutes % 60 === 0) {
+            maxEndHour = Math.min(24, Math.floor(maxEndMinutes / 60) + 1);
+          } else {
+            // For partial hours, ceil to include the partial hour slot
+            maxEndHour = Math.min(24, Math.ceil(maxEndMinutes / 60));
+          }
+        }
+      }
+    } catch (shiftErr) {
+      console.warn(
+        'Could not compute shifts for court slots, falling back to defaults',
+        shiftErr && shiftErr.message
+      );
+    }
+
     const allSlots = [];
-    for (let hour = 6; hour < 23; hour++) {
+    for (let hour = minStartHour; hour < maxEndHour; hour++) {
       const start = `${hour.toString().padStart(2, '0')}:00`;
       const end = `${(hour + 1).toString().padStart(2, '0')}:00`;
 

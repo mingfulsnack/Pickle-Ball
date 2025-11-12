@@ -1,0 +1,77 @@
+.court-status-page {
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .left,
+    .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .courts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .court-panel {
+    background: #fff;
+    border-radius: 6px;
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+    .court-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .slots-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .slot {
+      min-width: 56px;
+      padding: 8px;
+      text-align: center;
+      border-radius: 6px;
+      color: #222;
+      font-weight: 600;
+    }
+    .slot.available {
+      background: #f0f0f0;
+    }
+    .slot.booked {
+      background: #d64545;
+      color: #fff;
+    }
+  }
+
+  .legend {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .legend .box {
+    display: inline-block;
+    width: 18px;
+    height: 12px;
+    margin-right: 6px;
+    border-radius: 3px;
+  }
+  .legend .box.available {
+    background: #f0f0f0;
+  }
+  .legend .box.booked {
+    background: #d64545;
+  }
+}
