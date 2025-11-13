@@ -223,52 +223,6 @@ const startServer = async () => {
       console.log('═'.repeat(50));
       console.log('\n📋 Available API endpoints:');
       // Schedule periodic cleanup job to cancel overdue pending bookings
-      try {
-        // Run every 10 minutes
-        cron.schedule(
-          '*/10 * * * *',
-          async () => {
-            try {
-              console.log(
-                '🕒 Running scheduled cleanup: cancel overdue pending bookings'
-              );
-              const res = await pool.query(`
-              UPDATE phieu_dat_san p
-              SET trang_thai = 'cancelled', updated_at = now()
-              FROM (
-                SELECT phieu_dat_id, MAX(end_time) as last_end
-                FROM chi_tiet_phieu_san
-                GROUP BY phieu_dat_id
-              ) s
-              WHERE p.id = s.phieu_dat_id
-                AND p.trang_thai = 'pending'
-                AND (p.ngay_su_dung + s.last_end) < now()
-              RETURNING p.id, p.ma_pd
-            `);
-
-              if (res && res.rowCount) {
-                console.log(
-                  `✅ Auto-cancelled ${res.rowCount} overdue booking(s):`,
-                  res.rows.map((r) => r.ma_pd).join(', ')
-                );
-              } else {
-                console.log('✅ No overdue pending bookings found');
-              }
-            } catch (err) {
-              console.error(
-                'Error during scheduled cleanup:',
-                err.message || err
-              );
-            }
-          },
-          {
-            scheduled: true,
-            timezone: process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh',
-          }
-        );
-      } catch (cronErr) {
-        console.error('Failed to schedule cleanup job:', cronErr);
-      }
     });
 
     return server;

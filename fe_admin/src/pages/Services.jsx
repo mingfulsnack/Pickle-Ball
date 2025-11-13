@@ -20,6 +20,19 @@ export default function Services() {
   const [form, setForm] = useState(emptyForm);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Add Services to Booking modal states
+  const [addServiceModalOpen, setAddServiceModalOpen] = useState(false);
+  const [bookingSearch, setBookingSearch] = useState({
+    name: '',
+    phone: '',
+  });
+  const [searchedBookings, setSearchedBookings] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedServicesForBooking, setSelectedServicesForBooking] = useState(
+    []
+  );
+  const [searchLoading, setSearchLoading] = useState(false);
+
   const fetchServices = async () => {
     setLoading(true);
     try {
@@ -88,6 +101,98 @@ export default function Services() {
     }
   };
 
+  const searchBookings = async () => {
+    const { name, phone } = bookingSearch;
+    if (!name && !phone) {
+      showError('Vui lòng nhập tên hoặc số điện thoại để tìm kiếm');
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      // backend expects search_name and search_phone
+      const params = {};
+      if (name) params.search_name = name;
+      if (phone) params.search_phone = phone;
+
+      const res = await api.get('/bookings', { params });
+      // backend returns { data: { bookings: [...], pagination: {...} } }
+      const payload = res.data && res.data.data ? res.data.data : null;
+      let allBookings = [];
+      if (payload) {
+        if (Array.isArray(payload)) allBookings = payload;
+        else if (Array.isArray(payload.bookings))
+          allBookings = payload.bookings;
+        else if (Array.isArray(payload.data)) allBookings = payload.data; // fallback
+      }
+
+      // Filter out cancelled bookings (if any)
+      const activeBookings = allBookings.filter(
+        (b) => String(b.trang_thai || '').toLowerCase() !== 'cancelled'
+      );
+      setSearchedBookings(activeBookings);
+    } catch (err) {
+      console.error('Search bookings error', err);
+      showError(getErrorMessage(err));
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleServiceToggleForBooking = (serviceId) => {
+    const existing = selectedServicesForBooking.find(
+      (s) => s.dich_vu_id === serviceId
+    );
+    if (existing) {
+      setSelectedServicesForBooking(
+        selectedServicesForBooking.filter((s) => s.dich_vu_id !== serviceId)
+      );
+    } else {
+      setSelectedServicesForBooking([
+        ...selectedServicesForBooking,
+        { dich_vu_id: serviceId, so_luong: 1 },
+      ]);
+    }
+  };
+
+  const handleServiceQuantityChange = (serviceId, quantity) => {
+    setSelectedServicesForBooking(
+      selectedServicesForBooking.map((s) =>
+        s.dich_vu_id === serviceId ? { ...s, so_luong: quantity } : s
+      )
+    );
+  };
+
+  const handleAddServicesToBooking = async () => {
+    if (!selectedBooking) {
+      showError('Vui lòng chọn đơn đặt sân');
+      return;
+    }
+    if (selectedServicesForBooking.length === 0) {
+      showError('Vui lòng chọn ít nhất một dịch vụ');
+      return;
+    }
+
+    try {
+      await api.post(`/bookings/${selectedBooking.id}/services`, {
+        services: selectedServicesForBooking,
+      });
+      showSuccess('Thêm dịch vụ vào đơn đặt thành công');
+      resetAddServiceModal();
+    } catch (err) {
+      console.error('Add services to booking error', err);
+      showError(getErrorMessage(err));
+    }
+  };
+
+  const resetAddServiceModal = () => {
+    setAddServiceModalOpen(false);
+    setBookingSearch({ name: '', phone: '' });
+    setSearchedBookings([]);
+    setSelectedBooking(null);
+    setSelectedServicesForBooking([]);
+  };
+
   return (
     <div className="admin-page services-page">
       <div className="page-header">
@@ -98,6 +203,13 @@ export default function Services() {
       <div className="page-actions">
         <button className="btn btn-primary" onClick={openCreate}>
           Tạo dịch vụ
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => setAddServiceModalOpen(true)}
+          style={{ marginLeft: '1rem' }}
+        >
+          Thêm dịch vụ vào đơn
         </button>
       </div>
 
@@ -129,23 +241,19 @@ export default function Services() {
                   <td>{s.ten_dv || s.ten_dich_vu}</td>
                   <td style={{ textAlign: 'center' }}>
                     {(() => {
-                    const normalize = (s) => {
-                      if (!s) return '';
-                      const key = String(s).toLowerCase();
-                      return key;
-                    };
-                    const labels = {
-                      rent: 'Thuê',
-                      buy: 'Mua',
-                    };
-                    const key = normalize(s.loai);
-                    const label = labels[key] || s.loai || '';
-                    return (
-                      <span className={`type ${key}`}>
-                        {label}
-                      </span>
-                    );
-                  })()}
+                      const normalize = (s) => {
+                        if (!s) return '';
+                        const key = String(s).toLowerCase();
+                        return key;
+                      };
+                      const labels = {
+                        rent: 'Thuê',
+                        buy: 'Mua',
+                      };
+                      const key = normalize(s.loai);
+                      const label = labels[key] || s.loai || '';
+                      return <span className={`type ${key}`}>{label}</span>;
+                    })()}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     {Number(s.don_gia).toLocaleString('vi-VN')}đ
@@ -256,6 +364,190 @@ export default function Services() {
               </button>
             </div>
           </form>
+        </div>
+      </Modal>
+
+      {/* Modal: Thêm dịch vụ vào đơn */}
+      <Modal
+        isOpen={addServiceModalOpen}
+        onClose={resetAddServiceModal}
+        size="large"
+      >
+        <div className="admin-modal add-service-to-booking-modal">
+          <h3 className="modal-title">Thêm dịch vụ vào đơn đặt sân</h3>
+
+          {/* Step 1: Search for booking */}
+          <div className="booking-search-section">
+            <h4>1. Tìm đơn đặt sân</h4>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Tên khách hàng:</label>
+                <input
+                  className="form-control"
+                  type="text"
+                  value={bookingSearch.name}
+                  onChange={(e) =>
+                    setBookingSearch({ ...bookingSearch, name: e.target.value })
+                  }
+                  placeholder="Nhập tên khách hàng..."
+                />
+              </div>
+              <div className="form-group">
+                <label>Số điện thoại:</label>
+                <input
+                  className="form-control"
+                  type="text"
+                  value={bookingSearch.phone}
+                  onChange={(e) =>
+                    setBookingSearch({
+                      ...bookingSearch,
+                      phone: e.target.value,
+                    })
+                  }
+                  placeholder="Nhập số điện thoại..."
+                />
+              </div>
+              <div className="form-group">
+                <button
+                  className="btn btn-primary"
+                  onClick={searchBookings}
+                  disabled={searchLoading}
+                >
+                  {searchLoading ? 'Đang tìm...' : 'Tìm kiếm'}
+                </button>
+              </div>
+            </div>
+
+            {/* Booking results */}
+            {searchedBookings.length > 0 && (
+              <div className="booking-results">
+                <h5>Kết quả tìm kiếm ({searchedBookings.length} đơn):</h5>
+                <div className="bookings-list">
+                  {searchedBookings.map((booking) => (
+                    <div
+                      key={booking.id}
+                      className={`booking-item ${
+                        selectedBooking?.id === booking.id ? 'selected' : ''
+                      }`}
+                      onClick={() => setSelectedBooking(booking)}
+                    >
+                      <div className="booking-info">
+                        <strong>{booking.ma_pd || `#${booking.id}`}</strong>
+                        <span>
+                          {booking.contact_name || booking.user_id} -{' '}
+                          {booking.contact_phone || booking.phone || '-'}
+                        </span>
+                        <span className="booking-date">
+                          {(() => {
+                            try {
+                              return new Date(booking.ngay_su_dung)
+                                .toISOString()
+                                .split('T')[0]
+                                .split('-')
+                                .reverse()
+                                .join('/');
+                            } catch {
+                              return booking.ngay_su_dung;
+                            }
+                          })()}
+                        </span>
+                        <span className="booking-total">
+                          {Number(booking.tong_tien || 0).toLocaleString(
+                            'vi-VN'
+                          )}
+                          đ
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Step 2: Select services */}
+          {selectedBooking && (
+            <div className="service-selection-section">
+              <h4>2. Chọn dịch vụ</h4>
+              <div className="services-grid">
+                {services.map((service) => {
+                  const selected = selectedServicesForBooking.find(
+                    (s) => s.dich_vu_id === service.id
+                  );
+                  return (
+                    <div
+                      key={service.id}
+                      className={`service-card ${selected ? 'selected' : ''}`}
+                    >
+                      <div className="service-header">
+                        <input
+                          type="checkbox"
+                          checked={!!selected}
+                          onChange={() =>
+                            handleServiceToggleForBooking(service.id)
+                          }
+                        />
+                        <span className="service-name">
+                          {service.ten_dv || service.ten_dich_vu}
+                        </span>
+                      </div>
+                      <div className="service-details">
+                        <span className="service-type">
+                          {(() => {
+                            const loai = String(service.loai || '')
+                              .toLowerCase()
+                              .trim();
+                            return loai === 'rent' ? 'Thuê' : 'Mua';
+                          })()}
+                        </span>
+                        <span className="service-price">
+                          {Number(service.don_gia || 0).toLocaleString('vi-VN')}
+                          đ
+                        </span>
+                      </div>
+                      {selected && (
+                        <div className="service-quantity">
+                          <label>Số lượng:</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={selected.so_luong}
+                            onChange={(e) =>
+                              handleServiceQuantityChange(
+                                service.id,
+                                parseInt(e.target.value) || 1
+                              )
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="form-actions">
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={resetAddServiceModal}
+            >
+              Hủy
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={handleAddServicesToBooking}
+              disabled={
+                !selectedBooking || selectedServicesForBooking.length === 0
+              }
+            >
+              Thêm dịch vụ
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

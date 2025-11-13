@@ -259,7 +259,6 @@ const createInvoicePdf = async (req, res) => {
       try {
         fs.writeFileSync(debugPath, pdfBuffer);
       } catch (writeError) {
-        console.error('Could not save debug PDF:', writeError);
       }
     }
 
