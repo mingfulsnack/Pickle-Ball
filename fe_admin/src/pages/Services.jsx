@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { publicApi } from '../services/api';
 import './Services.scss';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
@@ -32,6 +33,7 @@ export default function Services() {
     []
   );
   const [searchLoading, setSearchLoading] = useState(false);
+  const [courts, setCourts] = useState([]);
 
   const fetchServices = async () => {
     setLoading(true);
@@ -48,6 +50,17 @@ export default function Services() {
 
   useEffect(() => {
     fetchServices();
+    // load courts for name lookup in booking results
+    (async () => {
+      try {
+        const res = await publicApi.get('/public/courts');
+        const payload = res.data && res.data.data ? res.data.data : null;
+        setCourts(Array.isArray(payload) ? payload : payload?.courts || []);
+      } catch (err) {
+        // non-fatal
+        console.warn('Could not load courts for Services page', err);
+      }
+    })();
   }, []);
 
   const openCreate = () => {
@@ -130,7 +143,30 @@ export default function Services() {
       const activeBookings = allBookings.filter(
         (b) => String(b.trang_thai || '').toLowerCase() !== 'cancelled'
       );
-      setSearchedBookings(activeBookings);
+
+      // Immediately fetch booking details (slots) for each result so we can show court/time info
+      const enriched = await Promise.all(
+        activeBookings.map(async (b) => {
+          try {
+            const det = await api.get(`/bookings/${b.id}`);
+            const detPayload = det.data && det.data.data ? det.data.data : null;
+            if (detPayload && detPayload.slots) {
+              return { ...b, slots: detPayload.slots };
+            }
+            // if payload.booking contains slots under a different shape
+            if (detPayload && detPayload.booking && detPayload.slots) {
+              return { ...b, slots: detPayload.slots };
+            }
+            return b;
+          } catch (err) {
+            // don't fail the whole search if one detail fetch fails
+            console.warn('Failed to load booking detail for', b.id, err);
+            return b;
+          }
+        })
+      );
+
+      setSearchedBookings(enriched);
     } catch (err) {
       console.error('Search bookings error', err);
       showError(getErrorMessage(err));
@@ -429,7 +465,38 @@ export default function Services() {
                       className={`booking-item ${
                         selectedBooking?.id === booking.id ? 'selected' : ''
                       }`}
-                      onClick={() => setSelectedBooking(booking)}
+                      onClick={async () => {
+                        // set shallow selection immediately
+                        setSelectedBooking(booking);
+                        // if slots not loaded yet, fetch booking detail to show slots
+                        if (!booking.slots) {
+                          try {
+                            const det = await api.get(
+                              `/bookings/${booking.id}`
+                            );
+                            const detPayload =
+                              det.data && det.data.data ? det.data.data : null;
+                            if (detPayload && detPayload.booking) {
+                              // merge slots into the searchedBookings list
+                              setSearchedBookings((prev) =>
+                                prev.map((b) =>
+                                  b.id === booking.id
+                                    ? { ...b, slots: detPayload.slots || [] }
+                                    : b
+                                )
+                              );
+                              // update selectedBooking with details
+                              setSelectedBooking({
+                                ...booking,
+                                ...detPayload.booking,
+                                slots: detPayload.slots || [],
+                              });
+                            }
+                          } catch (err) {
+                            console.error('Load booking detail error', err);
+                          }
+                        }
+                      }}
                     >
                       <div className="booking-info">
                         <strong>{booking.ma_pd || `#${booking.id}`}</strong>
@@ -439,18 +506,41 @@ export default function Services() {
                         </span>
                         <span className="booking-date">
                           {(() => {
-                            try {
-                              return new Date(booking.ngay_su_dung)
-                                .toISOString()
-                                .split('T')[0]
-                                .split('-')
-                                .reverse()
-                                .join('/');
-                            } catch {
-                              return booking.ngay_su_dung;
-                            }
+                            const dateVal = booking.ngay_su_dung;
+                      if (!dateVal) return '-';
+                      try {
+                        const d = new Date(dateVal);
+                        if (isNaN(d.getTime())) return dateVal;
+                        return d.toLocaleDateString('vi-VN');
+                      } catch (err) {
+                        console.error('Date parse error', err);
+                        return dateVal;
+                      }
                           })()}
                         </span>
+                        {/* Show booked slots if available */}
+                        {booking.slots && booking.slots.length > 0 && (
+                          <div className="booking-slots">
+                            {booking.slots.map((slot, idx) => {
+                              const court = courts.find(
+                                (c) => String(c.id) === String(slot.san_id)
+                              );
+                              return (
+                                <div key={idx} className="booking-slot-item">
+                                  <strong>
+                                    {court
+                                      ? court.ten_san
+                                      : `Sân ${slot.san_id}`}
+                                  </strong>
+                                  <br />
+                                  <span>
+                                    {slot.start_time} - {slot.end_time}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                         <span className="booking-total">
                           {Number(booking.tong_tien || 0).toLocaleString(
                             'vi-VN'
