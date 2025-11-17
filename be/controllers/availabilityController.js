@@ -218,9 +218,16 @@ const getCourtAvailableSlots = async (req, res) => {
 
       // Kiểm tra xem khung giờ này có bị trùng không
       const isBooked = bookedSlots.rows.some((booking) => {
-        const bookingStart = booking.start_time;
-        const bookingEnd = booking.end_time;
-        return !(end <= bookingStart || start >= bookingEnd);
+        // Normalize time format to HH:MM for consistent comparison
+        // Database may return HH:MM:SS format
+        const bookingStart = String(booking.start_time).slice(0, 5);
+        const bookingEnd = String(booking.end_time).slice(0, 5);
+
+        // A slot [start, end) overlaps with booking [bookingStart, bookingEnd) if:
+        // NOT (slot ends before or exactly at booking start OR slot starts at or after booking end)
+        const overlaps = !(end <= bookingStart || start >= bookingEnd);
+
+        return overlaps;
       });
 
       allSlots.push({

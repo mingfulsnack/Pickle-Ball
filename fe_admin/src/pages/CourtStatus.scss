@@ -39,19 +39,33 @@
     }
 
     .slot {
-      min-width: 56px;
-      padding: 8px;
+      min-width: 80px;
+      padding: 8px 10px;
       text-align: center;
       border-radius: 6px;
-      color: #222;
       font-weight: 600;
+      font-size: 0.875rem;
+      cursor: default;
+      transition: all 0.2s ease;
+
+      .time-range {
+        white-space: nowrap;
+      }
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
     }
     .slot.available {
-      background: #f0f0f0;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
     }
     .slot.booked {
-      background: #d64545;
-      color: #fff;
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
     }
   }
 
@@ -69,9 +83,11 @@
     border-radius: 3px;
   }
   .legend .box.available {
-    background: #f0f0f0;
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
   }
   .legend .box.booked {
-    background: #d64545;
+    background: #ffebee;
+    border: 1px solid #ef9a9a;
   }
 }

@@ -93,7 +93,9 @@ const CourtStatus = () => {
                   s.is_available ? 'Chưa đặt' : 'Đã đặt'
                 }`}
               >
-                {s.start_time.slice(0, 5)}
+                <span className="time-range">
+                  {s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}
+                </span>
               </div>
             ))}
         </div>
