@@ -123,6 +123,10 @@ export default function Services() {
 
     setSearchLoading(true);
     try {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const todayDateString = now.toISOString().split('T')[0];
+
       // backend expects search_name and search_phone
       const params = {};
       if (name) params.search_name = name;
@@ -139,10 +143,47 @@ export default function Services() {
         else if (Array.isArray(payload.data)) allBookings = payload.data; // fallback
       }
 
-      // Filter out cancelled bookings (if any)
-      const activeBookings = allBookings.filter(
-        (b) => String(b.trang_thai || '').toLowerCase() !== 'cancelled'
-      );
+      // Filter out cancelled bookings and past bookings
+      const activeBookings = allBookings.filter((b) => {
+        // Exclude cancelled bookings
+        if (String(b.trang_thai || '').toLowerCase() === 'cancelled') {
+          return false;
+        }
+
+        // Exclude past bookings (only show future bookings from current time)
+        try {
+          const bookingDate = new Date(b.ngay_su_dung);
+          if (isNaN(bookingDate.getTime())) return true; // keep if date parse fails
+
+          // Compare date only first
+          const nowDateOnly = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          );
+          const bookingDateOnly = new Date(
+            bookingDate.getFullYear(),
+            bookingDate.getMonth(),
+            bookingDate.getDate()
+          );
+
+          // If booking is on a future date, include it
+          if (bookingDateOnly > nowDateOnly) return true;
+
+          // If booking is on today, check if it's in the future (has slots after current time)
+          if (bookingDateOnly.getTime() === nowDateOnly.getTime()) {
+            // Will need to check slots later, for now include all today's bookings
+            // The slot-level filtering will happen after we fetch details
+            return true;
+          }
+
+          // Booking is in the past
+          return false;
+        } catch (err) {
+          console.warn('Date comparison error for booking', b.id, err);
+          return true; // keep on error
+        }
+      });
 
       // Immediately fetch booking details (slots) for each result so we can show court/time info
       const enriched = await Promise.all(
@@ -151,11 +192,54 @@ export default function Services() {
             const det = await api.get(`/bookings/${b.id}`);
             const detPayload = det.data && det.data.data ? det.data.data : null;
             if (detPayload && detPayload.slots) {
-              return { ...b, slots: detPayload.slots };
+              // Filter out past slots for today's bookings
+              let slots = detPayload.slots;
+              const bookingDateString = b.ngay_su_dung?.split('T')[0];
+
+              if (bookingDateString === todayDateString) {
+                // For today's bookings, only include slots that haven't started yet
+                slots = slots.filter((slot) => {
+                  try {
+                    const slotStartHour = parseInt(
+                      slot.start_time.split(':')[0],
+                      10
+                    );
+                    return slotStartHour > currentHour;
+                  } catch {
+                    return true; // keep on parse error
+                  }
+                });
+              }
+
+              // Only return booking if it has future slots
+              if (slots.length > 0) {
+                return { ...b, slots };
+              }
+              return null; // exclude bookings with no future slots
             }
             // if payload.booking contains slots under a different shape
             if (detPayload && detPayload.booking && detPayload.slots) {
-              return { ...b, slots: detPayload.slots };
+              let slots = detPayload.slots;
+              const bookingDateString = b.ngay_su_dung?.split('T')[0];
+
+              if (bookingDateString === todayDateString) {
+                slots = slots.filter((slot) => {
+                  try {
+                    const slotStartHour = parseInt(
+                      slot.start_time.split(':')[0],
+                      10
+                    );
+                    return slotStartHour > currentHour;
+                  } catch {
+                    return true;
+                  }
+                });
+              }
+
+              if (slots.length > 0) {
+                return { ...b, slots };
+              }
+              return null;
             }
             return b;
           } catch (err) {
@@ -166,7 +250,8 @@ export default function Services() {
         })
       );
 
-      setSearchedBookings(enriched);
+      // Filter out null entries (bookings with no future slots)
+      setSearchedBookings(enriched.filter((b) => b !== null));
     } catch (err) {
       console.error('Search bookings error', err);
       showError(getErrorMessage(err));
@@ -358,8 +443,8 @@ export default function Services() {
                 value={form.loai}
                 onChange={(e) => setForm({ ...form, loai: e.target.value })}
               >
-                <option value="rent">rent</option>
-                <option value="buy">buy</option>
+                <option value="rent">Thuê</option>
+                <option value="buy">Mua</option>
               </select>
             </div>
 
@@ -507,15 +592,15 @@ export default function Services() {
                         <span className="booking-date">
                           {(() => {
                             const dateVal = booking.ngay_su_dung;
-                      if (!dateVal) return '-';
-                      try {
-                        const d = new Date(dateVal);
-                        if (isNaN(d.getTime())) return dateVal;
-                        return d.toLocaleDateString('vi-VN');
-                      } catch (err) {
-                        console.error('Date parse error', err);
-                        return dateVal;
-                      }
+                            if (!dateVal) return '-';
+                            try {
+                              const d = new Date(dateVal);
+                              if (isNaN(d.getTime())) return dateVal;
+                              return d.toLocaleDateString('vi-VN');
+                            } catch (err) {
+                              console.error('Date parse error', err);
+                              return dateVal;
+                            }
                           })()}
                         </span>
                         {/* Show booked slots if available */}

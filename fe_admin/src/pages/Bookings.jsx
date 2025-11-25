@@ -613,7 +613,7 @@ const Bookings = () => {
                       return key;
                     };
                     const labels = {
-                      pending: 'Đang đặt',
+                      pending: 'Chờ xác nhận',
                       confirmed: 'Đã xác nhận',
                       cancelled: 'Đã hủy',
                     };
@@ -991,7 +991,7 @@ const Bookings = () => {
                   return (
                     <div key={service.id} className="service-item">
                       <span>
-                        {service.ten_dich_vu} -{' '}
+                        {service.ten_dv} -{' '}
                         {Number(service.don_gia).toLocaleString('vi-VN')}đ
                       </span>
                       <div className="service-controls">
@@ -1339,7 +1339,7 @@ const Bookings = () => {
                   }
                 >
                   <option value="">-- Chọn trạng thái --</option>
-                  <option value="pending">Đang đặt</option>
+                  <option value="pending">Chờ xác nhận</option>
                   <option value="confirmed">Đã xác nhận</option>
                   <option value="cancelled">Đã hủy</option>
                 </select>
