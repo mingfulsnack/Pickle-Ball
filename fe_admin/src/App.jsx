@@ -15,6 +15,7 @@ import TimeFrames from './pages/TimeFrames';
 import Services from './pages/Services';
 import Customers from './pages/Customers';
 import Employees from './pages/Employees';
+import CourtStatus from './pages/CourtStatus';
 import './styles/globals.scss';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -32,6 +33,7 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="bookings" element={<Bookings />} />
             <Route path="courts" element={<Courts />} />
+            <Route path="court-status" element={<CourtStatus />} />
             <Route path="timeframes" element={<TimeFrames />} />
             <Route path="services" element={<Services />} />
             <Route path="customers" element={<Customers />} />

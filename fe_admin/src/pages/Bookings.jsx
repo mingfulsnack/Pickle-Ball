@@ -5,7 +5,6 @@ import Modal from '../components/Modal';
 import toast from '../utils/toast';
 import {
   FaTicketAlt,
-  FaTimes,
   FaMapMarkerAlt,
   FaInfoCircle,
   FaCalendarAlt,
@@ -216,14 +215,21 @@ const Bookings = () => {
   };
 
   const handleCreateNewCustomer = async () => {
-    const { full_name, phone } = newCustomerForm;
-    if (!full_name || !phone) {
-      toast.error('Vui lòng nhập tên và số điện thoại');
+    const { full_name, phone, email } = newCustomerForm;
+    if (!full_name || !phone || !email) {
+      toast.error('Vui lòng nhập tên, số điện thoại và email');
       return;
     }
 
     try {
-      const res = await api.post('/customers', newCustomerForm);
+      // Backend validation expects ho_ten and sdt keys (and email)
+      const payload = {
+        ho_ten: full_name,
+        sdt: phone,
+        email,
+      };
+
+      const res = await api.post('/customers', payload);
       if (res.data && res.data.success) {
         setSelectedCustomer(res.data.data);
         setShowCustomerModal(false);
@@ -608,15 +614,13 @@ const Bookings = () => {
                     };
                     const labels = {
                       pending: 'Chờ xác nhận',
-                      confirmed: 'Đã nhận sân',
+                      confirmed: 'Đã xác nhận',
                       cancelled: 'Đã hủy',
                     };
                     const key = normalize(b.trang_thai);
                     const label = labels[key] || b.trang_thai || '';
                     return (
-                      <span className={`booking-status ${key}`}>
-                        {label}
-                      </span>
+                      <span className={`booking-status ${key}`}>{label}</span>
                     );
                   })()}
                 </td>
@@ -987,7 +991,7 @@ const Bookings = () => {
                   return (
                     <div key={service.id} className="service-item">
                       <span>
-                        {service.ten_dich_vu} -{' '}
+                        {service.ten_dv} -{' '}
                         {Number(service.don_gia).toLocaleString('vi-VN')}đ
                       </span>
                       <div className="service-controls">
@@ -1210,9 +1214,9 @@ const Bookings = () => {
                             : ''}{' '}
                           ●{' '}
                           {slots.length > 0
-                            ? `${formatTime(slots[0].start_time)} - ${formatTime(
-                                slots[0].end_time
-                              )}`
+                            ? `${formatTime(
+                                slots[0].start_time
+                              )} - ${formatTime(slots[0].end_time)}`
                             : ''}
                         </p>
                         <p>
@@ -1223,7 +1227,7 @@ const Bookings = () => {
                         <p>
                           <strong>Người đặt</strong>
                           <br />
-                          {bookingObj.contact_name || '-' }
+                          {bookingObj.contact_name || '-'}
                         </p>
                         <hr />
                         <p className="location-info">
@@ -1248,7 +1252,10 @@ const Bookings = () => {
                         </p>
                         {services && services.length > 0 ? (
                           services.map((s) => (
-                            <p className="service-item" key={s.id || s.dich_vu_id}>
+                            <p
+                              className="service-item"
+                              key={s.id || s.dich_vu_id}
+                            >
                               <span>
                                 - {s.dv?.ten_dv || s.ten_dv || s.ten || s.name}{' '}
                                 x{s.so_luong || s.quantity || 1}:
@@ -1257,7 +1264,9 @@ const Bookings = () => {
                                 {s.lineTotal
                                   ? Number(s.lineTotal).toLocaleString() + 'đ'
                                   : s.so_luong && s.don_gia
-                                  ? Number(s.so_luong * s.don_gia).toLocaleString() + 'đ'
+                                  ? Number(
+                                      s.so_luong * s.don_gia
+                                    ).toLocaleString() + 'đ'
                                   : '0đ'}
                               </span>
                             </p>
@@ -1285,12 +1294,15 @@ const Bookings = () => {
                     </div>
                     {bookingObj.trang_thai === 'pending' && (
                       <div className="modal-actions">
-                        <button className="btn-cancel-main" onClick={() => {
-                          // open status modal to allow cancellation from admin
-                          setEditingBooking(bookingObj);
-                          setShowStatusModal(true);
-                          handleCloseDetail();
-                        }}>
+                        <button
+                          className="btn-cancel-main"
+                          onClick={() => {
+                            // open status modal to allow cancellation from admin
+                            setEditingBooking(bookingObj);
+                            setShowStatusModal(true);
+                            handleCloseDetail();
+                          }}
+                        >
                           Hủy đặt sân
                         </button>
                       </div>
@@ -1328,7 +1340,7 @@ const Bookings = () => {
                 >
                   <option value="">-- Chọn trạng thái --</option>
                   <option value="pending">Chờ xác nhận</option>
-                  <option value="confirmed">Đã nhận sân</option>
+                  <option value="confirmed">Đã xác nhận</option>
                   <option value="cancelled">Đã hủy</option>
                 </select>
               </div>

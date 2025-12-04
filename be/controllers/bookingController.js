@@ -184,9 +184,12 @@ const createBooking = async (req, res) => {
         }
       }
 
+      // Mark booking as paid immediately when payment_method indicates online transfer
+      const isPaid = payment_method === 'bank_transfer';
+
       const insertBookingSql = `
         INSERT INTO phieu_dat_san (ma_pd, user_id, contact_id, contact_name, contact_phone, contact_email, created_by, ngay_su_dung, trang_thai, payment_method, is_paid, note, tien_san, tien_dich_vu, tong_tien)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,false,$11,$12,$13,$14)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
         RETURNING *
       `;
       const bookingRes = await client.query(insertBookingSql, [
@@ -200,6 +203,7 @@ const createBooking = async (req, res) => {
         ngay_su_dung,
         'pending',
         payment_method || null,
+        isPaid,
         note || null,
         slotsTotal,
         servicesTotal,
@@ -695,7 +699,109 @@ module.exports = {
   cancelBooking,
   updateBooking,
   getBookingByToken,
+  addServicesToBooking,
 };
+
+// Admin: add services to existing booking
+async function addServicesToBooking(req, res) {
+  try {
+    const { id } = req.params;
+    const { services } = req.body; // [{ dich_vu_id, so_luong }]
+
+    if (!Array.isArray(services) || services.length === 0) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Danh sách dịch vụ không hợp lệ'));
+    }
+
+    // Find booking
+    const q = await PhieuDatSan.query(
+      /^\d+$/.test(id)
+        ? 'SELECT * FROM phieu_dat_san WHERE id = $1'
+        : 'SELECT * FROM phieu_dat_san WHERE ma_pd = $1',
+      [id]
+    );
+    const booking = q.rows[0];
+    if (!booking) {
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt'));
+    }
+
+    // Check if booking is cancelled
+    if (String(booking.trang_thai).toLowerCase() === 'cancelled') {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Không thể thêm dịch vụ cho đơn đã hủy'));
+    }
+
+    // Calculate total hours for the booking (for rent-type services)
+    const slotsQuery = await PhieuDatSan.query(
+      'SELECT start_time, end_time FROM chi_tiet_phieu_san WHERE phieu_dat_id = $1',
+      [booking.id]
+    );
+    const slots = slotsQuery.rows;
+    let totalHours = 0;
+    for (const slot of slots) {
+      const startHour = parseInt(slot.start_time.split(':')[0], 10);
+      const endHour = parseInt(slot.end_time.split(':')[0], 10);
+      totalHours += endHour - startHour;
+    }
+
+    // Process services
+    let servicesTotal = 0;
+    const serviceDetails = [];
+    for (const svc of services) {
+      const dv = await DichVu.findById(svc.dich_vu_id);
+      if (!dv) {
+        return res
+          .status(404)
+          .json(
+            formatErrorResponse(`Không tìm thấy dịch vụ id=${svc.dich_vu_id}`)
+          );
+      }
+      const qty = svc.so_luong || 1;
+      let lineTotal = 0;
+      if (dv.loai === 'rent') {
+        lineTotal = parseFloat(dv.don_gia) * qty * totalHours;
+      } else {
+        lineTotal = parseFloat(dv.don_gia) * qty;
+      }
+      servicesTotal += lineTotal;
+      serviceDetails.push({ dv, qty, lineTotal });
+    }
+
+    // Add services and update totals in transaction
+    await PhieuDatSan.transaction(async (client) => {
+      // Insert service details
+      for (const sd of serviceDetails) {
+        await client.query(
+          `INSERT INTO chi_tiet_phieu_dich_vu (phieu_dat_id, dich_vu_id, so_luong, don_gia, ghi_chu)
+           VALUES ($1,$2,$3,$4,$5)`,
+          [booking.id, sd.dv.id, sd.qty, sd.dv.don_gia, null]
+        );
+      }
+
+      // Recalculate totals
+      const currentServiceTotal = parseFloat(booking.tien_dich_vu || 0);
+      const newServiceTotal = currentServiceTotal + servicesTotal;
+      const newGrandTotal = parseFloat(booking.tien_san || 0) + newServiceTotal;
+
+      // Update booking: add to service total, update grand total, and set is_paid to false if it was true
+      await client.query(
+        `UPDATE phieu_dat_san 
+         SET tien_dich_vu = $1, tong_tien = $2, is_paid = CASE WHEN is_paid = true THEN false ELSE is_paid END
+         WHERE id = $3`,
+        [newServiceTotal, newGrandTotal, booking.id]
+      );
+    });
+
+    res.json(formatResponse(true, null, 'Thêm dịch vụ vào đơn đặt thành công'));
+  } catch (error) {
+    console.error('Add services to booking error:', error);
+    res.status(500).json(formatErrorResponse(error.message || 'Lỗi server'));
+  }
+}
 
 // Admin: update booking (status/payment)
 async function updateBooking(req, res) {

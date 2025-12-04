@@ -41,4 +41,11 @@ router.put(
   bookingController.updateBooking
 );
 
+// Admin: add services to existing booking
+router.post(
+  '/:id/services',
+  checkRole(['manager', 'staff']),
+  bookingController.addServicesToBooking
+);
+
 module.exports = router;
