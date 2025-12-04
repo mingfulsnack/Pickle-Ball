@@ -213,33 +213,33 @@
   td {
     &:nth-child(1) {
       // Mã phiếu đặt
-      width: 10%;
+      width: 12% !important;
       text-align: center;
       font-weight: 600;
     }
 
     &:nth-child(2) {
       // Ngày đặt
-      width: 12%;
+      width: 11% !important;
       text-align: center;
     }
 
     &:nth-child(3) {
       // Tên khách hàng
-      width: 20%;
+      width: 17% !important; // giảm bớt để nhường chỗ cho các cột khác
       text-align: left;
       font-weight: 500;
     }
 
     &:nth-child(4) {
       // Điện thoại
-      width: 12%;
+      width: 10% !important; // giảm bớt để nhường chỗ cho cột cuối
       text-align: left;
     }
 
     &:nth-child(5) {
       // Tổng tiền
-      width: 12%;
+      width: 13% !important;
       text-align: right;
       font-weight: 600;
       color: #059669;
@@ -247,19 +247,19 @@
 
     &:nth-child(6) {
       // Trạng thái
-      width: 12%;
+      width: 13% !important;
       text-align: center;
     }
 
     &:nth-child(7) {
       // Thanh toán
-      width: 12%;
+      width: 13% !important;
       text-align: center;
     }
 
     &:nth-child(8) {
       // Hành động
-      width: 10%;
+      width: 13% !important; // nới rộng để không bị cắt chữ
       text-align: center;
     }
   }
@@ -379,14 +379,14 @@
     // Adjust column widths for mobile
     th,
     td {
-      &:nth-child(1) { width: 8%; }   // Mã phiếu
-      &:nth-child(2) { width: 10%; }  // Ngày
-      &:nth-child(3) { width: 15%; }  // Tên
-      &:nth-child(4) { width: 12%; }  // SĐT
-      &:nth-child(5) { width: 12%; }  // Tiền
-      &:nth-child(6) { width: 13%; }  // Trạng thái
-      &:nth-child(7) { width: 13%; }  // Thanh toán
-      &:nth-child(8) { width: 17%; }  // Hành động
+      &:nth-child(1) { width: 7% !important; }   // Mã phiếu
+      &:nth-child(2) { width: 10% !important; }  // Ngày
+      &:nth-child(3) { width: 13% !important; }  // Tên (giảm bớt)
+      &:nth-child(4) { width: 10% !important; }  // SĐT (giảm bớt)
+      &:nth-child(5) { width: 12% !important; }  // Tiền
+      &:nth-child(6) { width: 13% !important; }  // Trạng thái
+      &:nth-child(7) { width: 13% !important; }  // Thanh toán
+      &:nth-child(8) { width: 22% !important; }  // Hành động (nới rộng)
     }
 
     .booking-status,
