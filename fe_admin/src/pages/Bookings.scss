@@ -273,10 +273,9 @@
       text-transform: capitalize;
       text-align: center;
       display: inline-block;
-      white-space: nowrap;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.3;
 
       &.pending {
         background: #fffbeb;
@@ -307,10 +306,9 @@
       font-weight: 600;
       text-transform: uppercase;
       display: inline-block;
-      white-space: nowrap;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.3;
 
       &.badge-success {
         background: #dcfce7;
@@ -356,6 +354,81 @@
         &:hover {
           background-color: #2563eb;
         }
+      }
+    }
+  }
+
+  // Responsive styles for mobile devices
+  @media screen and (max-width: 768px) {
+    font-size: 0.85rem;
+
+    thead {
+      th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    tbody {
+      td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    // Adjust column widths for mobile
+    th,
+    td {
+      &:nth-child(1) { width: 8%; }   // Mã phiếu
+      &:nth-child(2) { width: 10%; }  // Ngày
+      &:nth-child(3) { width: 15%; }  // Tên
+      &:nth-child(4) { width: 12%; }  // SĐT
+      &:nth-child(5) { width: 12%; }  // Tiền
+      &:nth-child(6) { width: 13%; }  // Trạng thái
+      &:nth-child(7) { width: 13%; }  // Thanh toán
+      &:nth-child(8) { width: 17%; }  // Hành động
+    }
+
+    .booking-status,
+    .badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+    }
+
+    .actions-cell {
+      .btn {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.3rem;
+        max-width: 100%;
+      }
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    font-size: 0.75rem;
+
+    thead th {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.65rem;
+    }
+
+    tbody td {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.7rem;
+    }
+
+    .booking-status,
+    .badge {
+      font-size: 0.6rem;
+      padding: 0.15rem 0.3rem;
+    }
+
+    .actions-cell {
+      gap: 0.15rem;
+
+      .btn {
+        font-size: 0.55rem;
+        padding: 0.15rem 0.25rem;
       }
     }
   }
