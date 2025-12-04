@@ -17,6 +17,7 @@ const BookingLookup = () => {
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const { isAuthenticated, user } = useAuth();
 
   // State for modals
@@ -131,7 +132,7 @@ const BookingLookup = () => {
   const getStatusText = (status) => {
     switch (status) {
       case 'pending':
-        return 'Chưa nhận sân';
+        return 'Chờ xác nhận';
       case 'confirmed':
         return 'Đã nhận sân';
       case 'cancelled':
@@ -145,6 +146,19 @@ const BookingLookup = () => {
     <div className="booking-lookup-page">
       <div className="lookup-container">
         <h1>Lịch sử đặt sân</h1>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+          <label style={{ fontWeight: 600 }}>Lọc trạng thái:</label>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            style={{ padding: '6px 8px', borderRadius: 6 }}
+          >
+            <option value="all">Tất cả</option>
+            <option value="pending">Chờ xác nhận</option>
+            <option value="confirmed">Đã nhận sân</option>
+            <option value="cancelled">Đã hủy</option>
+          </select>
+        </div>
         {error && <div className="lookup-error">{error}</div>}
         <div className="lookup-result">
           {loading ? (
@@ -152,8 +166,18 @@ const BookingLookup = () => {
           ) : bookings.length === 0 ? (
             <div>Bạn chưa có đặt sân nào.</div>
           ) : (
-            bookings.map((b) => (
-              <article key={b.id} className="booking-card">
+              bookings
+                .filter((b) => {
+                  const normalize = (s) => (s ? String(s).toLowerCase() : '');
+                  if (selectedStatus === 'all') return true;
+                  const st = normalize(b.trang_thai);
+                  if (selectedStatus === 'cancelled') {
+                    return st === 'cancelled' || st === 'canceled';
+                  }
+                  return st === selectedStatus;
+                })
+                .map((b) => (
+                  <article key={b.id} className="booking-card">
                 <header className="card-head">
                   <div className="code">#{b.ma_pd}</div>
                   <div className={`status badge-${b.trang_thai || 'pending'}`}>
@@ -201,7 +225,7 @@ const BookingLookup = () => {
                     title={
                       b.trang_thai === 'pending'
                         ? 'Hủy đặt'
-                        : 'Chỉ có thể hủy khi phiếu ở trạng thái Chưa nhận sân'
+                        : 'Chỉ có thể hủy khi phiếu ở trạng thái Chờ xác nhận'
                     }
                   >
                     Hủy đặt

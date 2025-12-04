@@ -84,7 +84,7 @@ const Bookings = () => {
   const getStatusText = (status) => {
     switch (String(status).toLowerCase()) {
       case 'pending':
-        return 'Chưa nhận sân';
+        return 'Chờ xác nhận';
       case 'confirmed':
         return 'Đã nhận sân';
       case 'cancelled':
@@ -607,8 +607,8 @@ const Bookings = () => {
                       return key;
                     };
                     const labels = {
-                      pending: 'Đang đặt',
-                      confirmed: 'Đã xác nhận',
+                      pending: 'Chờ xác nhận',
+                      confirmed: 'Đã nhận sân',
                       cancelled: 'Đã hủy',
                     };
                     const key = normalize(b.trang_thai);
@@ -1327,8 +1327,8 @@ const Bookings = () => {
                   }
                 >
                   <option value="">-- Chọn trạng thái --</option>
-                  <option value="pending">Đang đặt</option>
-                  <option value="confirmed">Đã xác nhận</option>
+                  <option value="pending">Chờ xác nhận</option>
+                  <option value="confirmed">Đã nhận sân</option>
                   <option value="cancelled">Đã hủy</option>
                 </select>
               </div>
