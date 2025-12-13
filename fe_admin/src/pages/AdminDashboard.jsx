@@ -78,6 +78,12 @@ const AdminDashboard = () => {
     endDate: new Date().toISOString().split('T')[0],
   });
   const [generatingReport, setGeneratingReport] = useState(false);
+  
+  // Stats date range filter
+  const [statsDateRange, setStatsDateRange] = useState({
+    startDate: '',
+    endDate: '',
+  });
 
   // Load revenue data based on report type
   const loadRevenueData = async () => {
@@ -365,7 +371,24 @@ const AdminDashboard = () => {
         // Calculate total revenue and cancelled bookings from all bookings
         const responseData = bRes.data.data || [];
         // Handle new paginated format vs legacy format
-        const allBookings = responseData.bookings || responseData || [];
+        let allBookings = responseData.bookings || responseData || [];
+        
+        // Filter bookings by date range if specified
+        if (statsDateRange.startDate || statsDateRange.endDate) {
+          allBookings = allBookings.filter((booking) => {
+            const bookingDate = booking.ngay_su_dung ? booking.ngay_su_dung.split('T')[0] : null;
+            if (!bookingDate) return false;
+            
+            if (statsDateRange.startDate && bookingDate < statsDateRange.startDate) {
+              return false;
+            }
+            if (statsDateRange.endDate && bookingDate > statsDateRange.endDate) {
+              return false;
+            }
+            return true;
+          });
+        }
+        
         const paidBookings = allBookings.filter(
           (booking) => booking.is_paid === true
         );
@@ -393,7 +416,7 @@ const AdminDashboard = () => {
       }
     };
     load();
-  }, []);
+  }, [statsDateRange]);
 
   // Load revenue data when filters change
   useEffect(() => {
@@ -415,7 +438,7 @@ const AdminDashboard = () => {
           <div className="header-text">
             <h1>Báo cáo</h1>
             <p className="page-subtitle">
-              Tổng quan hệ thống quản lý sân pickleball
+              Tổng quan hệ thống quản lý sân
             </p>
           </div>
           <button
@@ -427,29 +450,72 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="dashboard-grid">
-        <StatCard title="Số sân" value={counts.courts} hint="Quản lý sân" />
-        <StatCard title="Đơn đặt" value={counts.bookings} hint="Đặt sân" />
-        <StatCard
-          title="Khung giờ"
-          value={counts.timeframes}
-          hint="Khung giờ & ca"
-        />
-        <StatCard
-          title="Khách hàng"
-          value={counts.customers}
-          hint="Danh bạ khách"
-        />
-        <StatCard
-          title="Tổng doanh thu"
-          value={formatCurrency(counts.totalRevenue)}
-          hint="Đến hiện tại"
-        />
-        <StatCard
-          title="Đơn bị hủy"
-          value={counts.cancelledBookings}
-          hint="Đơn đã hủy"
-        />
+      {/* Dashboard Stats Card with Filter */}
+      <div className="dashboard-stats-card">
+        <div className="stats-header">
+          <h2>Thống kê tổng quan</h2>
+          <div className="stats-filter">
+            <div className="filter-group">
+              <label>Từ ngày:</label>
+              <input
+                type="date"
+                value={statsDateRange.startDate}
+                onChange={(e) =>
+                  setStatsDateRange({
+                    ...statsDateRange,
+                    startDate: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="filter-group">
+              <label>Đến ngày:</label>
+              <input
+                type="date"
+                value={statsDateRange.endDate}
+                onChange={(e) =>
+                  setStatsDateRange({
+                    ...statsDateRange,
+                    endDate: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() =>
+                setStatsDateRange({ startDate: '', endDate: '' })
+              }
+            >
+              Xóa bộ lọc
+            </button>
+          </div>
+        </div>
+
+        <div className="dashboard-grid">
+          <StatCard title="Số sân" value={counts.courts} hint="Quản lý sân" />
+          <StatCard title="Đơn đặt" value={counts.bookings} hint="Đặt sân" />
+          <StatCard
+            title="Khung giờ"
+            value={counts.timeframes}
+            hint="Khung giờ & ca"
+          />
+          <StatCard
+            title="Khách hàng"
+            value={counts.customers}
+            hint="Danh bạ khách"
+          />
+          <StatCard
+            title="Tổng doanh thu"
+            value={formatCurrency(counts.totalRevenue)}
+            hint="Đến hiện tại"
+          />
+          <StatCard
+            title="Đơn bị hủy"
+            value={counts.cancelledBookings}
+            hint="Đơn đã hủy"
+          />
+        </div>
       </div>
 
       {/* Revenue Overview Section */}

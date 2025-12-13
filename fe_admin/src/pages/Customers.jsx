@@ -3,9 +3,11 @@ import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import toast from '../utils/toast';
+import { useAuth } from '../context/AuthContext';
 import './Customers.scss';
 
 const Customers = () => {
+  const { canEdit } = useAuth();
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -178,9 +180,11 @@ const Customers = () => {
       </div>
 
       <div className="page-actions">
-        <button className="btn btn-primary" onClick={openCreateModal}>
-          Thêm khách hàng
-        </button>
+        {canEdit() && (
+          <button className="btn btn-primary" onClick={openCreateModal}>
+            Thêm khách hàng
+          </button>
+        )}
 
         <div className="search-container">
           <input
@@ -227,20 +231,24 @@ const Customers = () => {
                     : '-'}
                 </td>
                 <td>
-                  <div className="actions-cell">
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => openEditModal(customer)}
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDeleteCustomer(customer)}
-                    >
-                      Xóa
-                    </button>
-                  </div>
+                  {canEdit() ? (
+                    <div className="actions-cell">
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => openEditModal(customer)}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDeleteCustomer(customer)}
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-muted">Chỉ xem</span>
+                  )}
                 </td>
               </tr>
             ))}

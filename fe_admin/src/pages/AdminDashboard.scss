@@ -24,6 +24,71 @@
     }
   }
 
+  .dashboard-stats-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      h2 {
+        margin: 0;
+        color: #1f2937;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      .stats-filter {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+
+          label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+          }
+
+          input[type='date'] {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            min-width: 140px;
+            transition: all 0.2s;
+
+            &:focus {
+              outline: none;
+              border-color: var(--primary-color, #007bff);
+              box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            }
+          }
+        }
+
+        .btn-sm {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          border-radius: 6px;
+          height: fit-content;
+        }
+      }
+    }
+  }
+
   .revenue-section {
     margin-top: 2rem;
 

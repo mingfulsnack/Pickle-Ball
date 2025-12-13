@@ -5,6 +5,7 @@ import './Services.scss';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import { showSuccess, showError, getErrorMessage } from '../utils/toast';
+import { useAuth } from '../context/AuthContext';
 
 const emptyForm = {
   ma_dv: '',
@@ -15,6 +16,7 @@ const emptyForm = {
 };
 
 export default function Services() {
+  const { canEdit } = useAuth();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -321,18 +323,20 @@ export default function Services() {
         <p className="page-subtitle">Thêm, sửa hoặc xóa dịch vụ</p>
       </div>
 
-      <div className="page-actions">
-        <button className="btn btn-primary" onClick={openCreate}>
-          Tạo dịch vụ
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={() => setAddServiceModalOpen(true)}
-          style={{ marginLeft: '1rem' }}
-        >
-          Thêm dịch vụ vào đơn
-        </button>
-      </div>
+      {canEdit() && (
+        <div className="page-actions">
+          <button className="btn btn-primary" onClick={openCreate}>
+            Tạo dịch vụ
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setAddServiceModalOpen(true)}
+            style={{ marginLeft: '1rem' }}
+          >
+            Thêm dịch vụ vào đơn
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <LoadingSpinner />
@@ -381,20 +385,24 @@ export default function Services() {
                   </td>
                   <td>{s.ghi_chu}</td>
                   <td>
-                    <div className="actions-cell">
-                      <button
-                        className="btn btn-sm"
-                        onClick={() => openEdit(s)}
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDelete(s.id)}
-                      >
-                        Xóa
-                      </button>
-                    </div>
+                    {canEdit() ? (
+                      <div className="actions-cell">
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => openEdit(s)}
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDelete(s.id)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-muted">Chỉ xem</span>
+                    )}
                   </td>
                 </tr>
               ))

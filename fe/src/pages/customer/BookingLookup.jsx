@@ -25,6 +25,7 @@ const BookingLookup = () => {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const fetchBookings = async () => {
     if (!isAuthenticated()) return;
@@ -74,6 +75,7 @@ const BookingLookup = () => {
 
   const handleCloseCancel = () => {
     setIsCancelOpen(false);
+    setCancelReason('');
   };
 
   const handleConfirmCancel = async () => {
@@ -94,7 +96,7 @@ const BookingLookup = () => {
       console.debug('Cancel URL:', url);
       // Use publicApi (no auth needed for token) to cancel
       await publicApi.put(url, {
-        reason: 'Customer cancellation from lookup page',
+        reason: cancelReason || 'Khách hàng hủy từ trang lịch sử đặt sân',
       });
       toast.success('Hủy đặt sân thành công!');
       fetchBookings(); // Refresh the list
@@ -256,9 +258,6 @@ const BookingLookup = () => {
                   <div className="modal-custom-header">
                     <FaTicketAlt className="header-icon" />
                     <h2>Chi tiết phiếu đặt sân</h2>
-                    <button onClick={handleCloseDetail} className="close-btn">
-                      <FaTimes />
-                    </button>
                   </div>
                   <div className="modal-custom-body">
                     <div className="booking-id-header">
@@ -272,23 +271,24 @@ const BookingLookup = () => {
                     <div className="detail-grid">
                       <div className="info-section">
                         <p>
-                          <strong>Thời gian</strong>
+                          <strong>Ngày đặt</strong>
                           <br />
                           {bookingObj.ngay_su_dung
                             ? formatDate(bookingObj.ngay_su_dung)
-                            : ''}{' '}
-                          ●{' '}
-                          {slots.length > 0
-                            ? `${formatTime(
-                                slots[0].start_time
-                              )} - ${formatTime(slots[0].end_time)}`
                             : ''}
                         </p>
                         <p>
-                          <strong>Sân</strong>
+                          <strong>Các sân đã đặt</strong>
                           <br />
-                          {slots.length > 0 ? `Sân ${slots[0].san_id}` : ''} -
-                          Sân vận động Bồ Đề
+                          {slots.length > 0 ? (
+                            slots.map((slot, idx) => (
+                              <span key={idx} style={{ display: 'block', marginBottom: '0.25rem' }}>
+                                Sân {slot.san_id}: {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                              </span>
+                            ))
+                          ) : (
+                            'Không có thông tin sân'
+                          )}
                         </p>
                         <p>
                           <strong>Người đặt</strong>
@@ -348,6 +348,11 @@ const BookingLookup = () => {
                           <span>Trả sau</span>
                         </p>
                         <hr />
+                        <p>
+                          <span>Ghi chú:</span>{' '}
+                          <span>{bookingObj.note || '-'}</span>
+                        </p>
+                        <hr />
                         <p className="total">
                           <span>Tổng tiền:</span>{' '}
                           <span>
@@ -380,6 +385,16 @@ const BookingLookup = () => {
       <Modal isOpen={isCancelOpen} onClose={handleCloseCancel} size="small">
         <div className="cancel-confirm-modal">
           <p>Bạn có muốn hủy đặt sân không?</p>
+          <div className="cancel-reason-input">
+            <label htmlFor="cancel-reason">Lý do hủy:</label>
+            <textarea
+              id="cancel-reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy đặt sân..."
+              rows={3}
+            />
+          </div>
           <div className="confirm-actions">
             <button className="btn-yes" onClick={handleConfirmCancel}>
               Có

@@ -4,7 +4,7 @@ import './AdminSidebar.scss';
 import appleImg from '../assets/apple.png';
 
 const AdminSidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, canEdit } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -12,48 +12,62 @@ const AdminSidebar = () => {
     navigate('/login');
   };
 
-  const menuItems = [
+  const allMenuItems = [
     {
       path: '/admin/dashboard',
       icon: '📊',
       label: 'Dashboard',
+      allowStaff: true,
     },
     {
       path: '/admin/bookings',
       icon: '📅',
       label: 'Đơn đặt sân',
+      allowStaff: true,
     },
     {
       path: '/admin/courts',
       icon: '🏓',
       label: 'Quản lý sân',
+      allowStaff: false,
     },
     {
       path: '/admin/timeframes',
       icon: '⏰',
       label: 'Khung giờ',
+      allowStaff: false,
     },
     {
       path: '/admin/services',
       icon: '🛎️',
       label: 'Dịch vụ',
+      allowStaff: true,
     },
     {
       path: '/admin/court-status',
       icon: '📍',
       label: 'Tình trạng sân',
+      allowStaff: true,
     },
     {
       path: '/admin/customers',
       icon: '👥',
       label: 'Khách hàng',
+      allowStaff: true,
     },
     {
       path: '/admin/employees',
       icon: '👨‍💼',
       label: 'Quản lý nhân viên',
+      allowStaff: false,
     },
   ];
+
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(item => {
+    if (canEdit()) return true; // Admin/Manager can see all
+    return item.allowStaff; // Staff can only see allowed items
+  });
 
   return (
     <div className="admin-sidebar">

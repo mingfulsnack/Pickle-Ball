@@ -490,9 +490,10 @@ const cancelBooking = async (req, res) => {
     }
 
     await PhieuDatSan.transaction(async (client) => {
+      // Update status and note with cancel reason
       await client.query(
-        'UPDATE phieu_dat_san SET trang_thai = $1 WHERE id = $2',
-        ['cancelled', booking.id]
+        'UPDATE phieu_dat_san SET trang_thai = $1, note = $2 WHERE id = $3',
+        ['cancelled', reason || 'Đã hủy', booking.id]
       );
       await client.query(
         'INSERT INTO phieu_huy_dat_san (phieu_dat_id, ly_do, nguoi_thuc_hien, tien_hoan) VALUES ($1,$2,$3,$4)',

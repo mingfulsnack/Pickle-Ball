@@ -105,6 +105,21 @@ export const AuthProvider = ({ children }) => {
     return result;
   }, [user]);
 
+  const isStaff = useCallback(() => {
+    if (!user) return false;
+    const role = user?.tenvaitro || user?.role || null;
+    const code = user?.mavaitro || user?.role_id || null;
+    return role === 'staff' || code === 3;
+  }, [user]);
+
+  const canEdit = useCallback(() => {
+    // Staff cannot edit, only admin and manager can
+    if (!user) return false;
+    const role = user?.tenvaitro || user?.role || null;
+    const code = user?.mavaitro || user?.role_id || null;
+    return role === 'admin' || role === 'manager' || code === 1 || code === 2;
+  }, [user]);
+
   const getToken = useCallback(() => {
     return localStorage.getItem('adminToken');
   }, []);
@@ -117,9 +132,11 @@ export const AuthProvider = ({ children }) => {
       logout,
       isAuthenticated,
       isAdmin,
+      isStaff,
+      canEdit,
       getToken,
     }),
-    [user, isLoading, isAuthenticated, isAdmin, getToken]
+    [user, isLoading, isAuthenticated, isAdmin, isStaff, canEdit, getToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

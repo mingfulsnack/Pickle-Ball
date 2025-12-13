@@ -194,14 +194,9 @@ const getCourtAvailableSlots = async (req, res) => {
           minStartHour = Math.max(0, Math.floor(minStartMinutes / 60));
         }
         if (maxEndMinutes > 0) {
-          // If the shift ends exactly on the hour (e.g. 22:00), include that last hour slot
-          // so a shift ending at 22:00 will show the 22:00-23:00 slot as available/booked.
-          if (maxEndMinutes % 60 === 0) {
-            maxEndHour = Math.min(24, Math.floor(maxEndMinutes / 60) + 1);
-          } else {
-            // For partial hours, ceil to include the partial hour slot
-            maxEndHour = Math.min(24, Math.ceil(maxEndMinutes / 60));
-          }
+          // Nếu ca kết thúc đúng giờ (ví dụ 22:00), slot cuối cùng nên kết thúc đúng giờ đó
+          // Ví dụ: ca 5:00-22:00 => slots từ 5:00-6:00 đến 21:00-22:00
+          maxEndHour = Math.floor(maxEndMinutes / 60);
         }
       }
     } catch (shiftErr) {

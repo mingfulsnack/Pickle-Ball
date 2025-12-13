@@ -61,16 +61,19 @@ const CourtStatus = () => {
     return date === today;
   };
 
-  const getMinStartHour = () => {
-    if (!isToday()) return 6; // default start
-    const now = new Date();
-    return now.getHours(); // floor to current hour (e.g., 10:37 -> 10)
-  };
-
   const renderCourtPanel = (court) => {
     const info = slotsByCourt[court.id];
     const slots = info?.slots || [];
-    const minHour = getMinStartHour();
+
+    // Chỉ filter các giờ đã qua nếu là ngày hôm nay
+    const filteredSlots = isToday()
+      ? slots.filter((s) => {
+          const now = new Date();
+          const currentHour = now.getHours();
+          const slotHour = parseInt(s.start_time.split(':')[0], 10);
+          return slotHour >= currentHour;
+        })
+      : slots; // Các ngày khác hiển thị tất cả slots từ API
 
     return (
       <div key={court.id} className="court-panel">
@@ -80,12 +83,7 @@ const CourtStatus = () => {
         </div>
 
         <div className="slots-grid">
-          {slots
-            .filter((s) => {
-              const hour = parseInt(s.start_time.split(':')[0], 10);
-              return hour >= minHour;
-            })
-            .map((s) => (
+          {filteredSlots.map((s) => (
               <div
                 key={`${court.id}_${s.start_time}`}
                 className={`slot ${s.is_available ? 'available' : 'booked'}`}

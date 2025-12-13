@@ -299,13 +299,54 @@
 
 // Cancel Confirm Modal
 .cancel-confirm-modal {
-  padding: 2rem 1rem;
+  padding: 2rem 1.5rem;
   text-align: center;
-  p {
+  
+  > p {
     font-size: 1.2rem;
-    margin: 0 0 2rem 0;
+    margin: 0 0 1.5rem 0;
     color: #333;
+    font-weight: 600;
   }
+
+  .cancel-reason-input {
+    margin-bottom: 2rem;
+    text-align: left;
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 80px;
+      transition: all 0.2s ease;
+      background: #fafafa;
+
+      &:focus {
+        outline: none;
+        border-color: #64b5f6;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.1);
+      }
+
+      &::placeholder {
+        color: #999;
+        font-style: italic;
+      }
+    }
+  }
+
   .confirm-actions {
     display: flex;
     justify-content: center;
@@ -314,24 +355,40 @@
     button {
       border: none;
       border-radius: 8px;
-      padding: 10px 30px;
+      padding: 12px 32px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
       &:active {
-        transform: scale(0.95);
+        transform: translateY(0);
       }
     }
 
     .btn-yes {
-      background-color: #64b5f6;
+      background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
       color: white;
+      
+      &:hover {
+        background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+      }
     }
 
     .btn-no {
-      background-color: #f0f4c3;
-      color: #555;
+      background: #f5f5f5;
+      color: #666;
+      border: 2px solid #e0e0e0;
+      
+      &:hover {
+        background: #fff;
+        border-color: #bdbdbd;
+      }
     }
   }
 }

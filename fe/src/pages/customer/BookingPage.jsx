@@ -28,6 +28,7 @@ const BookingPage = () => {
     location.state?.selectedContact || null
   );
   const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to cash
+  const [timeOptions, setTimeOptions] = useState([]);
 
   useEffect(() => {
     // Update selectedContact if coming from Contacts page
@@ -67,25 +68,66 @@ const BookingPage = () => {
     // Otherwise, do not auto-fetch. User must explicitly search to load availability.
   }, [location.state, user?.id, selectedContact]);
 
-  // Function to get available time options based on selected date
-  const getAvailableTimeOptions = useCallback(() => {
-    const options = [];
-    const now = new Date();
-    const selectedDate = new Date(searchParams.date);
-    const isToday = selectedDate.toDateString() === now.toDateString();
-
-    for (let hour = 6; hour <= 22; hour++) {
-      // If it's today, only show hours after current hour
-      if (isToday) {
-        const currentHour = now.getHours();
-        if (hour <= currentHour) {
-          continue; // Skip hours that have passed or current hour
-        }
+  // Fetch available time options from API based on selected date
+  useEffect(() => {
+    const fetchTimeOptions = async () => {
+      if (!searchParams.date) {
+        setTimeOptions([]);
+        return;
       }
-      options.push(`${hour.toString().padStart(2, '0')}:00`);
-    }
 
-    return options;
+      try {
+        // Fetch slots for the first court to get available time range
+        const courtsResponse = await publicApi.get('/public/courts');
+        const courts = courtsResponse.data?.data || [];
+        if (courts.length === 0) return;
+
+        const firstCourtId = courts[0].id;
+        const slotsResponse = await publicApi.get(
+          `/public/availability/courts/${firstCourtId}`,
+          { params: { date: searchParams.date } }
+        );
+        
+        const slots = slotsResponse.data?.data?.slots || [];
+        if (slots.length === 0) return;
+
+        const now = new Date();
+        const selectedDate = new Date(searchParams.date);
+        const isToday = selectedDate.toDateString() === now.toDateString();
+        const currentHour = isToday ? now.getHours() : -1;
+
+        // Extract unique time options from slots and filter out past hours for today
+        const timeSet = new Set();
+        slots.forEach((slot) => {
+          const hour = parseInt(slot.start_time.split(':')[0], 10);
+          if (!isToday || hour > currentHour) {
+            timeSet.add(slot.start_time.slice(0, 5));
+          }
+        });
+
+        // Add end time of last slot as well
+        if (slots.length > 0) {
+          const lastSlot = slots[slots.length - 1];
+          const endHour = parseInt(lastSlot.end_time.split(':')[0], 10);
+          if (!isToday || endHour > currentHour) {
+            timeSet.add(lastSlot.end_time.slice(0, 5));
+          }
+        }
+
+        const sortedTimes = Array.from(timeSet).sort();
+        setTimeOptions(sortedTimes);
+      } catch (error) {
+        console.error('Error fetching time options:', error);
+        // Fallback to default range if API fails
+        const defaultOptions = [];
+        for (let hour = 6; hour <= 22; hour++) {
+          defaultOptions.push(`${hour.toString().padStart(2, '0')}:00`);
+        }
+        setTimeOptions(defaultOptions);
+      }
+    };
+
+    fetchTimeOptions();
   }, [searchParams.date]);
 
   // Helper to parse hour number from a time string like '09:00'
@@ -97,30 +139,23 @@ const BookingPage = () => {
 
   // Reset time selections when date changes and selected times are no longer valid
   useEffect(() => {
-    if (searchParams.date) {
-      const availableOptions = getAvailableTimeOptions();
-
+    if (searchParams.date && timeOptions.length > 0) {
       // Reset start time if it's no longer available
       if (
         searchParams.startTime &&
-        !availableOptions.includes(searchParams.startTime)
+        !timeOptions.includes(searchParams.startTime)
       ) {
         setSearchParams((prev) => ({ ...prev, startTime: '', endTime: '' }));
       }
       // Reset end time if start time was reset or end time is no longer available
       else if (
         searchParams.endTime &&
-        !availableOptions.includes(searchParams.endTime)
+        !timeOptions.includes(searchParams.endTime)
       ) {
         setSearchParams((prev) => ({ ...prev, endTime: '' }));
       }
     }
-  }, [
-    searchParams.date,
-    searchParams.startTime,
-    searchParams.endTime,
-    getAvailableTimeOptions,
-  ]);
+  }, [searchParams.date, searchParams.startTime, searchParams.endTime, timeOptions]);
 
   const fetchServices = async () => {
     try {
@@ -198,7 +233,6 @@ const BookingPage = () => {
   };
 
   // compute end time options so user can't pick an end <= start
-  const timeOptions = getAvailableTimeOptions();
   const endTimeOptions = timeOptions.filter((t) => {
     if (!searchParams.startTime) return true;
     const startH = parseHour(searchParams.startTime);

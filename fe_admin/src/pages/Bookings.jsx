@@ -3,6 +3,7 @@ import api, { publicApi } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import toast from '../utils/toast';
+import { useAuth } from '../context/AuthContext';
 import {
   FaTicketAlt,
   FaMapMarkerAlt,
@@ -13,6 +14,7 @@ import './Admin.scss';
 import './Bookings.scss';
 
 const Bookings = () => {
+  const { canEdit } = useAuth();
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [pagination, setPagination] = useState({
@@ -55,6 +57,7 @@ const Bookings = () => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [pricing, setPricing] = useState(null);
   const [bookingNote, setBookingNote] = useState('');
+  const [timeOptions, setTimeOptions] = useState([]);
   // Status modal state
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
@@ -475,57 +478,87 @@ const Bookings = () => {
     calculatePrice();
   }, [calculatePrice]);
 
-  // Function to get available time options based on selected date
-  const getAvailableTimeOptions = useCallback(() => {
-    const options = [];
-    const now = new Date();
-    const selectedDate = new Date(searchParams.date);
-    const isToday = selectedDate.toDateString() === now.toDateString();
-
-    for (let hour = 0; hour <= 23; hour++) {
-      // If it's today, only show hours after current hour
-      if (isToday) {
-        const currentHour = now.getHours();
-        if (hour <= currentHour) {
-          continue; // Skip hours that have passed or current hour
-        }
+  // Fetch available time options from API based on selected date
+  useEffect(() => {
+    const fetchTimeOptions = async () => {
+      if (!searchParams.date) {
+        setTimeOptions([]);
+        return;
       }
-      options.push({
-        value: `${hour.toString().padStart(2, '0')}:00`,
-        label: `${hour.toString().padStart(2, '0')}:00`,
-      });
-    }
 
-    return options;
+      try {
+        // Fetch slots for the first court to get available time range
+        const courtsResponse = await publicApi.get('/public/courts');
+        const courts = courtsResponse.data?.data || [];
+        if (courts.length === 0) return;
+
+        const firstCourtId = courts[0].id;
+        const slotsResponse = await publicApi.get(
+          `/public/availability/courts/${firstCourtId}`,
+          { params: { date: searchParams.date } }
+        );
+        
+        const slots = slotsResponse.data?.data?.slots || [];
+        if (slots.length === 0) return;
+
+        const now = new Date();
+        const selectedDate = new Date(searchParams.date);
+        const isToday = selectedDate.toDateString() === now.toDateString();
+        const currentHour = isToday ? now.getHours() : -1;
+
+        // Extract unique time options from slots and filter out past hours for today
+        const timeSet = new Set();
+        slots.forEach((slot) => {
+          const hour = parseInt(slot.start_time.split(':')[0], 10);
+          if (!isToday || hour > currentHour) {
+            timeSet.add(slot.start_time.slice(0, 5));
+          }
+        });
+
+        // Add end time of last slot as well
+        if (slots.length > 0) {
+          const lastSlot = slots[slots.length - 1];
+          const endHour = parseInt(lastSlot.end_time.split(':')[0], 10);
+          if (!isToday || endHour > currentHour) {
+            timeSet.add(lastSlot.end_time.slice(0, 5));
+          }
+        }
+
+        const sortedTimes = Array.from(timeSet).sort();
+        setTimeOptions(sortedTimes);
+      } catch (error) {
+        console.error('Error fetching time options:', error);
+        // Fallback to default range if API fails
+        const defaultOptions = [];
+        for (let hour = 6; hour <= 22; hour++) {
+          defaultOptions.push(`${hour.toString().padStart(2, '0')}:00`);
+        }
+        setTimeOptions(defaultOptions);
+      }
+    };
+
+    fetchTimeOptions();
   }, [searchParams.date]);
 
   // Reset time selections when date changes and selected times are no longer valid
   useEffect(() => {
-    if (searchParams.date) {
-      const availableOptions = getAvailableTimeOptions();
-      const availableTimeValues = availableOptions.map((opt) => opt.value);
-
+    if (searchParams.date && timeOptions.length > 0) {
       // Reset start time if it's no longer available
       if (
         searchParams.startTime &&
-        !availableTimeValues.includes(searchParams.startTime)
+        !timeOptions.includes(searchParams.startTime)
       ) {
         setSearchParams((prev) => ({ ...prev, startTime: '', endTime: '' }));
       }
       // Reset end time if start time was reset or end time is no longer available
       else if (
         searchParams.endTime &&
-        !availableTimeValues.includes(searchParams.endTime)
+        !timeOptions.includes(searchParams.endTime)
       ) {
         setSearchParams((prev) => ({ ...prev, endTime: '' }));
       }
     }
-  }, [
-    searchParams.date,
-    searchParams.startTime,
-    searchParams.endTime,
-    getAvailableTimeOptions,
-  ]);
+  }, [searchParams.date, searchParams.startTime, searchParams.endTime, timeOptions]);
 
   return (
     <div className="admin-page">
@@ -535,12 +568,14 @@ const Bookings = () => {
       </div>
 
       <div className="page-actions">
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowBookingModal(true)}
-        >
-          Tạo đơn đặt
-        </button>
+        {canEdit() && (
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowBookingModal(true)}
+          >
+            Tạo đơn đặt
+          </button>
+        )}
 
         <div className="search-container">
           <input
@@ -633,22 +668,24 @@ const Bookings = () => {
                 </td>
                 <td>
                   <div className="actions-cell">
-                    <button
-                      type="button"
-                      className="btn btn-sm"
-                      onClick={() => {
-                        setEditingBooking(b);
-                        setShowStatusModal(true);
-                      }}
-                    >
-                      Sửa
-                    </button>
+                    {canEdit() && (
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        onClick={() => {
+                          setEditingBooking(b);
+                          setShowStatusModal(true);
+                        }}
+                      >
+                        Sửa
+                      </button>
+                    )}
 
                     <button
                       type="button"
                       className="btn btn-sm"
                       onClick={() => handleOpenDetail(b)}
-                      style={{ marginLeft: 6 }}
+                      style={{ marginLeft: canEdit() ? 6 : 0 }}
                     >
                       Xem
                     </button>
@@ -837,9 +874,9 @@ const Bookings = () => {
                   }
                 >
                   <option value="">Chọn giờ</option>
-                  {getAvailableTimeOptions().map((timeOption) => (
-                    <option key={timeOption.value} value={timeOption.value}>
-                      {timeOption.label}
+                  {timeOptions.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
                     </option>
                   ))}
                 </select>
@@ -856,11 +893,18 @@ const Bookings = () => {
                   }
                 >
                   <option value="">Chọn giờ</option>
-                  {getAvailableTimeOptions().map((timeOption) => (
-                    <option key={timeOption.value} value={timeOption.value}>
-                      {timeOption.label}
-                    </option>
-                  ))}
+                  {timeOptions
+                    .filter((t) => {
+                      if (!searchParams.startTime) return true;
+                      const startH = parseInt(searchParams.startTime.split(':')[0], 10);
+                      const h = parseInt(t.split(':')[0], 10);
+                      return h > startH;
+                    })
+                    .map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="form-group">
@@ -1207,22 +1251,24 @@ const Bookings = () => {
                     <div className="detail-grid">
                       <div className="info-section">
                         <p>
-                          <strong>Thời gian</strong>
+                          <strong>Ngày đặt</strong>
                           <br />
                           {bookingObj.ngay_su_dung
                             ? formatDate(bookingObj.ngay_su_dung)
-                            : ''}{' '}
-                          ●{' '}
-                          {slots.length > 0
-                            ? `${formatTime(
-                                slots[0].start_time
-                              )} - ${formatTime(slots[0].end_time)}`
                             : ''}
                         </p>
                         <p>
-                          <strong>Sân</strong>
+                          <strong>Các sân đã đặt</strong>
                           <br />
-                          {slots.length > 0 ? `Sân ${slots[0].san_id}` : ''}
+                          {slots.length > 0 ? (
+                            slots.map((slot, idx) => (
+                              <span key={idx} style={{ display: 'block', marginBottom: '0.25rem' }}>
+                                Sân {slot.san_id}: {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                              </span>
+                            ))
+                          ) : (
+                            'Không có thông tin sân'
+                          )}
                         </p>
                         <p>
                           <strong>Người đặt</strong>
@@ -1280,6 +1326,11 @@ const Bookings = () => {
                         <p>
                           <span>Phương thức thanh toán:</span>{' '}
                           <span>Trả sau</span>
+                        </p>
+                        <hr />
+                        <p>
+                          <span>Ghi chú:</span>{' '}
+                          <span>{bookingObj.note || '-'}</span>
                         </p>
                         <hr />
                         <p className="total">

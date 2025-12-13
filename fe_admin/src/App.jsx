@@ -7,6 +7,7 @@ import {
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from './context/AuthContext';
 import AdminLayout from './layouts/AdminLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Bookings from './pages/Bookings';
@@ -32,12 +33,33 @@ function App() {
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="bookings" element={<Bookings />} />
-            <Route path="courts" element={<Courts />} />
+            <Route
+              path="courts"
+              element={
+                <ProtectedRoute requireEdit={true}>
+                  <Courts />
+                </ProtectedRoute>
+              }
+            />
             <Route path="court-status" element={<CourtStatus />} />
-            <Route path="timeframes" element={<TimeFrames />} />
+            <Route
+              path="timeframes"
+              element={
+                <ProtectedRoute requireEdit={true}>
+                  <TimeFrames />
+                </ProtectedRoute>
+              }
+            />
             <Route path="services" element={<Services />} />
             <Route path="customers" element={<Customers />} />
-            <Route path="employees" element={<Employees />} />
+            <Route
+              path="employees"
+              element={
+                <ProtectedRoute requireEdit={true}>
+                  <Employees />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           {/* Default redirect */}
