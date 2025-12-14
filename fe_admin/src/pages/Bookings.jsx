@@ -65,6 +65,9 @@ const Bookings = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedBookingDetail, setSelectedBookingDetail] = useState(null);
+  // Cancel modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const formatDate = (dateString) => {
     try {
@@ -362,18 +365,56 @@ const Bookings = () => {
     setBookingNote('');
   };
 
-  const handleSaveStatus = async (updated) => {
+  const handleSaveStatus = async (updated, reason = '') => {
     if (!editingBooking) return;
     try {
-      await api.put(`/bookings/${editingBooking.id}`, updated);
+      const payload = { ...updated };
+      // Save cancel reason into note field, similar to customer BookingLookup
+      if (updated.trang_thai === 'cancelled' && reason) {
+        payload.note = reason;
+      }
+      await api.put(`/bookings/${editingBooking.id}`, payload);
       toast.success('Cập nhật trạng thái thành công');
       setShowStatusModal(false);
       setEditingBooking(null);
+      setCancelReason('');
       fetchBookings(pagination.currentPage);
     } catch (err) {
       console.error('Update booking status error', err);
       toast.error(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái');
     }
+  };
+
+  const handleStatusChange = (newStatus) => {
+    setEditingBooking({
+      ...editingBooking,
+      trang_thai: newStatus,
+    });
+    // If status is cancelled, open cancel modal
+    if (newStatus === 'cancelled') {
+      setShowStatusModal(false);
+      setShowCancelModal(true);
+    }
+  };
+
+  const handleConfirmCancel = () => {
+    // Save status with cancel reason
+    handleSaveStatus(
+      {
+        trang_thai: 'cancelled',
+        is_paid: editingBooking.is_paid,
+      },
+      cancelReason
+    );
+    setShowCancelModal(false);
+    setCancelReason('');
+  };
+
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false);
+    setCancelReason('');
+    // Reopen status modal
+    setShowStatusModal(true);
   };
 
   const handleExportInvoice = (booking) => {
@@ -497,7 +538,7 @@ const Bookings = () => {
           `/public/availability/courts/${firstCourtId}`,
           { params: { date: searchParams.date } }
         );
-        
+
         const slots = slotsResponse.data?.data?.slots || [];
         if (slots.length === 0) return;
 
@@ -558,7 +599,12 @@ const Bookings = () => {
         setSearchParams((prev) => ({ ...prev, endTime: '' }));
       }
     }
-  }, [searchParams.date, searchParams.startTime, searchParams.endTime, timeOptions]);
+  }, [
+    searchParams.date,
+    searchParams.startTime,
+    searchParams.endTime,
+    timeOptions,
+  ]);
 
   return (
     <div className="admin-page">
@@ -896,7 +942,10 @@ const Bookings = () => {
                   {timeOptions
                     .filter((t) => {
                       if (!searchParams.startTime) return true;
-                      const startH = parseInt(searchParams.startTime.split(':')[0], 10);
+                      const startH = parseInt(
+                        searchParams.startTime.split(':')[0],
+                        10
+                      );
                       const h = parseInt(t.split(':')[0], 10);
                       return h > startH;
                     })
@@ -1260,15 +1309,21 @@ const Bookings = () => {
                         <p>
                           <strong>Các sân đã đặt</strong>
                           <br />
-                          {slots.length > 0 ? (
-                            slots.map((slot, idx) => (
-                              <span key={idx} style={{ display: 'block', marginBottom: '0.25rem' }}>
-                                Sân {slot.san_id}: {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                              </span>
-                            ))
-                          ) : (
-                            'Không có thông tin sân'
-                          )}
+                          {slots.length > 0
+                            ? slots.map((slot, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    display: 'block',
+                                    marginBottom: '0.25rem',
+                                  }}
+                                >
+                                  Sân {slot.san_id}:{' '}
+                                  {formatTime(slot.start_time)} -{' '}
+                                  {formatTime(slot.end_time)}
+                                </span>
+                              ))
+                            : 'Không có thông tin sân'}
                         </p>
                         <p>
                           <strong>Người đặt</strong>
@@ -1382,12 +1437,7 @@ const Bookings = () => {
                 <label>Trạng thái đơn:</label>
                 <select
                   value={editingBooking.trang_thai || ''}
-                  onChange={(e) =>
-                    setEditingBooking({
-                      ...editingBooking,
-                      trang_thai: e.target.value,
-                    })
-                  }
+                  onChange={(e) => handleStatusChange(e.target.value)}
                 >
                   <option value="">-- Chọn trạng thái --</option>
                   <option value="pending">Chờ xác nhận</option>
@@ -1440,6 +1490,35 @@ const Bookings = () => {
           ) : (
             <div>Không có đơn để chỉnh sửa</div>
           )}
+        </div>
+      </Modal>
+
+      {/* Cancel Confirm Modal */}
+      <Modal
+        isOpen={showCancelModal}
+        onClose={handleCloseCancelModal}
+        size="small"
+      >
+        <div className="cancel-confirm-modal">
+          <p>Bạn có muốn hủy đơn đặt sân này không?</p>
+          <div className="cancel-reason-input">
+            <label htmlFor="cancel-reason">Lý do hủy:</label>
+            <textarea
+              id="cancel-reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy đặt sân..."
+              rows={3}
+            />
+          </div>
+          <div className="confirm-actions">
+            <button className="btn-yes" onClick={handleConfirmCancel}>
+              Có
+            </button>
+            <button className="btn-no" onClick={handleCloseCancelModal}>
+              Không
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

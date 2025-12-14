@@ -128,6 +128,7 @@ const getAvailability = async (req, res) => {
         ma_san: court.ma_san,
         ten_san: court.ten_san,
         suc_chua: court.suc_chua,
+        ghi_chu: court.ghi_chu,
         is_available: isAvailable,
         bookings: conflictDetails || [],
       });

@@ -511,7 +511,7 @@ const BookingPage = () => {
                     {court.ten_san} ({court.ma_san})
                   </h3>
                   <p>Sức chứa: {court.suc_chua} người</p>
-
+                  <p>Ghi chú: {court.ghi_chu}</p>
                   {court.is_available ? (
                     <div className="time-slots">
                       <div

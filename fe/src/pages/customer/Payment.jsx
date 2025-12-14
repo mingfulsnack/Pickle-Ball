@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { publicApi } from '../../services/api';
 import './Payment.scss';
@@ -7,6 +7,7 @@ const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes in seconds
 
   const {
     booking,
@@ -19,6 +20,39 @@ const Payment = () => {
     selectedServices,
     paymentMethod,
   } = location.state || {};
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      alert('Phiên thanh toán đã hết hạn. Vui lòng đặt sân lại.');
+      navigate('/booking');
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, navigate]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return {
+      minutes: mins.toString().padStart(2, '0'),
+      seconds: secs.toString().padStart(2, '0'),
+    };
+  };
+
+  const { minutes, seconds } = formatTime(timeLeft);
 
   // If neither a created booking nor bookingData is provided, redirect home
   if (!booking && !bookingData) {
@@ -108,8 +142,9 @@ const Payment = () => {
           <div className="countdown-timer">
             <span>Giao dịch hết hạn sau</span>
             <div className="timer">
-              <span className="time-digit">14</span>
-              <span className="time-digit">59</span>
+              <span className="time-digit">{minutes}</span>
+              <span className="time-separator">:</span>
+              <span className="time-digit">{seconds}</span>
             </div>
           </div>
         </div>
