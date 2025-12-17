@@ -4,7 +4,13 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import './Admin.scss';
 
-const emptyForm = { ma_san: '', ten_san: '', suc_chua: 4, ghi_chu: '' };
+const emptyForm = {
+  ma_san: '',
+  ten_san: '',
+  suc_chua: 4,
+  ghi_chu: '',
+  trang_thai: true,
+};
 
 const Courts = () => {
   const [loading, setLoading] = useState(false);
@@ -16,7 +22,8 @@ const Courts = () => {
   const fetchCourts = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/courts');
+      // Admin should see all courts including inactive ones
+      const res = await api.get('/courts?activeOnly=false');
       setCourts(res.data.data || []);
     } catch (err) {
       console.error('Fetch courts error', err);
@@ -42,6 +49,7 @@ const Courts = () => {
       ten_san: court.ten_san || '',
       suc_chua: court.suc_chua || 4,
       ghi_chu: court.ghi_chu || '',
+      trang_thai: court.trang_thai !== undefined ? court.trang_thai : true,
     });
     setIsModalOpen(true);
   };
@@ -99,6 +107,7 @@ const Courts = () => {
               <th>Mã sân</th>
               <th>Tên</th>
               <th>Sức chứa</th>
+              <th>Trạng thái</th>
               <th>Ghi chú</th>
               <th>Hành động</th>
             </tr>
@@ -110,6 +119,7 @@ const Courts = () => {
                 <td>{c.ma_san}</td>
                 <td>{c.ten_san}</td>
                 <td>{c.suc_chua}</td>
+                <td>{c.trang_thai ? 'Hoạt động' : 'Không hoạt động'}</td>
                 <td>{c.ghi_chu}</td>
                 <td>
                   <div className="actions-cell">
@@ -179,6 +189,22 @@ const Courts = () => {
                     max="20"
                     placeholder="Số người tối đa"
                   />
+                </div>
+                <div className="form-group">
+                  <label>Trạng thái</label>
+                  <select
+                    name="trang_thai"
+                    value={form.trang_thai ? 'true' : 'false'}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        trang_thai: e.target.value === 'true',
+                      })
+                    }
+                  >
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Không hoạt động</option>
+                  </select>
                 </div>
                 <div className="form-group full-width">
                   <label>Ghi chú</label>
